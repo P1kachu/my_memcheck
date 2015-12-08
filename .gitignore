@@ -5,3 +5,4 @@
 *.png
 *.bckp
 *.memcheck
+my_strace
