@@ -1,0 +1,7 @@
+*.pdf
+*.so
+*.o
+*.a
+*.png
+*.bckp
+*.memcheck
