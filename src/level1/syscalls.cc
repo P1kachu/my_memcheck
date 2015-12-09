@@ -5,10 +5,10 @@ const char* get_syscall_name(int id)
   std::ifstream in("/usr/include/asm/unistd_64.h");
   std::string s;
   id+=3;
-  for(int i = 0; i < id; ++i)
+  for (int i = 0; i < id; ++i)
     getline(in, s);
 
-  getline(in,s);
+  getline(in, s);
   s = s.substr(s.find("__NR_") + 5, strlen(s.c_str()));
   s = s.substr(0, s.find(" "));
 
@@ -20,7 +20,7 @@ const char* get_syscall_name(int id)
 static void print_addresses(pid_t child, user_regs_struct& regs)
 {
 #ifndef QUIET
-  fprintf(OUT, "[pid %04d] [0x%08llx] ", child, regs.rip);
+  fprintf(OUT, "[pid %04d][0x%08llx] ", child, regs.rip);
 #else
   UNUSED(child);
   UNUSED(regs);
@@ -108,7 +108,7 @@ static void print_clone(pid_t child, user_regs_struct& regs)
 
 #if BONUS
   char b[128];
-  sprintf(b,"clone_flags = 0x%llx,  newsp = %lld, ",
+  sprintf(b, "clone_flags = 0x%llx,  newsp = %lld, ",
           regs.rdi, regs.rsi);
 
   sprintf(b + strlen(b), "parent_tidptr = %llx, child_tidpte = %llx, ",
@@ -139,11 +139,11 @@ static void print_execve(pid_t child, user_regs_struct& regs)
 
 #if BONUS
   char b[128];
-  char *str = reinterpret_cast<char*>(regs.rdi);
+  char* str = reinterpret_cast<char*>(regs.rdi); //NOMO
 
   sprintf(b, "filename = %s, argv = %p, ",
-    str ? str : "NULL", reinterpret_cast<void*>(regs.rsi));
-  sprintf(b + strlen(b), "envp = %p", reinterpret_cast<void*>(regs.rdx));
+          str ? str : "NULL", reinterpret_cast<void*>(regs.rsi)); //NOMO
+  sprintf(b + strlen(b), "envp = %p", reinterpret_cast<void* >(regs.rdx));//NOMO
 
   fprintf(OUT, b);
 #endif
@@ -182,7 +182,7 @@ void print_syscall(pid_t child, int orig)
   struct user_regs_struct regs;
 
   // Get child register and store them into regs
-  ptrace(PTRACE_GETREGS, child, NULL, &regs);
+  ptrace(PTRACE_GETREGS, child, NULL, &regs); //NOMO
 
 
 

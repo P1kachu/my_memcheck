@@ -1,10 +1,6 @@
 #include "level1.hh"
 #include "syscalls.hh"
 
-/*static const char* get_syscall_name(int id)
-{
-}*/
-
 static int wait_for_syscall(pid_t child)
 {
   int status = 0;
@@ -14,10 +10,10 @@ static int wait_for_syscall(pid_t child)
     ptrace(PTRACE_SYSCALL, child, 0, 0);
 
     //       pid, status, options
-    waitpid(child, &status, 0);
+    waitpid(child, &status, 0); // NOMO
 
     // Program was stopped by a signal and this signal is a syscall
-    if (WIFSTOPPED(status) && WSTOPSIG(status) & 0x80)
+    if (WIFSTOPPED(status) && WSTOPSIG(status) & 0x80) // NOMO
       return 0;
 
     // Program exited normally
@@ -29,9 +25,9 @@ static int wait_for_syscall(pid_t child)
 
 int run_child(int argc, char** argv)
 {
-  char** args = new char*[argc + 1];
+  char** args = new char* [argc + 1];
   memcpy(args, argv, argc * sizeof (char*));
-  args[argc] = nullptr; // FIXME Ask ACU
+  args[argc] = nullptr; // TODO Ask ACU
 
   ptrace(PTRACE_TRACEME);
   kill(getpid(), SIGSTOP);
@@ -45,7 +41,7 @@ int trace_child(pid_t child)
 {
   int status = 0;
   int retval = 0;
-  waitpid(child, &status, 0);
+  waitpid(child, &status, 0); //NOMO
 
   // PTRACE_O_TRACESYSGOOD is used to differentiate syscalls from normal traps
   ptrace(PTRACE_SETOPTIONS, child, 0, PTRACE_O_TRACESYSGOOD);
@@ -71,7 +67,7 @@ int trace_child(pid_t child)
 
   }
 
-  fprintf(OUT, "\n+++ Process %d exited with %d +++\n", child, retval);
+  fprintf(OUT, "\n+++ Process %d exited with %d+++\n", child, retval);
   return 0;
 
 }

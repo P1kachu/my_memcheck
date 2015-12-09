@@ -1,6 +1,8 @@
 Mandatory
 
 ask about #ifndef
+Delete NOMO tags
+
 
 ## NOTES ##
 - x86_64, instruction: syscall, syscall # and retval in $rax
