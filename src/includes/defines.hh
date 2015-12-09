@@ -3,13 +3,18 @@
 
 # include <string>
 # include <fstream>
+# include <iostream>
+# include <sstream>
 # include <string.h>
 # include <unistd.h>
 # include <stdio.h>
 # include <stdlib.h>
 # include <sys/ptrace.h>
 # include <sys/types.h>
+# include <sys/stat.h>
 # include <sys/reg.h>
+# include <fcntl.h>
+# include <link.h>
 # include <sys/user.h>
 # include <sys/wait.h>
 # include <sys/mman.h>

@@ -2,7 +2,7 @@ Mandatory
 
 ask about #ifndef
 Delete NOMO tags
-follow_fork_mode
+follow_fork_mode (multi htreading)
 
 ## NOTES ##
 - x86_64, instruction: syscall, syscall # and retval in $rax
