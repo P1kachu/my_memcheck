@@ -2,6 +2,7 @@
 # define DEFINES_HH
 
 # include <string>
+# include <fstream>
 
 # include <string.h>
 # include <unistd.h>
@@ -23,6 +24,6 @@
 # define NULL_STRING "NULL"
 
 # define BONUS 1
-# define QUIET 1
+# define QUIET
 
 #endif /* !DEFINES_HH */

@@ -1,13 +1,21 @@
 #include "syscalls.hh"
 
-// Pretty printer
-/*static std::string pp(unsigned long long reg)
+const char* get_syscall_name(int id)
 {
-  if (!reg)
-    return NULL_STRING;
+  std::ifstream in("/usr/include/asm/unistd_64.h");
+  std::string s;
+  id+=3;
+  for(int i = 0; i < id; ++i)
+    getline(in, s);
 
-  else return std::to_string(reg);
-}*/
+  getline(in,s);
+  s = s.substr(s.find("__NR_") + 5, strlen(s.c_str()));
+  s = s.substr(0, s.find(" "));
+
+  in.close();
+
+  return s.c_str();
+}
 
 static void print_addresses(pid_t child, user_regs_struct& regs)
 {
@@ -161,13 +169,11 @@ static void print_exitgroup(pid_t child, user_regs_struct& regs)
 #endif
 }
 
-static void print_lambda(pid_t child, user_regs_struct& regs)
+static void print_lambda(pid_t child, int orig, user_regs_struct& regs)
 {
   print_addresses(child, regs);
 
-  // TODO add function names
-
-  fprintf(OUT, "FUNCTION_TODO(...");
+  fprintf(OUT, "%s(...", get_syscall_name(orig));
 }
 
 
@@ -227,7 +233,7 @@ void print_syscall(pid_t child, int orig)
       break;
 
     default: // don't care
-      print_lambda(child, regs);
+      print_lambda(child, orig, regs);
       break;
   }
 }
