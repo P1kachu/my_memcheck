@@ -35,13 +35,21 @@ void* get_r_debug(pid_t pid)
   {
     phdr = reinterpret_cast<Elf64_Phdr*>((char*)at_phdr + i * at_phent);
     if (phdr->p_type == PT_DYNAMIC)
+    {
       fprintf(OUT, "Found (%p)\n", (void*)phdr->p_vaddr);
+      break;
+    }
   }
-  void* dynamic = (void*)phdr->p_vaddr;
 
-  Elf64_Shdr* shdr = (Elf64_Shdr*)dynamic;
+  Elf64_Dyn* dt_struct = reinterpret_cast<Elf64_Dyn*>(phdr->p_vaddr);
 
-  printf("%d\n", shdr->sh_name);
+
+  int i = 0;
+
+  while (dt_struct[i].d_tag != DT_DEBUG)
+    ++i;
+
+  fprintf(OUT, "The GRAAL: %p\n", reinterpret_cast<void*>(dt_struct[i].d_un.d_ptr));
 
   return (void*)0;
 
