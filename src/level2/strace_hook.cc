@@ -35,10 +35,14 @@ void* get_r_debug(pid_t pid)
   {
     phdr = reinterpret_cast<Elf64_Phdr*>((char*)at_phdr + i * at_phent);
     if (phdr->p_type == PT_DYNAMIC)
-    {
       fprintf(OUT, "Found (%p)\n", (void*)phdr->p_vaddr);
-    }
   }
+  void* dynamic = (void*)phdr->p_vaddr;
+
+  Elf64_Shdr* shdr = (Elf64_Shdr*)dynamic;
+
+  printf("%d\n", shdr->sh_name);
+
   return (void*)0;
 
 }
