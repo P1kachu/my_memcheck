@@ -1,14 +1,29 @@
 #include "syscalls.hh"
 
+// Pretty printer
+/*static std::string pp(unsigned long long reg)
+{
+  if (!reg)
+    return NULL_STRING;
+
+  else return std::to_string(reg);
+}*/
 
 static void print_mmap(pid_t child, user_regs_struct& regs)
 {
   fprintf(OUT, "[pid %04d] [0x%08llx] mmap(", child, regs.rip);
 
 #if BONUS
-  fprintf(OUT, "addr = %lld, len = %lld, ", regs.rdi, regs.rsi);
-  fprintf(OUT, "prot = %lld, flags = %lld, ", regs.rdx, regs.r10);
-  fprintf(OUT, "fd = %lld, off = %lld", regs.r8, regs.r9);
+  char buffer[128];
+
+  sprintf(buffer,
+          "addr = 0x%llx, len = %lld, ", regs.rdi, regs.rsi);
+  sprintf(buffer + strlen(buffer),
+          "prot = %lld, flags = %lld, ", regs.rdx, regs.r10);
+  sprintf(buffer + strlen(buffer),
+          "fd = %d, off = 0x%llx", static_cast<int>(regs.r8), regs.r9);
+
+  fprintf(OUT, buffer);
 #endif
 }
 
@@ -17,8 +32,15 @@ static void print_mprotect(pid_t child, user_regs_struct& regs)
   fprintf(OUT, "[pid %04d] [0x%08llx] mprotect(", child, regs.rip);
 
 #if BONUS
-  fprintf(OUT, "addr = %lld, len = %llu, ", regs.rdi, regs.rsi);
-  fprintf(OUT, "prot = %lld", regs.rdx);
+  char buffer[128];
+  sprintf(buffer,
+          "addr = 0x%llx, len = %lu, ",
+          regs.rdi, static_cast<size_t>(regs.rsi));
+
+  sprintf(buffer + strlen(buffer),
+          "prot = %lld",
+          regs.rdx);
+  fprintf(OUT, buffer);
 #endif
 }
 
@@ -27,7 +49,11 @@ static void print_munmap(pid_t child, user_regs_struct& regs)
   fprintf(OUT, "[pid %04d] [0x%08llx] munmap(", child, regs.rip);
 
 #if BONUS
-  fprintf(OUT, "addr = %lld, len = %llu", regs.rdi, regs.rsi);
+  char buffer[128];
+  sprintf(buffer,
+          "addr = 0x%llx, len = %lu",
+          regs.rdi, static_cast<size_t>(regs.rsi));
+  fprintf(OUT, buffer);
 #endif
 }
 
@@ -36,7 +62,9 @@ static void print_brk(pid_t child, user_regs_struct& regs)
   fprintf(OUT, "[pid %04d] [0x%08llx] brk(", child, regs.rip);
 
 #if BONUS
-  fprintf(OUT, "addr = %lld", regs.rdi);
+char buffer[128];
+  sprintf(buffer, "addr = 0x%llx", regs.rdi);
+  fprintf(OUT, buffer);
 #endif
 }
 
@@ -54,11 +82,16 @@ static void print_clone(pid_t child, user_regs_struct& regs)
   fprintf(OUT, "[pid %04d] [0x%08llx] clone(", child, regs.rip);
 
 #if BONUS
-  fprintf(OUT, "clone_flags = %lld, newsp = %lld, ", regs.rdi, regs.rsi);
-  fprintf(OUT, "parent_tidptr = %p, child_tidpte = %p, ",
-          (void*)regs.rdx, (void*)regs.r10);
-  // TODO
-  fprintf(OUT, "tls_val = %lld", regs.r8);
+  char b[128];
+  sprintf(b,"clone_flags = 0x%llx,  newsp = %lld, ",
+          regs.rdi, regs.rsi);
+
+  sprintf(b + strlen(b), "parent_tidptr = %llx, child_tidpte = %llx, ",
+          regs.rdx, regs.r10);
+
+  sprintf(b + strlen(b), "tls_val = %d", static_cast<int>(regs.r8));
+
+  fprintf(OUT, b);
 #endif
 }
 

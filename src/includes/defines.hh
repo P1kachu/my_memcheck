@@ -11,6 +11,7 @@
 # include <sys/user.h>
 # include <sys/wait.h>
 # include <stdio.h>
+# include <stdlib.h>
 # include <sys/mman.h>
 
 # include "colors.hh"
@@ -18,6 +19,8 @@
 
 # define OUT stdout
 # define UNUSED(x) { (x) = (x); }
+
+# define NULL_STRING "NULL"
 
 # define BONUS 1
 
