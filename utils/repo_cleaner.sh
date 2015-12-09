@@ -12,6 +12,7 @@ find . \( \
      -o  -name "CSR*" \
      -o -name "*.a" \
      -o -name "*~" \
+     -o -name ".#*" \
      -o -name "build" \
      -o  -name "*.so" \
      -o -name "42sh" \

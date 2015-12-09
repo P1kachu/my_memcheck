@@ -11,10 +11,10 @@ static int wait_for_syscall(pid_t child)
       fprintf(OUT, "%sERROR:%s PTRACE_SYSCALL failed\n", RED, NONE);
 
     //       pid, status, options
-    waitpid(child, &status, 0); // NOMO
+    waitpid(child, &status, __WALL);
 
     // Program was stopped by a signal and this signal is a syscall
-    if (WIFSTOPPED(status) && WSTOPSIG(status) & 0x80) // NOMO
+    if (WIFSTOPPED(status) && WSTOPSIG(status) & 0x80)
       return 0;
 
     // Program exited normally
@@ -28,7 +28,7 @@ int run_child(int argc, char** argv)
 {
   char** args = new char*[argc + 1];
   memcpy(args, argv, argc * sizeof (char*));
-  args[argc] = nullptr; // TODO Ask ACU
+  args[argc] = nullptr; // TODO Ask ACU if this is clean
 
   if (ptrace(PTRACE_TRACEME) == -1)
     fprintf(OUT, "%sERROR:%s PTRACE_TRACEME failed\n", RED, NONE);
@@ -44,14 +44,20 @@ int trace_child(pid_t child)
 {
   int status = 0;
   int retval = 0;
-  waitpid(child, &status, 0); //NOMO
+  waitpid(child, &status, 0);
 
   // PTRACE_O_TRACESYSGOOD is used to differentiate syscalls from normal traps
   if (ptrace(PTRACE_SETOPTIONS, child, 0, PTRACE_O_TRACESYSGOOD))
-    fprintf(OUT, "%sERROR:%s PTRACE_SETOPTIONS failed\n", RED, NONE);
+    fprintf(OUT, "%sERROR:%s PTRACE_O_TRACESYSGOOD failed\n", RED, NONE);
+
+  // FOLLOW_FORK_MODE Bonus
+  //if (ptrace(PTRACE_SETOPTIONS, child, 0, FOLLOW_FORK_MODE) == -1)
+  //  fprintf(OUT, "%sERROR:%s FOLLOW_FORK_MODE failed\n", RED, NONE);
+  // TODO ASK ACU why the output disappear
 
   while (true)
   {
+
     if (wait_for_syscall(child))
       break;
 

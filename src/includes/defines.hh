@@ -20,7 +20,10 @@
 
 # define OUT stdout
 # define UNUSED(x) { (x) = (x); }
+# define BONUS 1
 
+
+// mem_strace
 # define NULL_STRING        "NULL"
 # define MMAP_SYSCALL       9
 # define MPROTECT_SYSCALL   10
@@ -33,7 +36,17 @@
 # define EXECVE_SYSCALL     59
 # define EXIT_SYSCALL       60
 # define EXIT_GROUP_SYSCALL 231
+# define FOLLOW_FORK_MODE   PTRACE_O_TRACEFORK \
+                          | PTRACE_O_TRACEVFORK \
+                          | PTRACE_O_TRACECLONE \
+                          | PTRACE_O_TRACEEXIT
 
-# define BONUS 1
+
+
+
+
+
+
+
 
 #endif /* !DEFINES_HH */

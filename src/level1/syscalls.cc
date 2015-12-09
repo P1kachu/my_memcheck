@@ -1,5 +1,11 @@
 #include "syscalls.hh"
 
+/*static const char* get_protections(int prot)
+{
+
+}*/
+
+
 static void print_syscall_name(int id)
 {
   std::ifstream in("/usr/include/asm/unistd_64.h");
@@ -18,7 +24,7 @@ static void print_syscall_name(int id)
 static void print_addresses(pid_t child, user_regs_struct& regs)
 {
 #if BONUS
-  fprintf(OUT, "[pid %04d][0x%08llx] ", child, regs.rip);
+  fprintf(OUT, "[pid %04d] [0x%08llx] ", child, regs.rip);
 #else
   UNUSED(child);
   UNUSED(regs);
