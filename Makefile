@@ -16,13 +16,15 @@ CXXFLAGS += -fdiagnostics-color=always
 INCLDIR   = src/includes/
 
 ## MAIN ##
-SRCS     = $(addsuffix .cc, $(addprefix src/, main game))
+SRCS     = $(addsuffix .cc, $(addprefix src/, main))
+SRCS    += $(addsuffix .cc, $(addprefix src/level1/, strace))
+SRCS    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
 ## OBJ CREATION ##
 OBJS      = $(SRCS:.cc=.o)
 
 ## EXEC NAME ##
-EXEC      = game
+EXEC      = memcheck
 
 ###############################################################################
 

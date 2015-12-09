@@ -3,7 +3,7 @@
 
 # include "defines.hh"
 
-bool binary_exists(const string& name);
+bool binary_exists(const std::string& name);
 
 
 

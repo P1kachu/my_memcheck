@@ -3,6 +3,7 @@
 
 # include "defines.hh"
 
-const char* get_syscall_name(int id);
+int run_child(int argc, char** argv);
+int trace_child(pid_t child);
 
 #endif /* LEVEL1_HH */

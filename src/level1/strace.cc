@@ -1,22 +1,10 @@
 #include "level1.hh"
 
-const char* get_syscall_name(int id)
+/*static const char* get_syscall_name(int id)
 {
+}*/
 
-}
-
-int run_child(int argc, char** argv)
-{
-  char* args[argc + 1];
-  memcpy(args, argv, argc * sizeof (char*));
-  args[argc] = NULL;
-
-  ptrace(PTRACE_TRACEME);
-  kill(getpid(), SIGSTOP);
-  return execvp(args[0], args]);
-}
-
-int wait_for_syscall(pid_t child)
+static int wait_for_syscall(pid_t child)
 {
   int status = 0;
   while (true)
@@ -37,11 +25,52 @@ int wait_for_syscall(pid_t child)
   }
 }
 
+
+int run_child(int argc, char** argv)
+{
+  char** args = new char*[argc + 1];
+  memcpy(args, argv, argc * sizeof (char*));
+  args[argc] = nullptr; // FIXME Ask ACU
+
+  ptrace(PTRACE_TRACEME);
+  kill(getpid(), SIGSTOP);
+  int ret = execvp(args[0], args);
+  delete[] args;
+  return ret;
+}
+
 int trace_child(pid_t child)
 {
   int status = 0;
   int retval = 0;
   fprintf(OUT, "[pid %d] ", child);
   waitpid(child, &status, 0);
-  ptrace(PTRACE_SETOPTIONS, child, 0,
+
+  // PTRACE_O_TRACESYSGOOD is used to differentiate syscalls from normal traps
+  ptrace(PTRACE_SETOPTIONS, child, 0, PTRACE_O_TRACESYSGOOD);
+
+  while (true)
+  {
+    if (wait_for_syscall(child))
+      break;
+
+
+    //                   Retrieve data from $rax
+    int syscall = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
+
+    UNUSED(syscall); // TODO
+    // print syscall
+
+    int tmp = wait_for_syscall(child);
+    retval = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
+    fprintf(OUT, ") = %d\n", retval);
+
+    if (tmp)
+      break;
+
+  }
+
+  fprintf(OUT, "\nProcess %d exited.\n", child);
+  return 0;
+
 }
