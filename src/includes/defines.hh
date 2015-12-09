@@ -3,17 +3,20 @@
 
 # include <string>
 # include <fstream>
-
 # include <string.h>
 # include <unistd.h>
+# include <stdio.h>
+# include <stdlib.h>
 # include <sys/ptrace.h>
 # include <sys/types.h>
 # include <sys/reg.h>
 # include <sys/user.h>
 # include <sys/wait.h>
-# include <stdio.h>
-# include <stdlib.h>
 # include <sys/mman.h>
+
+// Level 2
+# include <sys/auxv.h>
+# include <sys/elf.h>
 
 # include "colors.hh"
 # include "helpers.hh"

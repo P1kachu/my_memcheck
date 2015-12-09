@@ -16,7 +16,10 @@ CXXFLAGS += -fdiagnostics-color=always
 INCLDIR   = src/includes/
 
 ## MAIN ##
-SRCS     = $(addsuffix .cc, $(addprefix src/level1/, strace syscalls mem_strace))
+#SRCS     = $(addsuffix .cc, $(addprefix src/level1/, strace syscalls mem_strace))
+#SRCS    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
+
+SRCS     = $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook strace_hook))
 SRCS    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
 ## OBJ CREATION ##
