@@ -13,19 +13,12 @@
 # include <stdio.h>
 # include <sys/mman.h>
 
-
 # include "colors.hh"
 # include "helpers.hh"
 
 # define OUT stdout
 # define UNUSED(x) { (x) = (x); }
 
-const std::string[] =
-{
-  "PROT_READ",
-  "PROT_WRITE",
-  "PROT_EXEC",
-  "PROT_NONE"
-}
+# define BONUS 1
 
 #endif /* !DEFINES_HH */

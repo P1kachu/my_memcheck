@@ -17,7 +17,7 @@ static void print_mprotect(pid_t child, user_regs_struct& regs)
   fprintf(OUT, "[pid %04d] [0x%08llx] mprotect(", child, regs.rip);
 
 #if BONUS
-  fprintf(OUT, "addr = %lld, len = %lu, ", regs.rdi, regs.rsi);
+  fprintf(OUT, "addr = %lld, len = %llu, ", regs.rdi, regs.rsi);
   fprintf(OUT, "prot = %lld", regs.rdx);
 #endif
 }
@@ -27,7 +27,7 @@ static void print_munmap(pid_t child, user_regs_struct& regs)
   fprintf(OUT, "[pid %04d] [0x%08llx] munmap(", child, regs.rip);
 
 #if BONUS
-  fprintf(OUT, "addr = %lld, len = %lu", regs.rdi, regs.rsi);
+  fprintf(OUT, "addr = %lld, len = %llu", regs.rdi, regs.rsi);
 #endif
 }
 
@@ -45,13 +45,21 @@ static void print_mremap(pid_t child, user_regs_struct& regs)
   fprintf(OUT, "[pid %04d] [0x%08llx] mremap(", child, regs.rip);
 
 #if BONUS
-  fprintf(OUT, "addr = %lld, len = %lu", regs.rdi, regs.rsi);
+  // TODO
 #endif
 }
 
 static void print_clone(pid_t child, user_regs_struct& regs)
 {
   fprintf(OUT, "[pid %04d] [0x%08llx] clone(", child, regs.rip);
+
+#if BONUS
+  fprintf(OUT, "clone_flags = %lld, newsp = %lld, ", regs.rdi, regs.rsi);
+  fprintf(OUT, "parent_tidptr = %p, child_tidpte = %p, ",
+          (void*)regs.rdx, (void*)regs.r10);
+  // TODO
+  fprintf(OUT, "tls_val = %lld", regs.r8);
+#endif
 }
 
 static void print_fork(pid_t child, user_regs_struct& regs)
@@ -67,21 +75,39 @@ static void print_vfork(pid_t child, user_regs_struct& regs)
 static void print_execve(pid_t child, user_regs_struct& regs)
 {
   fprintf(OUT, "[pid %04d] [0x%08llx] execve(", child, regs.rip);
+
+#if BONUS
+  fprintf(OUT, "filename = %lld, argv = %p, ", regs.rdi, (void*)regs.rsi);
+  // TODO GET STRING
+  fprintf(OUT, "envp = %p", (void*)regs.rdx);
+#endif
 }
 
 static void print_exit(pid_t child, user_regs_struct& regs)
 {
   fprintf(OUT, "[pid %04d] [0x%08llx] exit(", child, regs.rip);
+
+#if BONUS
+  fprintf(OUT, "error_code = %lld", regs.rdi);
+#endif
 }
 
 static void print_exitgroup(pid_t child, user_regs_struct& regs)
 {
   fprintf(OUT, "[pid %04d] [0x%08llx] exit_group(", child, regs.rip);
+
+#if BONUS
+  fprintf(OUT, "error_code = %lld", regs.rdi);
+#endif
 }
 
 static void print_lambda(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] some_func(", child, regs.rip);
+  fprintf(OUT, "[pid %04d] [0x%08llx] some_func(...", child, regs.rip);
+
+#if BONUS
+  // TODO add function names
+#endif
 }
 
 
@@ -141,6 +167,8 @@ void print_syscall(pid_t child, int orig)
       break;
 
     default: // don't care
+#ifndef QUIET
       print_lambda(child, regs);
+#endif
   }
 }

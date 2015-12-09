@@ -28,22 +28,22 @@ EXEC      = memcheck
 
 ###############################################################################
 
-# Multi threaded make of the final binary #
-multi:
-	$(MAKE) -j all
-
 # Produce the final binary   #
 all: $(OBJS)
 	$(CXX) $(OBJS) $(LDLIBS) -o $(EXEC)
 
+# Multi threaded make of the final binary #
+multi:
+	$(MAKE) -Bj all
+
 # Produce test binary, and launch #
 check: multi
-	./$(EXEC)
+	./$(EXEC) ./hardcoded
 
 # Clean repository           #
 clean:
 	$(RM) $(OBJS) $(EXEC)
 
-.PHONY: multi all check clean
+.PHONY: multi all check clean bonus
 
 ###############################################################################
