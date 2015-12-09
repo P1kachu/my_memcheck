@@ -9,9 +9,21 @@
   else return std::to_string(reg);
 }*/
 
+static void print_addresses(pid_t child, user_regs_struct& regs)
+{
+#ifndef QUIET
+  fprintf(OUT, "[pid %04d] [0x%08llx] ", child, regs.rip);
+#else
+  UNUSED(child);
+  UNUSED(regs);
+#endif
+}
+
 static void print_mmap(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] mmap(", child, regs.rip);
+
+  print_addresses(child, regs);
+  fprintf(OUT, "mmap(");
 
 #if BONUS
   char buffer[128];
@@ -29,7 +41,8 @@ static void print_mmap(pid_t child, user_regs_struct& regs)
 
 static void print_mprotect(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] mprotect(", child, regs.rip);
+  print_addresses(child, regs);
+  fprintf(OUT, "mprotect(");
 
 #if BONUS
   char buffer[128];
@@ -46,7 +59,8 @@ static void print_mprotect(pid_t child, user_regs_struct& regs)
 
 static void print_munmap(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] munmap(", child, regs.rip);
+  print_addresses(child, regs);
+  fprintf(OUT, "munmap(");
 
 #if BONUS
   char buffer[128];
@@ -59,7 +73,8 @@ static void print_munmap(pid_t child, user_regs_struct& regs)
 
 static void print_brk(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] brk(", child, regs.rip);
+  print_addresses(child, regs);
+  fprintf(OUT, "brk(");
 
 #if BONUS
 char buffer[128];
@@ -70,7 +85,8 @@ char buffer[128];
 
 static void print_mremap(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] mremap(", child, regs.rip);
+  print_addresses(child, regs);
+  fprintf(OUT, "mremap(");
 
 #if BONUS
   // TODO
@@ -79,7 +95,8 @@ static void print_mremap(pid_t child, user_regs_struct& regs)
 
 static void print_clone(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] clone(", child, regs.rip);
+  print_addresses(child, regs);
+  fprintf(OUT, "clone(");
 
 #if BONUS
   char b[128];
@@ -97,50 +114,60 @@ static void print_clone(pid_t child, user_regs_struct& regs)
 
 static void print_fork(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] fork(", child, regs.rip);
+  print_addresses(child, regs);
+  fprintf(OUT, "fork(");
 }
 
 static void print_vfork(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] vfork(", child, regs.rip);
+  print_addresses(child, regs);
+  fprintf(OUT, "vfork(");
 }
 
 static void print_execve(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] execve(", child, regs.rip);
+  print_addresses(child, regs);
+  fprintf(OUT, "execve(");
 
 #if BONUS
-  fprintf(OUT, "filename = %lld, argv = %p, ", regs.rdi, (void*)regs.rsi);
-  // TODO GET STRING
-  fprintf(OUT, "envp = %p", (void*)regs.rdx);
+  char b[128];
+  char *str = reinterpret_cast<char*>(regs.rdi);
+
+  sprintf(b, "filename = %s, argv = %p, ",
+    str ? str : "NULL", reinterpret_cast<void*>(regs.rsi));
+  sprintf(b + strlen(b), "envp = %p", reinterpret_cast<void*>(regs.rdx));
+
+  fprintf(OUT, b);
 #endif
 }
 
 static void print_exit(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] exit(", child, regs.rip);
+  print_addresses(child, regs);
+  fprintf(OUT, "exit(");
 
 #if BONUS
-  fprintf(OUT, "error_code = %lld", regs.rdi);
+  fprintf(OUT, "error_code = %d", static_cast<int>(regs.rdi));
 #endif
 }
 
 static void print_exitgroup(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] exit_group(", child, regs.rip);
+  print_addresses(child, regs);
+  fprintf(OUT, "exit_group(");
 
 #if BONUS
-  fprintf(OUT, "error_code = %lld", regs.rdi);
+  fprintf(OUT, "error_code = %d", static_cast<int>(regs.rdi));
 #endif
 }
 
 static void print_lambda(pid_t child, user_regs_struct& regs)
 {
-  fprintf(OUT, "[pid %04d] [0x%08llx] some_func(...", child, regs.rip);
+  print_addresses(child, regs);
 
-#if BONUS
   // TODO add function names
-#endif
+
+  fprintf(OUT, "FUNCTION_TODO(...");
 }
 
 
@@ -200,8 +227,7 @@ void print_syscall(pid_t child, int orig)
       break;
 
     default: // don't care
-#ifndef QUIET
       print_lambda(child, regs);
-#endif
+      break;
   }
 }

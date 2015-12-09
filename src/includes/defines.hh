@@ -23,5 +23,6 @@
 # define NULL_STRING "NULL"
 
 # define BONUS 1
+# define QUIET 1
 
 #endif /* !DEFINES_HH */
