@@ -6,7 +6,6 @@ find . \( \
      -o  -name "*.o" \
      -o  -name "CMakeCache.txt" \
      -o  -name "CMakeFiles" \
-     -o -name "Makefile" \
      -o -name "cmake_install.cmake" \
      -o  -name ".gdb_history" \
      -o  -name "peda*" \
