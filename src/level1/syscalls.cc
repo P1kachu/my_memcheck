@@ -97,7 +97,21 @@ static void print_mremap(pid_t child, user_regs_struct& regs)
   fprintf(OUT, "mremap(");
 
 #if BONUS
-  // TODO
+  char buffer[128];
+
+  sprintf(buffer,
+          "old_addr = 0x%llx, old_size = %lu, ",
+    regs.rdi, static_cast<size_t>(regs.rsi));
+
+  sprintf(buffer + strlen(buffer),
+          "new_size = %lu, flags = %lld, ",
+    static_cast<size_t>(regs.rdx), regs.r10);
+
+  sprintf(buffer + strlen(buffer),
+          "flags = %d, [new_addr = 0x%llx]",
+    static_cast<int>(regs.r8), regs.r9);
+
+  fprintf(OUT, buffer);
 #endif
 }
 
@@ -139,11 +153,12 @@ static void print_execve(pid_t child, user_regs_struct& regs)
 
 #if BONUS
   char b[128];
-  char* str = reinterpret_cast<char*>(regs.rdi); //NOMO
+  char* str = reinterpret_cast<char*>(regs.rdi);
+  // FIXME Ask ACU
 
   sprintf(b, "filename = %s, argv = %p, ",
-          str ? str : "NULL", reinterpret_cast<void*>(regs.rsi)); //NOMO
-  sprintf(b + strlen(b), "envp = %p", reinterpret_cast<void* >(regs.rdx));//NOMO
+          str ? str : "NULL", reinterpret_cast<void*>(regs.rsi));
+  sprintf(b + strlen(b), "envp = %p", reinterpret_cast<void*>(regs.rdx));
 
   fprintf(OUT, b);
 #endif
@@ -182,7 +197,7 @@ void print_syscall(pid_t child, int orig)
   struct user_regs_struct regs;
 
   // Get child register and store them into regs
-  ptrace(PTRACE_GETREGS, child, NULL, &regs); //NOMO
+  ptrace(PTRACE_GETREGS, child, NULL, &regs);
 
 
 
