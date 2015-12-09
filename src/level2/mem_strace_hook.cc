@@ -2,5 +2,5 @@
 
 int main()
 {
-
+  get_r_debug();
 }
