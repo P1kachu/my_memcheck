@@ -19,7 +19,7 @@ const char* get_syscall_name(int id)
 
 static void print_addresses(pid_t child, user_regs_struct& regs)
 {
-#ifndef QUIET
+#if BONUS
   fprintf(OUT, "[pid %04d][0x%08llx] ", child, regs.rip);
 #else
   UNUSED(child);
@@ -155,7 +155,6 @@ static void print_execve(pid_t child, user_regs_struct& regs)
   char b[128];
   char* str = reinterpret_cast<char*>(regs.rdi);
   // FIXME Ask ACU
-
   sprintf(b, "filename = %s, argv = %p, ",
           str ? str : "NULL", reinterpret_cast<void*>(regs.rsi));
   sprintf(b + strlen(b), "envp = %p", reinterpret_cast<void*>(regs.rdx));
@@ -164,7 +163,7 @@ static void print_execve(pid_t child, user_regs_struct& regs)
 #endif
 }
 
-static void print_exit(pid_t child, user_regs_struct& regs)
+int print_exit(pid_t child, user_regs_struct& regs)
 {
   print_addresses(child, regs);
   fprintf(OUT, "exit(");
@@ -172,9 +171,11 @@ static void print_exit(pid_t child, user_regs_struct& regs)
 #if BONUS
   fprintf(OUT, "error_code = %d", static_cast<int>(regs.rdi));
 #endif
+
+  return static_cast<int>(regs.rdi);
 }
 
-static void print_exitgroup(pid_t child, user_regs_struct& regs)
+int print_exitgroup(pid_t child, user_regs_struct& regs)
 {
   print_addresses(child, regs);
   fprintf(OUT, "exit_group(");
@@ -182,6 +183,8 @@ static void print_exitgroup(pid_t child, user_regs_struct& regs)
 #if BONUS
   fprintf(OUT, "error_code = %d", static_cast<int>(regs.rdi));
 #endif
+
+  return static_cast<int>(regs.rdi);
 }
 
 static void print_lambda(pid_t child, int orig, user_regs_struct& regs)
@@ -192,7 +195,7 @@ static void print_lambda(pid_t child, int orig, user_regs_struct& regs)
 }
 
 
-void print_syscall(pid_t child, int orig)
+int print_syscall(pid_t child, int orig)
 {
   struct user_regs_struct regs;
 
@@ -201,52 +204,52 @@ void print_syscall(pid_t child, int orig)
 
   switch (orig)
   {
-    case   9: // mmap
+    case   MMAP_SYSCALL: // mmap
       print_mmap(child, regs);
       break;
 
-    case  10: // mprotect
+    case  MPROTECT_SYSCALL: // mprotect
       print_mprotect(child, regs);
       break;
 
-    case  11: // munmap
+    case  MUNMAP_SYSCALL: // munmap
       print_munmap(child, regs);
       break;
 
-    case  12: // brk
+    case  BRK_SYSCALL: // brk
       print_brk(child, regs);
       break;
 
-    case  25: // mremap
+    case  MREMAP_SYSCALL: // mremap
       print_mremap(child, regs);
       break;
 
-    case  56: // clone
+    case  CLONE_SYSCALL: // clone
       print_clone(child, regs);
       break;
 
-    case  57: // fork
+    case  FORK_SYSCALL: // fork
       print_fork(child, regs);
       break;
 
-    case  58: // vfork
+    case  VFORK_SYSCALL: // vfork
       print_vfork(child, regs);
       break;
 
-    case  59: // execve
+    case  EXECVE_SYSCALL: // execve
       print_execve(child, regs);
       break;
 
-    case  60: // exit
-      print_exit(child, regs);
-      break;
+    case  EXIT_SYSCALL: // exit
+      return print_exit(child, regs);
 
-    case 231: // exit_group
-      print_exitgroup(child, regs);
-      break;
+    case EXIT_GROUP_SYSCALL: // exit_group
+      return print_exitgroup(child, regs);
 
     default: // don't care
       print_lambda(child, orig, regs);
       break;
   }
+
+  return 0;
 }

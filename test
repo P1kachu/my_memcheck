@@ -1,0 +1,43 @@
+/nfs/home/epita_2018/lejay_s/Dropbox/lejay_s-projet-lse
+Tracing...
+execve() = -2
+execve() = -2
+execve() = 0
+brk() = 36724736
+access(...) = -2
+open(...) = 3
+fstat(...) = 0
+mmap() = 128151552
+close(...) = 0
+open(...) = 3
+read(...) = 832
+fstat(...) = 0
+mmap() = 128147456
+mmap() = 122236928
+mprotect() = 0
+mmap() = 126013440
+mmap() = 126038016
+close(...) = 0
+mmap() = 128143360
+mmap() = 128139264
+arch_prctl(...) = 0
+mprotect() = 0
+mprotect() = 0
+mprotect() = 0
+munmap() = 0
+brk() = 36724736
+brk() = 36859904
+open(...) = 3
+fstat(...) = 0
+mmap() = 126509056
+close(...) = 0
+getcwd(...) = 56
+fstat(...) = 0
+mmap() = 128155648
+write(...) = 56
+close(...) = 0
+munmap() = 0
+close(...) = 0
+exit_group() = 0
+
++++ Process 9311 exited with 0+++

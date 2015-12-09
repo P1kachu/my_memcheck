@@ -21,9 +21,19 @@
 # define OUT stdout
 # define UNUSED(x) { (x) = (x); }
 
-# define NULL_STRING "NULL"
+# define NULL_STRING        "NULL"
+# define MMAP_SYSCALL       9
+# define MPROTECT_SYSCALL   10
+# define MUNMAP_SYSCALL     11
+# define BRK_SYSCALL        12
+# define MREMAP_SYSCALL     25
+# define CLONE_SYSCALL      56
+# define FORK_SYSCALL       57
+# define VFORK_SYSCALL      58
+# define EXECVE_SYSCALL     59
+# define EXIT_SYSCALL       60
+# define EXIT_GROUP_SYSCALL 231
 
 # define BONUS 1
-# define QUIET
 
 #endif /* !DEFINES_HH */

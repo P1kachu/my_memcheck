@@ -25,7 +25,7 @@ static int wait_for_syscall(pid_t child)
 
 int run_child(int argc, char** argv)
 {
-  char** args = new char* [argc + 1];
+  char** args = new char*[argc + 1];
   memcpy(args, argv, argc * sizeof (char*));
   args[argc] = nullptr; // TODO Ask ACU
 
@@ -55,11 +55,15 @@ int trace_child(pid_t child)
     // Retrieve data from $rax
     int syscall = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * ORIG_RAX);
 
-    print_syscall(child, syscall);
+    int rdi = print_syscall(child, syscall);
 
 
     int tmp = wait_for_syscall(child);
     retval = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
+
+    if (syscall == EXIT_SYSCALL || syscall == EXIT_GROUP_SYSCALL)
+      retval = rdi;
+
     fprintf(OUT, ") = %d\n", retval);
 
     if (tmp)
