@@ -199,8 +199,6 @@ void print_syscall(pid_t child, int orig)
   // Get child register and store them into regs
   ptrace(PTRACE_GETREGS, child, NULL, &regs);
 
-
-
   switch (orig)
   {
     case   9: // mmap
