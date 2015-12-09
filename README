@@ -1,1 +1,7 @@
 Mandatory
+
+Level1:
+       mem_strace
+       Use of ptrace to track system calls from a traced program
+       Prints arguments for execve, fork, vfork, clone, exit,
+       exit_group, brk, mmap, munmap, mremap, mprotect

@@ -17,8 +17,6 @@ int main(int argc, char** argv)
     exit(-1);
   }
 
-  fprintf(OUT, "Tracing...\n");
-
   pid_t pid = 0;
 
   if ((pid = fork()) == 0)

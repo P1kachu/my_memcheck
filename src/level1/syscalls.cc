@@ -1,6 +1,6 @@
 #include "syscalls.hh"
 
-const char* get_syscall_name(int id)
+static void print_syscall_name(int id)
 {
   std::ifstream in("/usr/include/asm/unistd_64.h");
   std::string s;
@@ -12,9 +12,7 @@ const char* get_syscall_name(int id)
   s = s.substr(s.find("__NR_") + 5, strlen(s.c_str()));
   s = s.substr(0, s.find(" "));
 
-  in.close();
-
-  return s.c_str();
+  fprintf(OUT, "%s(...", s.c_str());
 }
 
 static void print_addresses(pid_t child, user_regs_struct& regs)
@@ -163,7 +161,7 @@ static void print_execve(pid_t child, user_regs_struct& regs)
 #endif
 }
 
-int print_exit(pid_t child, user_regs_struct& regs)
+static int print_exit(pid_t child, user_regs_struct& regs)
 {
   print_addresses(child, regs);
   fprintf(OUT, "exit(");
@@ -175,7 +173,7 @@ int print_exit(pid_t child, user_regs_struct& regs)
   return static_cast<int>(regs.rdi);
 }
 
-int print_exitgroup(pid_t child, user_regs_struct& regs)
+static int print_exitgroup(pid_t child, user_regs_struct& regs)
 {
   print_addresses(child, regs);
   fprintf(OUT, "exit_group(");
@@ -191,7 +189,7 @@ static void print_lambda(pid_t child, int orig, user_regs_struct& regs)
 {
   print_addresses(child, regs);
 
-  fprintf(OUT, "%s(...", get_syscall_name(orig));
+  print_syscall_name(orig);
 }
 
 

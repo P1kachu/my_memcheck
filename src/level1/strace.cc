@@ -7,7 +7,8 @@ static int wait_for_syscall(pid_t child)
   while (true)
   {
     // Trace system calls from child
-    ptrace(PTRACE_SYSCALL, child, 0, 0);
+    if (ptrace(PTRACE_SYSCALL, child, 0, 0) == -1)
+      fprintf(OUT, "%sERROR:%s PTRACE_SYSCALL failed\n", RED, NONE);
 
     //       pid, status, options
     waitpid(child, &status, 0); // NOMO
@@ -29,7 +30,9 @@ int run_child(int argc, char** argv)
   memcpy(args, argv, argc * sizeof (char*));
   args[argc] = nullptr; // TODO Ask ACU
 
-  ptrace(PTRACE_TRACEME);
+  if (ptrace(PTRACE_TRACEME) == -1)
+    fprintf(OUT, "%sERROR:%s PTRACE_TRACEME failed\n", RED, NONE);
+
   kill(getpid(), SIGSTOP);
   int ret = execvp(args[0], args);
   delete[] args;
@@ -44,7 +47,8 @@ int trace_child(pid_t child)
   waitpid(child, &status, 0); //NOMO
 
   // PTRACE_O_TRACESYSGOOD is used to differentiate syscalls from normal traps
-  ptrace(PTRACE_SETOPTIONS, child, 0, PTRACE_O_TRACESYSGOOD);
+  if (ptrace(PTRACE_SETOPTIONS, child, 0, PTRACE_O_TRACESYSGOOD))
+    fprintf(OUT, "%sERROR:%s PTRACE_SETOPTIONS failed\n", RED, NONE);
 
   while (true)
   {
