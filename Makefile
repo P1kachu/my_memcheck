@@ -17,7 +17,7 @@ INCLDIR   = src/includes/
 
 ## MAIN ##
 SRCS     = $(addsuffix .cc, $(addprefix src/, main))
-SRCS    += $(addsuffix .cc, $(addprefix src/level1/, strace))
+SRCS    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
 SRCS    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
 ## OBJ CREATION ##

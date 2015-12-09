@@ -4,5 +4,6 @@
 *.a
 *.png
 *.bckp
-*.memcheck
+memcheck
 my_strace
+hardcoded

@@ -1,4 +1,5 @@
 #include "level1.hh"
+#include "syscalls.hh"
 
 /*static const char* get_syscall_name(int id)
 {
@@ -39,11 +40,11 @@ int run_child(int argc, char** argv)
   return ret;
 }
 
+
 int trace_child(pid_t child)
 {
   int status = 0;
   int retval = 0;
-  fprintf(OUT, "[pid %d] ", child);
   waitpid(child, &status, 0);
 
   // PTRACE_O_TRACESYSGOOD is used to differentiate syscalls from normal traps
@@ -55,11 +56,11 @@ int trace_child(pid_t child)
       break;
 
 
-    //                   Retrieve data from $rax
-    int syscall = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
+    // Retrieve data from $rax
+    int syscall = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * ORIG_RAX);
 
-    UNUSED(syscall); // TODO
-    // print syscall
+    print_syscall(child, syscall);
+
 
     int tmp = wait_for_syscall(child);
     retval = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
@@ -70,7 +71,7 @@ int trace_child(pid_t child)
 
   }
 
-  fprintf(OUT, "\nProcess %d exited.\n", child);
+  fprintf(OUT, "\n+++ Process %d exited with %d +++\n", child, retval);
   return 0;
 
 }
