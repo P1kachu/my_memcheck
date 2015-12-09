@@ -25,7 +25,7 @@ void* get_r_debug()
       for (unsigned j = 0; j < phdr->p_memsz / sizeof (Elf64_Shdr); ++j)
       {
         Elf64_Shdr* shdr = reinterpret_cast<Elf64_Shdr*>(j * sizeof (Elf64_Shdr) + phdr->p_vaddr);
-        fprintf(OUT, "%p --> PT_LOAD (sh_type: %d)\n", (void*)shdr, shdr->sh_type); // TODO Remove
+        fprintf(OUT, "\t-->%p (sh_type: %d)\n", (void*)shdr, shdr->sh_type); // TODO Remove
         if (shdr->sh_type == SHT_DYNAMIC)
         {
           fprintf(OUT, "Found\n");
