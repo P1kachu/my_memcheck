@@ -37,28 +37,32 @@ static struct r_debug* get_r_debug(pid_t pid)
     return NULL;
 
   // Loop on the Program header until the PT_DYNAMIC entry
-  for (unsigned i = 0; i < at_phnum; ++i)
+  unsigned i;
+  for (i = 0; i < at_phnum; ++i)
   {
     phdr = reinterpret_cast<Elf64_Phdr*>((char*)at_phdr + i * at_phent);
     if (phdr->p_type == PT_DYNAMIC)
       break;
   }
 
+  if (i >= at_phnum)
+    throw std::logic_error("PT_DYNAMIC not found");
+
   // First DT_XXXX entry
   Elf64_Dyn* dt_struct = reinterpret_cast<Elf64_Dyn*>(phdr->p_vaddr);
 
-  int i = 0;
+  int i2 = 0;
 
   // Loop until DT_DEBUG
-  while (dt_struct[i].d_tag != DT_DEBUG)
- ++i;
+  while (dt_struct[i2].d_tag != DT_DEBUG)
+ ++i2;
 
   // FIXME : Remove debug fprintf
   fprintf(OUT, "r_debug at %p\n",
-          reinterpret_cast<void*>(dt_struct[i].d_un.d_ptr));
+          reinterpret_cast<void*>(dt_struct[i2].d_un.d_ptr));
 
   // Return r_debug struct address
-  return reinterpret_cast<struct r_debug*>(dt_struct[i].d_un.d_ptr);
+  return reinterpret_cast<struct r_debug*>(dt_struct[i2].d_un.d_ptr);
 
 }
 
@@ -82,7 +86,7 @@ void Breaker::remove_breakpoint(void* addr)
     return; // No breakpoint found at this address
 
   // Get saved instruction and rewrite it in memory
-  ptrace(PTRACE_POKETEXT, pid, addr, handled_syscalls.find(addr)->second);
+  ptrace(PTRACE_POKEDATA, pid, addr, handled_syscalls.find(addr)->second);
 
   handled_syscalls.erase(addr);
 }
@@ -93,10 +97,8 @@ void Breaker::add_breakpoint(void* addr)
     return; // Address already patched
 
   // Get origin instruction and save it
-  printf("Pid: %d\n", pid);
-  printf ("%s\n", strerror(errno));
-  unsigned long instr = ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * INSTR_REG);
-  printf ("%s\n", strerror(errno));
+  unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, addr, 0);
+
   handled_syscalls.insert(std::pair<void*, unsigned long>(addr, instr));
 
   // Replace it with an int3 (CC) opcode sequence
@@ -107,5 +109,10 @@ void Breaker::print_bps() const
 {
   int i = 0;
   for (auto& iter : handled_syscalls)
-    fprintf(OUT, "%3d: %p - %8lx\n", i, iter.first, iter.second);
+  {
+    unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, iter.first, 0);
+    fprintf(OUT, "%3d: %p :\n", i, iter.first);
+    fprintf(OUT, "\t%8lx (origin)\n", iter.second);
+    fprintf(OUT, "\t%8lx (actual)\n", instr);
+  }
 }

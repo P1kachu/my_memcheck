@@ -10,5 +10,6 @@ int main()
     Breaker b(pid);
     b.add_breakpoint(b.brk);
     b.print_bps();
+    b.remove_breakpoint(b.brk);
   }
 }

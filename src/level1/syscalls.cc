@@ -1,11 +1,5 @@
 #include "syscalls.hh"
 
-/*static const char* get_protections(int prot)
-{
-
-} */
-
-
 static void print_syscall_name(int id)
 {
   std::ifstream in("/usr/include/asm/unistd_64.h");
