@@ -2,6 +2,7 @@
 
 static struct r_debug* get_r_debug(pid_t pid)
 {
+  // Open proc/[pid]/auxv
   std::ostringstream ss;
   ss << "/proc/" << pid << "/auxv";
   auto file = ss.str();
@@ -13,6 +14,7 @@ static struct r_debug* get_r_debug(pid_t pid)
   unsigned long at_phnum = 0;
   Elf64_Phdr* phdr;
 
+  // Read from flux until getting all the interesting data
   while (read(fd, &auxv_, sizeof (auxv_)) > -1)
   {
     if (auxv_.a_type == AT_PHDR)
@@ -30,9 +32,11 @@ static struct r_debug* get_r_debug(pid_t pid)
 
   close(fd);
 
+  // Something went wrong ?
   if (!at_phdr)
     return NULL;
 
+  // Loop on the Program header until the PT_DYNAMIC entry
   for (unsigned i = 0; i < at_phnum; ++i)
   {
     phdr = reinterpret_cast<Elf64_Phdr*>((char*)at_phdr + i * at_phent);
@@ -40,16 +44,20 @@ static struct r_debug* get_r_debug(pid_t pid)
       break;
   }
 
+  // First DT_XXXX entry
   Elf64_Dyn* dt_struct = reinterpret_cast<Elf64_Dyn*>(phdr->p_vaddr);
 
   int i = 0;
 
+  // Loop until DT_DEBUG
   while (dt_struct[i].d_tag != DT_DEBUG)
    ++i;
 
+  // FIXME : Remove debug fprintf
   fprintf(OUT, "r_debug at %p\n",
           reinterpret_cast<void*>(dt_struct[i].d_un.d_ptr));
 
+  // Return r_debug struct address
   return reinterpret_cast<struct r_debug*>(dt_struct[i].d_un.d_ptr);
 
 }
@@ -58,11 +66,13 @@ Breaker::Breaker(pid_t p)
 {
   pid = p;
   r_deb = get_r_debug(pid);
+
   if (!r_deb)
   {
     fprintf(OUT, "%sERROR:%s Recovering r_debug struct failed\n", RED, NONE);
     throw std::logic_error("r_debug not found");
   }
+
   brk = r_deb->r_brk;
 }
 
@@ -71,6 +81,7 @@ void Breaker::remove_breakpoint(void* addr)
   if (handled_syscalls.find(addr) == handled_syscalls.end())
     return; // No breakpoint found at this address
 
+  // Get saved instruction and rewrite it in memory
   ptrace(PTRACE_POKETEXT, pid, addr, handled_syscalls.find(addr)->second);
 
   handled_syscalls.erase(addr);
@@ -81,8 +92,14 @@ void Breaker::put_breakpoint(void* addr)
   if (handled_syscalls.find(addr) != handled_syscalls.end())
     return; // Address already patched
 
-  unsigned long instr = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * INSTR_REG);
+  // Get child register and store them
+  struct user_regs_struct regs;
+  ptrace(PTRACE_GETREGS, pid, 0, &regs);
 
+  // Get origin instruction and save it
+  unsigned long instr = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * regs.INSTR_REG);
   handled_syscalls.insert(std::pair<void*, unsigned long>(addr, instr));
+
+  // Replace it with an int3 (CC) opcode sequence
   ptrace(PTRACE_POKETEXT, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
 }
