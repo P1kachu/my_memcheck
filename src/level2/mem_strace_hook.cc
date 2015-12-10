@@ -2,6 +2,5 @@
 
 int main()
 {
-//  get_r_debug(getpid());
-    get_r_debug(2);
+  Breaker b(getpid());
 }

@@ -1,4 +1,4 @@
-###############################################################################
+QUIET=-s
 
 ## COMPILER ##
 CXX       = g++
@@ -19,7 +19,7 @@ INCLDIR   = src/includes/
 SRCS_1     = $(addsuffix .cc, $(addprefix src/level1/, strace syscalls mem_strace))
 SRCS_1    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
-SRCS_2     = $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook strace_hook))
+SRCS_2     = $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook breaker))
 SRCS_2    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
 ## OBJ CREATION ##
@@ -30,19 +30,18 @@ OBJS_2      = $(SRCS_2:.cc=.o)
 EXEC_1      = mem_strace
 EXEC_2      = mem_strace_hook
 
-###############################################################################
+# Multi threaded make of the final binary #
+multi:
+	$(MAKE) $(QUIET) -Bj all
+
 
 # Produce the final binary   #
 all: $(OBJS_1) $(OBJS_2)
 	$(CXX) $(OBJS_1) $(LDLIBS) -o $(EXEC_1)
 	$(CXX) $(OBJS_2) $(LDLIBS) -o $(EXEC_2)
 
-# Multi threaded make of the final binary #
-multi:
-	$(MAKE) -Bj all
-
 # Produce test binary, and launch #
-check: multi
+check: clean multi
 	./$(EXEC_1) ./hardcoded
 
 # Clean repository           #
@@ -51,5 +50,3 @@ clean:
 	$(RM) $(OBJS_2) $(EXEC_2)
 
 .PHONY: multi all check clean bonus
-
-###############################################################################

@@ -2,26 +2,27 @@
 # define DEFINES_HH
 
 # include <string>
+# include <vector>
 # include <fstream>
-# include <iostream>
 # include <sstream>
+# include <iostream>
+# include <stdexcept>
+
+# include <link.h>
+# include <stdio.h>
+# include <fcntl.h>
 # include <string.h>
 # include <unistd.h>
-# include <stdio.h>
 # include <stdlib.h>
-# include <sys/ptrace.h>
-# include <sys/types.h>
-# include <sys/stat.h>
 # include <sys/reg.h>
-# include <fcntl.h>
-# include <link.h>
+# include <sys/stat.h>
 # include <sys/user.h>
 # include <sys/wait.h>
 # include <sys/mman.h>
-
-// Level 2
 # include <sys/auxv.h>
-//# include <sys/elf.h>
+# include <sys/types.h>
+# include <sys/ptrace.h>
+
 
 # include "colors.hh"
 # include "helpers.hh"

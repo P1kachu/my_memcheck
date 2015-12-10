@@ -251,9 +251,7 @@ int print_syscall(pid_t child, int orig)
       return print_exitgroup(child, regs);
 
     default: // don't care
-#if BONUS
       print_lambda(child, orig, regs);
-#endif
       break;
   }
 

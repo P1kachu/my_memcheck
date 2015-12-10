@@ -67,7 +67,6 @@ int trace_child(pid_t child)
 
     int rdi = print_syscall(child, syscall);
 
-
     int tmp = wait_for_syscall(child);
     retval = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
 
