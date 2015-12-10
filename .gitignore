@@ -8,3 +8,5 @@ memcheck
 my_strace
 hardcoded
 .#*
+.gdb*
+*.txt

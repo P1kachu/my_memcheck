@@ -1,6 +1,6 @@
 #include "level2.hh"
 
-void* get_r_debug(pid_t pid)
+struct r_debug* get_r_debug(pid_t pid)
 {
   std::ostringstream ss;
   ss << "/proc/" << pid << "/auxv";
@@ -35,10 +35,7 @@ void* get_r_debug(pid_t pid)
   {
     phdr = reinterpret_cast<Elf64_Phdr*>((char*)at_phdr + i * at_phent);
     if (phdr->p_type == PT_DYNAMIC)
-    {
-      fprintf(OUT, "Found (%p)\n", (void*)phdr->p_vaddr);
       break;
-    }
   }
 
   Elf64_Dyn* dt_struct = reinterpret_cast<Elf64_Dyn*>(phdr->p_vaddr);
@@ -49,8 +46,9 @@ void* get_r_debug(pid_t pid)
   while (dt_struct[i].d_tag != DT_DEBUG)
     ++i;
 
-  fprintf(OUT, "The GRAAL: %p\n", reinterpret_cast<void*>(dt_struct[i].d_un.d_ptr));
+  fprintf(OUT, "The GRAAL: %p\n",
+          reinterpret_cast<void*>(dt_struct[i].d_un.d_ptr));
 
-  return (void*)0;
+  return reinterpret_cast<struct r_debug*>(dt_struct[i].d_un.d_ptr);
 
 }
