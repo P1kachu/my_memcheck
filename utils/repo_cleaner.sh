@@ -2,7 +2,7 @@
 
 find . \( \
      -name "._bckp*" \
-     -name "*.bckp" \
+     -o -name ".*.bckp" \
      -o  -name "*.o" \
      -o  -name "CMakeCache.txt" \
      -o  -name "CMakeFiles" \

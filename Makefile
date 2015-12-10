@@ -1,4 +1,4 @@
-QUIET=-s
+QUIET=#-s
 
 ## COMPILER ##
 CXX       = g++
@@ -46,6 +46,7 @@ check: clean multi
 
 # Clean repository           #
 clean:
+	./utils/repo_cleaner.sh
 	$(RM) $(OBJS_1) $(EXEC_1)
 	$(RM) $(OBJS_2) $(EXEC_2)
 

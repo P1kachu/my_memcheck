@@ -1,12 +1,14 @@
 #ifndef DEFINES_HH
 # define DEFINES_HH
 
+# include <map>
 # include <string>
 # include <vector>
 # include <fstream>
 # include <sstream>
 # include <iostream>
 # include <stdexcept>
+# include <algorithm>
 
 # include <link.h>
 # include <stdio.h>
@@ -50,7 +52,20 @@
                           | PTRACE_O_TRACECLONE \
                           | PTRACE_O_TRACEEXIT
 
+# define TRAP_LEN    1
+# define TRAP_INST   0xCC
 
+# if defined(__i386)
+
+#  define INSTR_REG   EIP
+#  define TRAP_MASK   0xFFFFFF00
+
+# elif defined(__x86_64)
+
+#  define INSTR_REG   RIP
+#  define TRAP_MASK   0xFFFFFFFFFFFFFF00
+
+# endif /* !ARCH */
 
 //mem_strace_hook
 

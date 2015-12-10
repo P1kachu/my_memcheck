@@ -45,7 +45,7 @@ static struct r_debug* get_r_debug(pid_t pid)
   int i = 0;
 
   while (dt_struct[i].d_tag != DT_DEBUG)
-    ++i;
+   ++i;
 
   fprintf(OUT, "r_debug at %p\n",
           reinterpret_cast<void*>(dt_struct[i].d_un.d_ptr));
@@ -64,4 +64,25 @@ Breaker::Breaker(pid_t p)
     throw std::logic_error("r_debug not found");
   }
   brk = r_deb->r_brk;
+}
+
+void Breaker::remove_breakpoint(void* addr)
+{
+  if (handled_syscalls.find(addr) == handled_syscalls.end())
+    return; // No breakpoint found at this address
+
+  ptrace(PTRACE_POKETEXT, pid, addr, handled_syscalls.find(addr)->second);
+
+  handled_syscalls.erase(addr);
+}
+
+void Breaker::put_breakpoint(void* addr)
+{
+  if (handled_syscalls.find(addr) != handled_syscalls.end())
+    return; // Address already patched
+
+  unsigned long instr = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * INSTR_REG);
+
+  handled_syscalls.insert(std::pair<void*, unsigned long>(addr, instr));
+  ptrace(PTRACE_POKETEXT, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
 }
