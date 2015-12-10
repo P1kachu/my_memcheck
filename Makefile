@@ -16,23 +16,26 @@ CXXFLAGS += -fdiagnostics-color=always
 INCLDIR   = src/includes/
 
 ## MAIN ##
-#SRCS     = $(addsuffix .cc, $(addprefix src/level1/, strace syscalls mem_strace))
-#SRCS    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
+SRCS_1     = $(addsuffix .cc, $(addprefix src/level1/, strace syscalls mem_strace))
+SRCS_1    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
-SRCS     = $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook strace_hook))
-SRCS    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
+SRCS_2     = $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook strace_hook))
+SRCS_2    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
 ## OBJ CREATION ##
-OBJS      = $(SRCS:.cc=.o)
+OBJS_1      = $(SRCS_1:.cc=.o)
+OBJS_2      = $(SRCS_2:.cc=.o)
 
 ## EXEC NAME ##
-EXEC      = memcheck
+EXEC_1      = mem_strace
+EXEC_2      = mem_strace_hook
 
 ###############################################################################
 
 # Produce the final binary   #
-all: $(OBJS)
-	$(CXX) $(OBJS) $(LDLIBS) -o $(EXEC)
+all: $(OBJS_1) $(OBJS_2)
+	$(CXX) $(OBJS_1) $(LDLIBS) -o $(EXEC_1)
+	$(CXX) $(OBJS_2) $(LDLIBS) -o $(EXEC_2)
 
 # Multi threaded make of the final binary #
 multi:
@@ -40,11 +43,12 @@ multi:
 
 # Produce test binary, and launch #
 check: multi
-	./$(EXEC) ./hardcoded
+	./$(EXEC_1) ./hardcoded
 
 # Clean repository           #
 clean:
-	$(RM) $(OBJS) $(EXEC)
+	$(RM) $(OBJS_1) $(EXEC_1)
+	$(RM) $(OBJS_2) $(EXEC_2)
 
 .PHONY: multi all check clean bonus
 

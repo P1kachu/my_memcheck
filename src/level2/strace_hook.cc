@@ -48,7 +48,7 @@ struct r_debug* get_r_debug(pid_t pid)
   int i = 0;
 
   while (dt_struct[i].d_tag != DT_DEBUG)
-  ++i;
+++i;
 
   fprintf(OUT, "r_debug at %p\n",
           reinterpret_cast<void*>(dt_struct[i].d_un.d_ptr));

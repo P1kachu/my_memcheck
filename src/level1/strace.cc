@@ -28,7 +28,7 @@ int run_child(int argc, char** argv)
 {
   char** args = new char* [argc + 1];
   memcpy(args, argv, argc * sizeof (char*));
-  args[argc] = nullptr; // TODO Ask ACU if this is clean
+  args[argc] = nullptr; // TODO : Ask ACU if this is clean
 
   if (ptrace(PTRACE_TRACEME) == -1)
     fprintf(OUT, "%sERROR:%s PTRACE_TRACEME failed\n", RED, NONE);
@@ -53,7 +53,7 @@ int trace_child(pid_t child)
   // FOLLOW_FORK_MODE Bonus
   //if (ptrace(PTRACE_SETOPTIONS, child, 0, FOLLOW_FORK_MODE) == -1)
   //  fprintf(OUT, "%sERROR:%s FOLLOW_FORK_MODE failed\n", RED, NONE);
-  // TODO ASK ACU why the output disappear
+  // TODO : ASK ACU why the output disappear
 
   while (true)
   {

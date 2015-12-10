@@ -1,10 +1,18 @@
 #include "level1.hh"
 
+// Bonus maybe ?
+typedef struct threading
+{
+  int argc;
+  char **argv;
+  pid_t pid;
+} s_threading;
+
 int main(int argc, char** argv)
 {
   if (argc < 2)
   {
-    fprintf(OUT, "Usage: %s binary_to_trace[ARGS]\n", argv[0]);
+    fprintf(OUT, "Usage: %s binary_to_trace [ARGS]\n", argv[0]);
     return 0;
   }
 

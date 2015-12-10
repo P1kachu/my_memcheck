@@ -10,3 +10,5 @@ hardcoded
 .#*
 .gdb*
 *.txt
+mem_strace
+mem_strace_hook
