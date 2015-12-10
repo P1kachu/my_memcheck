@@ -37,8 +37,9 @@ static struct r_debug* get_r_debug(pid_t pid)
     return NULL;
 
   // Binary not an ELF ?
-  if (!is_elf(auxv_))
-    return NULL;
+  // FIXME : Get Ehdr
+  //if (!is_elf(auxv_))
+  //  return NULL;
 
   // Loop on the Program header until the PT_DYNAMIC entry
   unsigned i;

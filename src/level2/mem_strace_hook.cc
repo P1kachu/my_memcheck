@@ -2,6 +2,7 @@
 
 static int mem_hook(std::string name, pid_t pid)
 {
+  setenv("LD_BIND_NOW", "1", 1);
   ptrace(PTRACE_ATTACH, pid, 0, 0);
   Breaker b(name, pid);
   b.add_breakpoint(b.brk);

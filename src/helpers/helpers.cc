@@ -10,6 +10,5 @@ bool is_elf(Elf64_Ehdr *hdr)
   return hdr->e_ident[EI_MAG0] == ELFMAG0
     && hdr->e_ident[EI_MAG1] == ELFMAG1
     && hdr->e_ident[EI_MAG2] == ELFMAG2
-    && hdr->e_ident[EI_MAG3] == ELFMAG3
-    && hdr->e_ident[EI_CLASS] == ELFCLASS64;
+    && hdr->e_ident[EI_MAG3] == ELFMAG3;
 }
