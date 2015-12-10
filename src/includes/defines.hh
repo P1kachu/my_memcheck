@@ -13,6 +13,7 @@
 # include <link.h>
 # include <stdio.h>
 # include <fcntl.h>
+# include <errno.h>
 # include <string.h>
 # include <unistd.h>
 # include <stdlib.h>
@@ -57,12 +58,12 @@
 
 # if defined(__i386)
 
-#  define INSTR_REG   eip
+#  define INSTR_REG   EIP
 #  define TRAP_MASK   0xFFFFFF00
 
 # elif defined(__x86_64)
 
-#  define INSTR_REG   rip
+#  define INSTR_REG   RIP
 #  define TRAP_MASK   0xFFFFFFFFFFFFFF00
 
 # endif /* !ARCH */

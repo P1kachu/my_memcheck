@@ -73,7 +73,7 @@ Breaker::Breaker(pid_t p)
     throw std::logic_error("r_debug not found");
   }
 
-  brk = r_deb->r_brk;
+  brk = reinterpret_cast<void*>(r_deb->r_brk);
 }
 
 void Breaker::remove_breakpoint(void* addr)
@@ -87,19 +87,25 @@ void Breaker::remove_breakpoint(void* addr)
   handled_syscalls.erase(addr);
 }
 
-void Breaker::put_breakpoint(void* addr)
+void Breaker::add_breakpoint(void* addr)
 {
   if (handled_syscalls.find(addr) != handled_syscalls.end())
     return; // Address already patched
 
-  // Get child register and store them
-  struct user_regs_struct regs;
-  ptrace(PTRACE_GETREGS, pid, 0, &regs);
-
   // Get origin instruction and save it
-  unsigned long instr = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * regs.INSTR_REG);
+  printf("Pid: %d\n", pid);
+  printf ("%s\n", strerror(errno));
+  unsigned long instr = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * INSTR_REG);
+  printf ("%s\n", strerror(errno));
   handled_syscalls.insert(std::pair<void*, unsigned long>(addr, instr));
 
   // Replace it with an int3 (CC) opcode sequence
   ptrace(PTRACE_POKETEXT, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
+}
+
+void Breaker::print_bps() const
+{
+  int i = 0;
+  for (auto& iter : handled_syscalls)
+    fprintf(OUT, "%3d: %p - %8lx\n", i, iter.first, iter.second);
 }

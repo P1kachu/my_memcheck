@@ -43,6 +43,7 @@ all: $(OBJS_1) $(OBJS_2)
 # Produce test binary, and launch #
 check: clean multi
 	./$(EXEC_1) ./hardcoded
+	./$(EXEC_2)
 
 # Clean repository           #
 clean:

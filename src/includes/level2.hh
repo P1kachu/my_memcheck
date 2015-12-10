@@ -8,10 +8,12 @@ class Breaker
 public:
   Breaker(pid_t pid);
   void remove_breakpoint(void* addr);
-  void put_breakpoint(void* addr);
+  void add_breakpoint(void* addr);
+
+  void print_bps() const;
 
   std::map<void*, unsigned long> handled_syscalls;
-  ElfW(Addr) brk;
+  void* brk;
   pid_t pid;
   struct r_debug* r_deb;
 };
