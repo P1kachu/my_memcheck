@@ -1,6 +1,6 @@
 #include "level1.hh"
 
-// Bonus maybe ?
+// FIXME: Bonus maybe ?
 typedef struct threading
 {
   int argc;

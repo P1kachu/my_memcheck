@@ -36,6 +36,10 @@ static struct r_debug* get_r_debug(pid_t pid)
   if (!at_phdr)
     return NULL;
 
+  // Binary not an ELF ?
+  if (!is_elf(auxv_))
+    return NULL;
+
   // Loop on the Program header until the PT_DYNAMIC entry
   unsigned i;
   for (i = 0; i < at_phnum; ++i)
@@ -66,15 +70,15 @@ static struct r_debug* get_r_debug(pid_t pid)
 
 }
 
-Breaker::Breaker(pid_t p)
+Breaker::Breaker(std::string binary_name, pid_t p)
 {
   pid = p;
   r_deb = get_r_debug(pid);
-
+  name = binary_name;
   if (!r_deb)
   {
     fprintf(OUT, "%sERROR:%s Recovering r_debug struct failed\n", RED, NONE);
-    throw std::logic_error("r_debug not found");
+    throw std::logic_error("r_debug not found. Statically linked perhaps ?");
   }
 
   brk = reinterpret_cast<void*>(r_deb->r_brk);
@@ -111,7 +115,11 @@ void Breaker::print_bps() const
   for (auto& iter : handled_syscalls)
   {
     unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, iter.first, 0);
-    fprintf(OUT, "%3d: %p :\n", i, iter.first);
+    if (iter.first == brk)
+      fprintf(OUT, "%3d: %p (r_brk):\n", i, iter.first);
+    else
+      fprintf(OUT, "%3d: %p :\n", i, iter.first);
+
     fprintf(OUT, "\t%8lx (origin)\n", iter.second);
     fprintf(OUT, "\t%8lx (actual)\n", instr);
   }

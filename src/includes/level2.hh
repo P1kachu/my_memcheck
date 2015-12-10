@@ -6,7 +6,7 @@
 class Breaker
 {
 public:
-  Breaker(pid_t pid);
+  Breaker(std::string binary_name, pid_t pid);
   void remove_breakpoint(void* addr);
   void add_breakpoint(void* addr);
 
@@ -16,6 +16,7 @@ public:
   void* brk;
   pid_t pid;
   struct r_debug* r_deb;
+  std::string name;
 };
 
 #endif /* LEVEL2_HH */
