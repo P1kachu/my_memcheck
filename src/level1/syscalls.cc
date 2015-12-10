@@ -3,7 +3,7 @@
 /*static const char* get_protections(int prot)
 {
 
-}*/
+} */
 
 
 static void print_syscall_name(int id)
@@ -24,7 +24,7 @@ static void print_syscall_name(int id)
 static void print_addresses(pid_t child, user_regs_struct& regs)
 {
 #if BONUS
-  fprintf(OUT, "[pid %04d] [0x%08llx] ", child, regs.rip);
+  fprintf(OUT, "[pid %04d][0x%08llx] ", child, regs.rip);
 #else
   UNUSED(child);
   UNUSED(regs);
@@ -112,7 +112,7 @@ static void print_mremap(pid_t child, user_regs_struct& regs)
     static_cast<size_t>(regs.rdx), regs.r10);
 
   sprintf(buffer + strlen(buffer),
-          "flags = %d, [new_addr = 0x%llx]",
+          "flags = %d,[new_addr = 0x%llx]",
     static_cast<int>(regs.r8), regs.r9);
 
   fprintf(OUT, buffer);
@@ -158,7 +158,7 @@ static void print_execve(pid_t child, user_regs_struct& regs)
 #if BONUS
   char b[128];
   char* str = reinterpret_cast<char*>(regs.rdi);
-  // FIXME Ask ACU
+  // FIXME : Correct output name in execve
   sprintf(b, "filename = %s, argv = %p, ",
           str ? str : "NULL", reinterpret_cast<void*>(regs.rsi));
   sprintf(b + strlen(b), "envp = %p", reinterpret_cast<void*>(regs.rdx));

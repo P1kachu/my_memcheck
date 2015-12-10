@@ -26,7 +26,7 @@ static int wait_for_syscall(pid_t child)
 
 int run_child(int argc, char** argv)
 {
-  char** args = new char*[argc + 1];
+  char** args = new char* [argc + 1];
   memcpy(args, argv, argc * sizeof (char*));
   args[argc] = nullptr; // TODO Ask ACU if this is clean
 
@@ -81,7 +81,7 @@ int trace_child(pid_t child)
 
   }
 
-  fprintf(OUT, "\n+++ Process %d exited with %d +++\n", child, retval);
+  fprintf(OUT, "\n+++ Process %d exited with %d+++\n", child, retval);
   return 0;
 
 }
