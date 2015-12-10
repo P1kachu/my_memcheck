@@ -51,7 +51,7 @@ static struct r_debug* get_r_debug(pid_t pid)
 
   // Loop until DT_DEBUG
   while (dt_struct[i].d_tag != DT_DEBUG)
-   ++i;
+ ++i;
 
   // FIXME : Remove debug fprintf
   fprintf(OUT, "r_debug at %p\n",
@@ -95,7 +95,7 @@ void Breaker::add_breakpoint(void* addr)
   // Get origin instruction and save it
   printf("Pid: %d\n", pid);
   printf ("%s\n", strerror(errno));
-  unsigned long instr = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * INSTR_REG);
+  unsigned long instr = ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * INSTR_REG);
   printf ("%s\n", strerror(errno));
   handled_syscalls.insert(std::pair<void*, unsigned long>(addr, instr));
 
