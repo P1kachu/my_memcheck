@@ -7,14 +7,14 @@ class Breaker
 {
 public:
   Breaker(std::string binary_name, pid_t pid);
-  void remove_breakpoint(void* addr);
-  void add_breakpoint(void* addr);
+  void remove_breakpoint(const char* region, void* addr);
+  void add_breakpoint(const char* region, void* addr);
   ssize_t find_syscalls(void* addr);
 
   void print_bps() const;
 
   // Vars
-  std::map<void*, unsigned long> handled_syscalls;
+  std::map<const char*, std::map<void*, unsigned long>> handled_syscalls;
   void* brk;
   pid_t pid;
   struct r_debug* r_deb;

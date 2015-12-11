@@ -5,3 +5,6 @@ Level1:
        Use of ptrace to track system calls from a traced program
        Prints arguments for execve, fork, vfork, clone, exit,
        exit_group, brk, mmap, munmap, mremap, mprotect
+       Catches return code with edi (exit*)
+       prints PID and where the error was raised
+       Prints other functions names, but no arguments

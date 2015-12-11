@@ -33,7 +33,6 @@ int run_child(int argc, char** argv)
   if (ptrace(PTRACE_TRACEME) == -1)
     fprintf(OUT, "%sERROR:%s PTRACE_TRACEME failed\n", RED, NONE);
 
-  kill(getpid(), SIGSTOP);
   int ret = execvp(args[0], args);
   delete[] args;
   return ret;
@@ -70,10 +69,13 @@ int trace_child(pid_t child)
     int tmp = wait_for_syscall(child);
     retval = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
 
+    if (retval >= 0)
+      fprintf(OUT, ") = %d\n", retval);
+    else
+      fprintf(OUT, ") = ?\n");
+
     if (syscall == EXIT_SYSCALL || syscall == EXIT_GROUP_SYSCALL)
       retval = rdi;
-
-    fprintf(OUT, ") = %d\n", retval);
 
     if (tmp)
       break;

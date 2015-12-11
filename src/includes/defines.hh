@@ -26,7 +26,7 @@
 # include <sys/auxv.h>
 # include <sys/types.h>
 # include <sys/ptrace.h>
-//# include <capstone/capstone.h>
+# include <capstone/capstone.h>
 
 # include "colors.hh"
 # include "helpers.hh"
@@ -37,6 +37,7 @@
 
 
 // mem_strace
+# define MAIN_CHILD         "MAIN"
 # define NULL_STRING        "NULL"
 # define MMAP_SYSCALL       9
 # define MPROTECT_SYSCALL   10

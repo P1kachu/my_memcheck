@@ -3,37 +3,3 @@ Mandatory
 print filenames from execve correctly
 Delete NOMO tags
 follow_fork_mode (multi htreading)
-
-## NOTES ##
-- x86_64, instruction: syscall, syscall # and retval in $rax
-- Calling conventions:
-
-        User-level applications use as integer registers for passing
-        the sequence %rdi, %rsi, %rdx, %rcx, %r8 and %r9. The kernel
-        interface uses %rdi, %rsi, %rdx, %r10, %r8 and %r9.
-
-        A system-call is done via the syscall instruction. The
-        kernel destroys registers %rcx and %r11.
-
-        The number of the syscall has to be passed in register
-        %rax.
-
-        System-calls are limited to six arguments, no argument
-        is passed directly on the stack.
-
-        Returning from the syscall, register %rax contains the
-        result of the system-call. A value in the range between -4095
-        and -1 indicates an error, it is -errno.
-
-        Only values of class INTEGER or class MEMORY are
-        passed to the kernel.
-
-
-
-        Once arguments are classified, the registers get assigned (in
-        left-to-right order) for passing as follows:
-
-        If the class is MEMORY, pass the argument on the stack.
-        If the class is INTEGER, the next available register
-        of the sequence %rdi, %rsi, %rdx, %rcx, %r8 and %r9 is
-        used
