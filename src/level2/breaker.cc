@@ -125,3 +125,21 @@ void Breaker::print_bps() const
     fprintf(OUT, "\t%8lx (actual)\n", instr);
   }
 }
+
+ssize_t Breaker::find_syscalls(void* addr)
+{
+  constexpr int page_size = 4096;
+  struct iovec local[1];
+  struct iovec remote[1];
+  char buf[page_size];
+  ssize_t nread;
+
+  local[0].iov_base = buf;
+  local[0].iov_len = 10;
+  remote[0].iov_base = addr;
+  remote[0].iov_len = page_size;
+
+  nread = process_vm_readv(pid, local, 1, remote, 1, 0);
+
+  return nread;
+}

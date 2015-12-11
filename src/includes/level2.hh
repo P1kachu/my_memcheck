@@ -9,9 +9,11 @@ public:
   Breaker(std::string binary_name, pid_t pid);
   void remove_breakpoint(void* addr);
   void add_breakpoint(void* addr);
+  ssize_t find_syscalls(void* addr);
 
   void print_bps() const;
 
+  // Vars
   std::map<void*, unsigned long> handled_syscalls;
   void* brk;
   pid_t pid;

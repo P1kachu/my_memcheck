@@ -18,6 +18,7 @@
 # include <unistd.h>
 # include <stdlib.h>
 # include <sys/reg.h>
+# include <sys/uio.h>
 # include <sys/stat.h>
 # include <sys/user.h>
 # include <sys/wait.h>

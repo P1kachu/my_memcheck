@@ -4,16 +4,21 @@ QUIET=#-s
 CXX       = g++
 
 ## FLAGS ##
-CXXFLAGS  = -Wall -Wextra -Werror -pedantic  -std=c++11  -I $(INCLDIR)
+CXXFLAGS  = -Wall -Wextra -Werror -pedantic  -std=c++11 -I $(INCLDIR)
 CXXFLAGS += -pedantic -g
 CXXFLAGS += -Wundef -Wshadow -Wpointer-arith -Wcast-qual
 CXXFLAGS += -Wcast-align
 CXXFLAGS += -Wmissing-declarations
 CXXFLAGS += -Wunreachable-code
 CXXFLAGS += -fdiagnostics-color=always
+#CXXFLAGS += -O3
 
 ## INCLUDES DIRECTORY ##
 INCLDIR   = src/includes/
+
+## LIBS ##
+
+LDFLAGS = -lcapstone
 
 ## MAIN ##
 SRCS_1     = $(addsuffix .cc, $(addprefix src/level1/, strace syscalls mem_strace))
@@ -34,11 +39,10 @@ EXEC_2      = mem_strace_hook
 multi:
 	$(MAKE) $(QUIET) -Bj all
 
-
 # Produce the final binary   #
 all: $(OBJS_1) $(OBJS_2)
-	$(CXX) $(OBJS_1) $(LDLIBS) -o $(EXEC_1)
-	$(CXX) $(OBJS_2) $(LDLIBS) -o $(EXEC_2)
+	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
+	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
 
 # Produce test binary, and launch #
 check: clean multi
