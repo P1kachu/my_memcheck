@@ -12,3 +12,4 @@ hardcoded
 *.txt
 mem_strace
 mem_strace_hook
+*.out
