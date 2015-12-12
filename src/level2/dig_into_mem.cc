@@ -152,6 +152,42 @@ void print_string_from_mem(void* str, pid_t pid)
 
 }
 
+int disass(ElfW(Phdr)* phdr, Breaker b, pid_t pid)
+{
+        csh handle;
+        cs_insn *insn;
+        size_t count;
+
+        char buffer[DISASS_SIZE];
+        struct iovec local;
+        struct iovec remote;
+        local.iov_base  = &buffer;
+        local.iov_len   = DISASS_SIZE;
+        remote.iov_base = (void*)(phdr->p_vaddr + (char*)phdr->p_offset);
+        remote.iov_len  = DISASS_SIZE;
+
+        ssize_t nread = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+
+        if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
+                return -1;
+
+        count = cs_disasm(handle, buffer, nread, 0x0, 0, &insn);
+
+        if (count > 0)
+        {
+                size_t j;
+                for (j = 0; j < count; j++)
+                {
+                }
+
+                cs_free(insn, count);
+        }
+        else
+                printf("ERROR: Failed to disassemble given code!\n");
+
+        cs_close(&handle);
+        return 0;
+}
 
 static void retrieve_infos(void* elf_header, pid_t pid, Breaker* b)
 {
@@ -190,10 +226,9 @@ static void retrieve_infos(void* elf_header, pid_t pid, Breaker* b)
                         else
                                 printf("Weird shit Found\n");
                         UNUSED(b);
+                        disass(phdr, b, pid);
                 }
         }
-
-
 }
 
 

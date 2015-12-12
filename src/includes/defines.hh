@@ -46,6 +46,7 @@
 
 # define MAIN_CHILD         "MAIN"
 # define NULL_STRING        "NULL"
+# define DISASS_SIZE        1024
 # define MMAP_SYSCALL       9
 # define MPROTECT_SYSCALL   10
 # define MUNMAP_SYSCALL     11
