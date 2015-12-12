@@ -199,3 +199,8 @@ void Breaker::print_bps() const
                 fprintf(OUT, "\t%8lx (actual)\n", instr);
         }
 }
+
+int Breaker::parse_elf(char* name)
+{
+
+}
