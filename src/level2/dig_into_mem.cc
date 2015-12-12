@@ -156,6 +156,7 @@ void print_string_from_mem(void* str, pid_t pid)
 static void retrieve_infos(void* elf_header, pid_t pid)
 {
         ElfW(Ehdr) header;
+        char buffer[1024];
         struct iovec local;
         struct iovec remote;
         local.iov_base  = &header;
@@ -164,36 +165,33 @@ static void retrieve_infos(void* elf_header, pid_t pid)
         remote.iov_len  = sizeof (ElfW(Ehdr));
         process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-        void* tmp = (char*)elf_header + header.e_shoff;
-        ElfW(Shdr)** sections = (ElfW(Shdr)**) tmp;
+        unsigned long phent = 0;
+        unsigned long phnum = 0;
 
-        ElfW(Shdr) sh_strtab;
+        void* at_phdr = get_phdr(phent, phnum, pid);
 
-        local.iov_base  = &sh_strtab;
-        local.iov_len   = sizeof (ElfW(Shdr));
-        remote.iov_base = sections + header.e_shstrndx * sizeof(ElfW(Shdr));
-        remote.iov_len  = sizeof (ElfW(Shdr));
-        process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-        return; // FIXME : Debug
-
-        char* sh_strtab_p = (char*)elf_header + sh_strtab.sh_offset;
-        printf("sh_strtab: %p\n", sh_strtab_p);
-        printf("sections: %p\n", (void*)sections);
-
-        // Skip SHT_NULL
-        for (int i = 1; i < header.e_shnum; ++i)
+        for (unsigned i = 0; i < header.e_phnum; ++i)
         {
-                ElfW(Shdr) section;
-                local.iov_base  = &section;
-                local.iov_len   = sizeof (ElfW(Shdr));
-                remote.iov_base = &sections[i];
-                remote.iov_len  = sizeof (ElfW(Shdr));
+                local.iov_base = buffer;
+                local.iov_len  = sizeof (Elf64_Phdr);
+                remote.iov_base = (char*)at_phdr + i * phent;
+                remote.iov_len  = sizeof (Elf64_Phdr);
+
                 process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-                printf("Section %d: %d", i, section.sh_type);
-                print_string_from_mem(section.sh_name + sh_strtab_p, pid);
+                ElfW(Phdr)* phdr = reinterpret_cast<Elf64_Phdr*>(buffer);
+                if (phdr->p_flags & PF_X)
+                {
+                        if (phdr->p_type == PT_LOAD)
+                                printf("Executable PT_LOAD Found\n");
+                        else if (phdr->p_type == PT_PHDR)
+                                printf("Executable PHDR Found\n");
+                        else
+                                printf("Weird shit Found\n");
+                }
         }
+
 
 }
 
@@ -221,7 +219,6 @@ void browse_link_map(void* link_m, pid_t pid)
 
         do
         {
-
                 process_vm_readv(pid, &local, 1, &remote, 1, 0);
                 if (map.l_addr)
                 {
@@ -229,16 +226,15 @@ void browse_link_map(void* link_m, pid_t pid)
                         // l_addr is not a difference or any stewpid thing
                         // like that apparently, but the base address the
                         // shared object is loaded at.
-                        retrieve_infos((void*)map.l_addr, pid);
                         fprintf(OUT, "l_addr: %p\n", (void*)map.l_addr);
                         fprintf(OUT, "%sl_name%s: ", YELLOW, NONE);
                         print_string_from_mem(map.l_name, pid);
                         fprintf(OUT, "l_ld: %p\n", (void*)map.l_ld);
+                        retrieve_infos((void*)map.l_addr, pid);
                         fprintf(OUT, "\n");
                 }
                 remote.iov_base = map.l_next;
         } while (map.l_next);
 
         fprintf(OUT, "\n");
-
 }

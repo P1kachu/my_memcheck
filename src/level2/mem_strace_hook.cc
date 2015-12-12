@@ -13,7 +13,7 @@ static unsigned long get_xip(pid_t pid)
 
 static int mem_hook(std::string name, pid_t pid)
 {
-        setenv("LD_BIND_NOW", "1", 1); //FIXME : Potential dead code
+        setenv("LD_BIND_NOW", "1", 1); //FIXME : Potentialy bad
         int status = 0;
         waitpid(pid, &status, 0);
 
@@ -31,26 +31,21 @@ static int mem_hook(std::string name, pid_t pid)
 
                 auto bp = reinterpret_cast<void*>(get_xip(pid) - 1);
 
-                printf("stus %d\n", status);
-
                 if (WIFEXITED(status))
                         break;
                 if (WIFSIGNALED(status))
                         break;
 
-                fprintf(OUT, "%s[%d]%s Signal received: %p - %s\n", GREEN, pid,
-                        NONE, (void*)bp, strsignal(WSTOPSIG(status)));
+                fprintf(OUT, "%s[%d]%s Signal received: %p - %s%s%s\n",
+                        GREEN, pid, NONE, (void*)bp, RED,
+                        strsignal(WSTOPSIG(status)), NONE);
 
                 try
                 {
                         if (b.is_from_us(bp))
                                 b.handle_bp(bp);
                 }
-                catch (std::logic_error)
-                {
-                        fprintf(OUT, "Something\n");
-                        break;
-                }
+                catch (std::logic_error) { break; }
         }
 
 
