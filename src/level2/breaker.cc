@@ -59,19 +59,19 @@ void Breaker::remove_breakpoint(const char* region, void* addr)
 {
         UNUSED(region);
         /*
-        auto it = handled_syscalls.find(region);
+          auto it = handled_syscalls.find(region);
 
-        printf("##%s##\n", it->first);
+          printf("##%s##\n", it->first);
 
-        if (it == handled_syscalls.end())
-        {
-                fprintf(OUT,
-                        "%sERROR:%s Region %s not found in map (remove)\n",
-                        RED, NONE, region);
-                return;
-        }
+          if (it == handled_syscalls.end())
+          {
+          fprintf(OUT,
+          "%sERROR:%s Region %s not found in map (remove)\n",
+          RED, NONE, region);
+          return;
+          }
 
-        auto breaks = it->second;
+          auto breaks = it->second;
         */
         auto& breaks = handled_syscalls;
 
@@ -93,25 +93,25 @@ void Breaker::add_breakpoint(const char* region, void* addr)
         print_errno();
 
         /*
-        auto it = handled_syscalls.find(region);
+          auto it = handled_syscalls.find(region);
 
-        if (it == handled_syscalls.end())
-        {
-                std::map<void*, unsigned long>* inner =
-                        new std::map<void*, unsigned long>;
-                inner->insert(std::make_pair(addr, instr));
-                handled_syscalls.insert(std::pair<const char*,
-                                        std::map<void*,
-                                        unsigned long>>(region, * inner));
-                return;
-        }
+          if (it == handled_syscalls.end())
+          {
+          std::map<void*, unsigned long>* inner =
+          new std::map<void*, unsigned long>;
+          inner->insert(std::make_pair(addr, instr));
+          handled_syscalls.insert(std::pair<const char*,
+          std::map<void*,
+          unsigned long>>(region, * inner));
+          return;
+          }
 
-        //auto breaks = it->second;
+          //auto breaks = it->second;
 
-        if (breaks.find(addr) != breaks.end())
-                return; // Address already patched
+          if (breaks.find(addr) != breaks.end())
+          return; // Address already patched
 
-        breaks.insert(std::pair<void*, unsigned long>(addr, instr));
+          breaks.insert(std::pair<void*, unsigned long>(addr, instr));
         */
 
         // Replace it with an int3 (CC) opcode sequence
@@ -179,11 +179,11 @@ void Breaker::print_bps() const
 {
         int i = 0;
         /*
-        for (auto& region : handled_syscalls)
-        {
-                fprintf(OUT, "%s: ", region.first);
-                for (auto& iter : region.second)
-                {
+          for (auto& region : handled_syscalls)
+          {
+          fprintf(OUT, "%s: ", region.first);
+          for (auto& iter : region.second)
+          {
 
         */
         for (auto& iter : handled_syscalls)

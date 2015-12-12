@@ -34,15 +34,15 @@
 # define OUT stdout
 # define UNUSED(x) { (x) = (x); }
 # define BONUS 1
-# define print_errno()                                          \
-  {                                                             \
-    if (errno)                                                  \
-    {                                                           \
-      fprintf(OUT, "%sERROR%s Something went wrong: %s\n",      \
-              RED, NONE, strerror(errno));                      \
-      exit(-1);                                                 \
-    }                                                           \
-  }
+# define print_errno()                                                       \
+        {                                                                    \
+                if (errno)                                                   \
+                {                                                            \
+                        fprintf(OUT, "%sERROR%s Something went wrong: %s\n", \
+                                RED, NONE, strerror(errno));                 \
+                        exit(-1);                                            \
+                }                                                            \
+        }
 
 # define MAIN_CHILD         "MAIN"
 # define NULL_STRING        "NULL"
@@ -57,10 +57,10 @@
 # define EXECVE_SYSCALL     59
 # define EXIT_SYSCALL       60
 # define EXIT_GROUP_SYSCALL 231
-# define FOLLOW_FORK_MODE   PTRACE_O_TRACEFORK \
-                          | PTRACE_O_TRACEVFORK \
-                          | PTRACE_O_TRACECLONE \
-                          | PTRACE_O_TRACEEXIT
+# define FOLLOW_FORK_MODE   PTRACE_O_TRACEFORK  \
+        | PTRACE_O_TRACEVFORK                   \
+        | PTRACE_O_TRACECLONE                   \
+        | PTRACE_O_TRACEEXIT
 
 # define TRAP_LEN    1
 # define TRAP_INST   0xCC
