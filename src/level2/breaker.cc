@@ -200,7 +200,8 @@ void Breaker::print_bps() const
         }
 }
 
-int Breaker::parse_elf(char* name)
+int Breaker::parse_elf(char* elf_name)
 {
-
+        UNUSED(elf_name);
+        return 0;
 }

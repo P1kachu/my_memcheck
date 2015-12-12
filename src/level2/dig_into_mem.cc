@@ -22,7 +22,7 @@ void* get_final_r_debug(Elf64_Dyn* dt_struct, pid_t pid_child)
         struct iovec remote;
 
         // Loop until DT_DEBUG
-        local.iov_base =& child_dyn;
+        local.iov_base = &child_dyn;
         local.iov_len = sizeof (Elf64_Dyn);
         remote.iov_base = dt_struct;
         remote.iov_len  = sizeof (Elf64_Dyn);
@@ -127,12 +127,11 @@ void* get_link_map(void* rr_debug, pid_t pid, int* status)
 
         process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-        struct link_map* link_map =
-                reinterpret_cast<struct r_debug*>(buffer)->r_map;
+        struct link_map* link_map = ((struct r_debug*)buffer)->r_map;
 
         // FIXME : Deadcode
         // fprintf(OUT, "Found r_debug->r_map:\t\t%p\n", (void*)link_map);
-        * status = reinterpret_cast<struct r_debug*>(buffer)->r_state;
+        *status = ((struct r_debug*)buffer)->r_state;
         return link_map;
 }
 
@@ -141,7 +140,7 @@ void print_string_from_mem(void* str, pid_t pid)
         char s[64] = {0};
         struct iovec local;
         struct iovec remote;
-        local.iov_base  =& s;
+        local.iov_base  = &s;
         local.iov_len   = sizeof (struct link_map);
         remote.iov_base = str;
         remote.iov_len  = sizeof (struct link_map);
@@ -158,7 +157,7 @@ void browse_link_map(void* link_m, pid_t pid)
         struct link_map map;
         struct iovec local;
         struct iovec remote;
-        local.iov_base  =& map;
+        local.iov_base  = &map;
         local.iov_len   = sizeof (struct link_map);
         remote.iov_base = link_m;
         remote.iov_len  = sizeof (struct link_map);
@@ -167,12 +166,31 @@ void browse_link_map(void* link_m, pid_t pid)
 
         fprintf(OUT, "\n%sBrowsing link map%s:\n", YELLOW, NONE);
 
+        // FIXME : Useless ? Check if we missed some
+        while (map.l_prev)
+        {
+                remote.iov_base = map.l_prev;
+                process_vm_readv(pid, &local, 1, &remote, 1, 0);
+        }
+
         do
         {
-                process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-                fprintf(OUT, "--> ");
-                print_string_from_mem(map.l_name, pid);
+                process_vm_readv(pid, &local, 1, &remote, 1, 0);
+                if (map.l_addr)
+                {
+                        // Unlike what the elf.h file can say about it
+                        // l_addr is not a difference or any stewpid thing
+                        // like that apparently, but the base address the
+                        // shared object is loaded at.
+                        // Which is nice
+
+                        fprintf(OUT, "l_addr: %p\n", (void*)map.l_addr);
+                        fprintf(OUT, "%sl_name%s: ", YELLOW, NONE);
+                        print_string_from_mem(map.l_name, pid);
+                        fprintf(OUT, "l_ld: %p\n", (void*)map.l_ld);
+                        fprintf(OUT, "\n");
+                }
                 remote.iov_base = map.l_next;
         } while (map.l_next);
 

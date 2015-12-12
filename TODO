@@ -4,3 +4,4 @@ print filenames from execve correctly
 print PROT with &
 Delete NOMO tags
 follow_fork_mode (multi htreading)
+get rid of reinterpret_casts
