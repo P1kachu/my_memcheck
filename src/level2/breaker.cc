@@ -74,30 +74,38 @@ static struct r_debug* get_r_debug(pid_t pid)
 
   printf("Dyn Child:\t%p\n", (void*)dt_struct);
 
+  Elf64_Dyn child_dyn;
   // Loop until DT_DEBUG
-  local[0].iov_base = buffer;
+  local[0].iov_base = &child_dyn;
+  local[0].iov_len = sizeof (Elf64_Dyn);
   remote[0].iov_base = dt_struct;
   remote[0].iov_len  = sizeof (Elf64_Dyn);
-  dt_struct = (Elf64_Dyn*) buffer;
-  nread = process_vm_readv(pid, local, 1, remote, 1, 0);
 
-  for(; dt_struct->d_tag; ++dt_struct)
+  while (true)
   {
-    remote[0].iov_base = dt_struct;
-    nread = process_vm_readv(pid, local, 1, remote, 1, 0);
-
-    if (reinterpret_cast<ElfW(Dyn)*>(buffer)->d_tag == DT_DEBUG)
+    for(Elf64_Dyn *cur = dt_struct; ; ++cur)
+    {
+      remote[0].iov_base = cur;
+      nread = process_vm_readv(pid, local, 1, remote, 1, 0);
+      if (child_dyn.d_tag == DT_DEBUG)
+        break;
+    }
+    if (child_dyn.d_un.d_ptr)
       break;
 
+    ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
+    waitpid(pid, 0, 0);
   }
+
+  void* rr_debug = reinterpret_cast<void*>(child_dyn.d_un.d_ptr);
+
   UNUSED(nread);
 
   // FIXME : Remove debug fprintf
-  fprintf(OUT, "Found r_debug   %p\n",
-          reinterpret_cast<void*>(dt_struct->d_un.d_ptr));
-
+  fprintf(OUT, "Found r_debug   %p\n", rr_debug);
   // Return r_debug struct address
-  return reinterpret_cast<struct r_debug*>(dt_struct->d_un.d_ptr);
+
+  return (struct r_debug*)rr_debug;
 
 }
 
