@@ -1,5 +1,20 @@
 #include "dig_into_mem.hh"
 
+void* get_r_brk(void* rr_debug, pid_t pid_child)
+{
+  struct iovec local;
+  struct iovec remote;
+  char buffer[128] = { 0 };
+  local.iov_base = buffer;
+  local.iov_len  = sizeof (struct r_debug);;
+  remote.iov_base = rr_debug;
+  remote.iov_len  = sizeof (struct r_debug);
+
+  process_vm_readv(pid_child, &local, 1, &remote, 1, 0);
+
+  return (void*)reinterpret_cast<struct r_debug*>(buffer)->r_brk;
+}
+
 void* get_final_r_debug(Elf64_Dyn* dt_struct, pid_t pid_child)
 {
   Elf64_Dyn child_dyn;

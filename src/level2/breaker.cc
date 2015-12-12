@@ -2,10 +2,7 @@
 
 struct r_debug* Breaker::get_r_debug(pid_t pid_child)
 {
-  struct iovec local;
-  struct iovec remote;
-  Elf64_Dyn* dt_struct = NULL;
-  char buffer[128] = { 0 };
+    Elf64_Dyn* dt_struct = NULL;
   unsigned long at_phent = 0;
   unsigned long at_phnum = 0;
 
@@ -16,23 +13,18 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
   if (!at_phdr)
     return NULL;
 
-  // Binary not an ELF ?
-  // FIXME : Get Ehdr, helpers/is_elf
+    // FIXME : Check if ELF ? Get Ehdr, helpers/is_elf
 
   // Get PT_DYNAMIC entry
   dt_struct = (Elf64_Dyn*)get_pt_dynamic(at_phent, at_phnum,
                                          pid_child, at_phdr);
 
+  // Get r_debug address
   void* rr_debug = get_final_r_debug(dt_struct, pid_child);
-  // So fucking annoying ffs
-  local.iov_base = buffer;
-  local.iov_len  = sizeof (struct r_debug);;
-  remote.iov_base = rr_debug;
-  remote.iov_len  = sizeof (struct r_debug);
 
-  process_vm_readv(pid_child, &local, 1, &remote, 1, 0);
 
-  rr_brk = (void*)reinterpret_cast<struct r_debug*>(buffer)->r_brk;
+  // Get r_debug content
+  rr_brk = get_r_brk(rr_debug, pid_child);
 
   // FIXME : Remove debug fprintf
   fprintf(OUT, "Found r_debug\t\t%p\n", rr_debug);
