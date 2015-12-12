@@ -9,7 +9,7 @@ int main()
   printf("\nPid %d\n", getpid());
   struct r_debug *r_debug = NULL;
   ElfW(Dyn)* dyn = _DYNAMIC;
-  printf("Dound _DYNAMIC:\t\t%p\n", (void*)dyn);
+  printf("Found _DYNAMIC:\t\t%p\n", (void*)dyn);
   for (; dyn->d_tag != DT_NULL; ++dyn)
   {
     //printf("size: %lu ", sizeof (ElfW(Dyn)));
