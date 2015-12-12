@@ -153,7 +153,7 @@ void print_string_from_mem(void* str, pid_t pid)
 }
 
 
-static void retrieve_infos(void* elf_header, pid_t pid)
+static void retrieve_infos(void* elf_header, pid_t pid, Breaker* b)
 {
         ElfW(Ehdr) header;
         char buffer[1024];
@@ -189,6 +189,7 @@ static void retrieve_infos(void* elf_header, pid_t pid)
                                 printf("Executable PHDR Found\n");
                         else
                                 printf("Weird shit Found\n");
+                        UNUSED(b);
                 }
         }
 
@@ -196,7 +197,7 @@ static void retrieve_infos(void* elf_header, pid_t pid)
 }
 
 
-void browse_link_map(void* link_m, pid_t pid)
+void browse_link_map(void* link_m, pid_t pid, Breaker* b)
 {
         struct link_map map;
         struct iovec local;
@@ -230,7 +231,7 @@ void browse_link_map(void* link_m, pid_t pid)
                         fprintf(OUT, "%sl_name%s: ", YELLOW, NONE);
                         print_string_from_mem(map.l_name, pid);
                         fprintf(OUT, "l_ld: %p\n", (void*)map.l_ld);
-                        retrieve_infos((void*)map.l_addr, pid);
+                        retrieve_infos((void*)map.l_addr, pid, b);
                         fprintf(OUT, "\n");
                 }
                 remote.iov_base = map.l_next;

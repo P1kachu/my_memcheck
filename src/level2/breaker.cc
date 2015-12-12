@@ -132,7 +132,7 @@ void Breaker::handle_bp(void* addr)
                        : "ADD"
                        : "CONSISTENT");
                 if (state == r_debug::RT_CONSISTENT)
-                        browse_link_map(link_map, pid);
+                        browse_link_map(link_map, pid, this);
 
         }
 
