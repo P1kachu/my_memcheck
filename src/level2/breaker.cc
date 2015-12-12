@@ -132,8 +132,7 @@ void Breaker::add_breakpoint(const char* region, void* addr)
   unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, addr, 0);
   UNUSED(region);
   print_errno();
-  printf("LLLL\n");
-//  auto it = handled_syscalls.find(region);
+  //  auto it = handled_syscalls.find(region);
 
   /*if (it == handled_syscalls.end())
   {

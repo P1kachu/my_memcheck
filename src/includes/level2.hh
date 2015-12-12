@@ -1,7 +1,6 @@
 #ifndef LEVEL2_HH
 # define LEVEL2_HH
 
-# include "defines.hh"
 # include "dig_into_mem.hh"
 
 class Breaker

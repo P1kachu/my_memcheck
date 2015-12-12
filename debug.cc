@@ -25,4 +25,5 @@ int main()
 
   printf("Child r_debug\t\t%p\n", (void *) r_debug);
   printf("Child r_debug->r_brk\t%p\n", (void *) r_debug->r_brk);
+  printf("Child r_debug->r_map\t%p\n", (void *) r_debug->r_map);
 }

@@ -1,5 +1,6 @@
 Mandatory
 
 print filenames from execve correctly
+print PROT with &
 Delete NOMO tags
 follow_fork_mode (multi htreading)
