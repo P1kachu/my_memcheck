@@ -152,6 +152,21 @@ void print_string_from_mem(void* str, pid_t pid)
 
 }
 
+
+static void retrieve_infos(void* elf_header, pid_t pid)
+{
+        ElfW(Ehdr) header;
+        struct iovec local;
+        struct iovec remote;
+        local.iov_base  = &header;
+        local.iov_len   = sizeof (ElfW(Ehdr));
+        remote.iov_base = elf_header;
+        remote.iov_len  = sizeof (ElfW(Ehdr));
+        process_vm_readv(pid, &local, 1, &remote, 1, 0);
+        printf("%c%c%c\n", header.e_ident[1], header.e_ident[2], header.e_ident[3]);
+}
+
+
 void browse_link_map(void* link_m, pid_t pid)
 {
         struct link_map map;
@@ -183,8 +198,7 @@ void browse_link_map(void* link_m, pid_t pid)
                         // l_addr is not a difference or any stewpid thing
                         // like that apparently, but the base address the
                         // shared object is loaded at.
-                        // Which is nice
-
+                        retrieve_infos((void*)map.l_addr, pid);
                         fprintf(OUT, "l_addr: %p\n", (void*)map.l_addr);
                         fprintf(OUT, "%sl_name%s: ", YELLOW, NONE);
                         print_string_from_mem(map.l_name, pid);
