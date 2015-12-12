@@ -55,23 +55,17 @@ Breaker::Breaker(std::string binary_name, pid_t p)
 
 void Breaker::remove_breakpoint(const char* region, void* addr)
 {
-        UNUSED(region);
-        /*
-          auto it = handled_syscalls.find(region);
+        auto it = handled_syscalls.find(region);
 
-          printf("##%s##\n", it->first);
+        if (it == handled_syscalls.end())
+        {
+                fprintf(OUT,
+                        "%sERROR:%s Region %s not found in map (remove)\n",
+                        RED, NONE, region);
+                return;
+        }
 
-          if (it == handled_syscalls.end())
-          {
-          fprintf(OUT,
-          "%sERROR:%s Region %s not found in map (remove)\n",
-          RED, NONE, region);
-          return;
-          }
-
-          auto breaks = it->second;
-        */
-        auto& breaks = handled_syscalls;
+        auto breaks = it->second;
 
         // No breakpoint found at this address
         if (breaks.find(addr) == breaks.end())
@@ -79,7 +73,6 @@ void Breaker::remove_breakpoint(const char* region, void* addr)
 
         // Get saved instruction and rewrite it in memory
         ptrace(PTRACE_POKEDATA, pid, addr, breaks.find(addr)->second);
-
         breaks.erase(addr);
 }
 
@@ -87,47 +80,42 @@ void Breaker::add_breakpoint(const char* region, void* addr)
 {
         // Get origin instruction and save it
         unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, addr, 0);
-        UNUSED(region);
+
         print_errno();
 
-        /*
-          auto it = handled_syscalls.find(region);
 
-          if (it == handled_syscalls.end())
-          {
-          std::map<void*, unsigned long>* inner =
-          new std::map<void*, unsigned long>;
-          inner->insert(std::make_pair(addr, instr));
-          handled_syscalls.insert(std::pair<const char*,
-          std::map<void*,
-          unsigned long>>(region, * inner));
-          return;
-          }
+        auto it = handled_syscalls.find(region);
 
-          //auto breaks = it->second;
+        if (it == handled_syscalls.end())
+        {
+                std::map<void*, unsigned long>* inner =
+                        new std::map<void*, unsigned long>;
+                inner->insert(std::make_pair(addr, instr));
+                handled_syscalls.insert(std::pair<const char*,
+                                        std::map<void*,
+                                        unsigned long>>(region, * inner));
+                ptrace(PTRACE_POKETEXT, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
+                return;
+        }
 
-          if (breaks.find(addr) != breaks.end())
-          return; // Address already patched
-
-          breaks.insert(std::pair<void*, unsigned long>(addr, instr));
-        */
-
-        // Replace it with an int3 (CC) opcode sequence
+        auto breaks = it->second;
 
         // Address already patched
-        if (handled_syscalls.find(addr) != handled_syscalls.end())
-                return;
+        if (breaks.find(addr) != breaks.end())
+                breaks.find(addr)->second = instr;
+        else
+                breaks.insert(std::pair<void*, unsigned long>(addr, instr));
 
-
-        handled_syscalls.insert(std::pair<void*, unsigned long>(addr, instr));
-
-
+        // Replace it with an int3 (CC) opcode sequence
         ptrace(PTRACE_POKETEXT, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
 }
 
 char Breaker::is_from_us(void* addr) const
 {
-        return handled_syscalls.find(addr) != handled_syscalls.end();
+        for (auto& it : handled_syscalls)
+                if (it.second.find(addr) != it.second.end())
+                        return 1;
+        return 0;
 }
 
 void Breaker::handle_bp(void* addr)
@@ -147,13 +135,17 @@ void Breaker::handle_bp(void* addr)
                         browse_link_map(link_map, pid);
 
         }
-        exec_breakpoint(addr);
+
+        for (auto it : handled_syscalls)
+                if (it.second.find(addr) != it.second.end())
+                        exec_breakpoint(it.first, addr);
 }
 
-void Breaker::exec_breakpoint(void* addr)
+void Breaker::exec_breakpoint(const char* region, void* addr)
 {
         // Not found
-        if (handled_syscalls.find(addr) == handled_syscalls.end())
+        auto it = handled_syscalls.find(region);
+        if (it->second.find(addr) == it->second.end())
                 return;
 
         struct user_regs_struct regs;
@@ -164,7 +156,7 @@ void Breaker::exec_breakpoint(void* addr)
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
         // Run instruction
-        remove_breakpoint(NULL, addr);
+        remove_breakpoint(region, addr);
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 
         int wait_status = 0;
@@ -172,31 +164,27 @@ void Breaker::exec_breakpoint(void* addr)
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");
 
-        add_breakpoint(NULL, addr);
+        add_breakpoint(region, addr);
 }
 
 void Breaker::print_bps() const
 {
         int i = 0;
-        /*
-          for (auto& region : handled_syscalls)
-          {
-          fprintf(OUT, "%s: ", region.first);
-          for (auto& iter : region.second)
-          {
-
-        */
-        for (auto& iter : handled_syscalls)
+        for (auto& region : handled_syscalls)
         {
-                unsigned long instr =
-                        ptrace(PTRACE_PEEKDATA, pid, iter.first, 0);
-                if (iter.first == rr_brk)
-                        fprintf(OUT, "%3d: %p (r_brk):\n", i, iter.first);
-                else
-                        fprintf(OUT, "%3d: %p :\n", i, iter.first);
+                fprintf(OUT, "%s: ", region.first);
+                for (auto& iter : region.second)
+                {
+                        unsigned long instr =
+                                ptrace(PTRACE_PEEKDATA, pid, iter.first, 0);
+                        if (iter.first == rr_brk)
+                                fprintf(OUT, "%3d: %p (r_brk):\n", i, iter.first);
+                        else
+                                fprintf(OUT, "%3d: %p :\n", i, iter.first);
 
-                fprintf(OUT, "\t%8lx (origin)\n", iter.second);
-                fprintf(OUT, "\t%8lx (actual)\n", instr);
+                        fprintf(OUT, "\t%8lx (origin)\n", iter.second);
+                        fprintf(OUT, "\t%8lx (actual)\n", instr);
+                }
         }
 }
 

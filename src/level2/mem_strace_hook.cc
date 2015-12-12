@@ -21,7 +21,7 @@ static int mem_hook(std::string name, pid_t pid)
         b.add_breakpoint(MAIN_CHILD, b.rr_brk);
 
         // FIXME : DEADCODE
-        //b.print_bps();
+        b.print_bps();
 
         while (1)
         {
@@ -30,6 +30,8 @@ static int mem_hook(std::string name, pid_t pid)
                 waitpid(pid, &status, 0);
 
                 auto bp = reinterpret_cast<void*>(get_xip(pid) - 1);
+
+                printf("stus %d\n", status);
 
                 if (WIFEXITED(status))
                         break;
@@ -44,9 +46,11 @@ static int mem_hook(std::string name, pid_t pid)
                         if (b.is_from_us(bp))
                                 b.handle_bp(bp);
                 }
-                catch (std::logic_error) { break; }
-
-                print_errno();
+                catch (std::logic_error)
+                {
+                        fprintf(OUT, "Something\n");
+                        break;
+                }
         }
 
 

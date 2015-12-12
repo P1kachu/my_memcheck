@@ -163,7 +163,38 @@ static void retrieve_infos(void* elf_header, pid_t pid)
         remote.iov_base = elf_header;
         remote.iov_len  = sizeof (ElfW(Ehdr));
         process_vm_readv(pid, &local, 1, &remote, 1, 0);
-        printf("%c%c%c\n", header.e_ident[1], header.e_ident[2], header.e_ident[3]);
+
+        void* tmp = (char*)elf_header + header.e_shoff;
+        ElfW(Shdr)** sections = (ElfW(Shdr)**) tmp;
+
+        ElfW(Shdr) sh_strtab;
+
+        local.iov_base  = &sh_strtab;
+        local.iov_len   = sizeof (ElfW(Shdr));
+        remote.iov_base = sections + header.e_shstrndx * sizeof(ElfW(Shdr));
+        remote.iov_len  = sizeof (ElfW(Shdr));
+        process_vm_readv(pid, &local, 1, &remote, 1, 0);
+
+        return; // FIXME : Debug
+
+        char* sh_strtab_p = (char*)elf_header + sh_strtab.sh_offset;
+        printf("sh_strtab: %p\n", sh_strtab_p);
+        printf("sections: %p\n", (void*)sections);
+
+        // Skip SHT_NULL
+        for (int i = 1; i < header.e_shnum; ++i)
+        {
+                ElfW(Shdr) section;
+                local.iov_base  = &section;
+                local.iov_len   = sizeof (ElfW(Shdr));
+                remote.iov_base = &sections[i];
+                remote.iov_len  = sizeof (ElfW(Shdr));
+                process_vm_readv(pid, &local, 1, &remote, 1, 0);
+
+                printf("Section %d: %d", i, section.sh_type);
+                print_string_from_mem(section.sh_name + sh_strtab_p, pid);
+        }
+
 }
 
 
