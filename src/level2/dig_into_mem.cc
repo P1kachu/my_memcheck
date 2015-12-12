@@ -1,5 +1,40 @@
 #include "dig_into_mem.hh"
 
+void* get_pt_dynamic(unsigned long phent, unsigned long phnum,
+                     pid_t pid_child, void* at_phdr)
+{
+  // Loop on the Program header until the PT_DYNAMIC entry
+  Elf64_Dyn* dt_struct = NULL;
+  struct iovec local;
+  struct iovec remote;
+  char buffer[128];
+  Elf64_Phdr* phdr;
+  for (unsigned i = 0; i < phnum; ++i)
+  {
+    local.iov_base = buffer;
+    local.iov_len  = sizeof (Elf64_Phdr);
+    remote.iov_base = (char*)at_phdr + i * phent;
+    remote.iov_len  = sizeof (Elf64_Phdr);
+
+    process_vm_readv(pid_child, &local, 1, &remote, 1, 0);
+
+    phdr = reinterpret_cast<Elf64_Phdr*>(buffer);
+    if (phdr->p_type == PT_DYNAMIC)
+    {
+      // First DT_XXXX entry
+      dt_struct = reinterpret_cast<Elf64_Dyn*>(phdr->p_vaddr);
+      break;
+    }
+  }
+
+  if (!dt_struct)
+    throw std::logic_error("PT_DYNAMIC not found");
+
+  printf("Found _DYNAMIC:\t\t%p\n", (void*)dt_struct);
+  return (void*) dt_struct;
+}
+
+
 void* get_phdr(unsigned long& phent, unsigned long& phnum, pid_t pid_child)
 {
     // Open proc/[pid]/auxv
@@ -80,11 +115,13 @@ void browse_link_map(void* link_m, pid_t pid)
 
   process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-  fprintf(OUT, "\n%sBrowsing link map%s:", YELLOW, NONE);
+  fprintf(OUT, "\n%sBrowsing link map%s:\n", YELLOW, NONE);
 
   do
   {
     process_vm_readv(pid, &local, 1, &remote, 1, 0);
+
+    fprintf(OUT, "--> ");
     print_string_from_mem(map.l_name, pid);
     remote.iov_base = map.l_next;
   } while (map.l_next);

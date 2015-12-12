@@ -15,6 +15,7 @@ find . \( \
      -o -name ".#*" \
      -o -name "build" \
      -o  -name "*.so" \
+     -o  -name "*.out" \
      -o -name "42sh" \
      -o  -name "__pycache__" \
      \) -print -exec rm -rf {} \;

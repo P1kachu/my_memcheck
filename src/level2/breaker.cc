@@ -4,10 +4,8 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
 {
   struct iovec local;
   struct iovec remote;
-  unsigned i;
   Elf64_Dyn* dt_struct = NULL;
   char buffer[128] = { 0 };
-  Elf64_Phdr* phdr;
   unsigned long at_phent = 0;
   unsigned long at_phnum = 0;
   void* at_phdr  = get_phdr(at_phent, at_phnum, pid_child);
@@ -21,29 +19,7 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
 
   // FIXME : Refactor this sh*tload
 
-  // Loop on the Program header until the PT_DYNAMIC entry
-  for (i = 0; i < at_phnum; ++i)
-  {
-    local.iov_base = buffer;
-    local.iov_len  = sizeof (Elf64_Phdr);
-    remote.iov_base = (char*)at_phdr + i * at_phent;
-    remote.iov_len  = sizeof (Elf64_Phdr);
-
-    process_vm_readv(pid_child, &local, 1, &remote, 1, 0);
-
-    phdr = reinterpret_cast<Elf64_Phdr*>(buffer);
-    if (phdr->p_type == PT_DYNAMIC)
-    {
-      // First DT_XXXX entry
-      dt_struct = reinterpret_cast<Elf64_Dyn*>(phdr->p_vaddr);
-      break;
-    }
-  }
-
-  if (!dt_struct)
-    throw std::logic_error("PT_DYNAMIC not found");
-
-  printf("Found _DYNAMIC:\t\t%p\n", (void*)dt_struct);
+  dt_struct = (Elf64_Dyn*)get_pt_dynamic(at_phent, at_phnum, pid_child, at_phdr);
 
   Elf64_Dyn child_dyn;
   // Loop until DT_DEBUG
