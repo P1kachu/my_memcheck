@@ -8,6 +8,8 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
   char buffer[128] = { 0 };
   unsigned long at_phent = 0;
   unsigned long at_phnum = 0;
+
+  // Get interesting Phdr
   void* at_phdr  = get_phdr(at_phent, at_phnum, pid_child);
 
   // Something went wrong ?
@@ -17,35 +19,11 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
   // Binary not an ELF ?
   // FIXME : Get Ehdr, helpers/is_elf
 
-  // FIXME : Refactor this sh*tload
+  // Get PT_DYNAMIC entry
+  dt_struct = (Elf64_Dyn*)get_pt_dynamic(at_phent, at_phnum,
+                                         pid_child, at_phdr);
 
-  dt_struct = (Elf64_Dyn*)get_pt_dynamic(at_phent, at_phnum, pid_child, at_phdr);
-
-  Elf64_Dyn child_dyn;
-  // Loop until DT_DEBUG
-  local.iov_base = &child_dyn;
-  local.iov_len = sizeof (Elf64_Dyn);
-  remote.iov_base = dt_struct;
-  remote.iov_len  = sizeof (Elf64_Dyn);
-
-  while (true)
-  {
-    for(Elf64_Dyn *cur = dt_struct; ; ++cur)
-    {
-      remote.iov_base = cur;
-      process_vm_readv(pid_child, &local, 1, &remote, 1, 0);
-      if (child_dyn.d_tag == DT_DEBUG)
-        break;
-    }
-    if (child_dyn.d_un.d_ptr)
-      break;
-
-    ptrace(PTRACE_SINGLESTEP, pid_child, NULL, NULL);
-    waitpid(pid_child, 0, 0);
-  }
-
-  void* rr_debug = reinterpret_cast<void*>(child_dyn.d_un.d_ptr);
-
+  void* rr_debug = get_final_r_debug(dt_struct, pid_child);
   // So fucking annoying ffs
   local.iov_base = buffer;
   local.iov_len  = sizeof (struct r_debug);;

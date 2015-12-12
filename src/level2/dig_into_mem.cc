@@ -1,5 +1,37 @@
 #include "dig_into_mem.hh"
 
+void* get_final_r_debug(Elf64_Dyn* dt_struct, pid_t pid_child)
+{
+  Elf64_Dyn child_dyn;
+  struct iovec local;
+  struct iovec remote;
+
+  // Loop until DT_DEBUG
+  local.iov_base = &child_dyn;
+  local.iov_len = sizeof (Elf64_Dyn);
+  remote.iov_base = dt_struct;
+  remote.iov_len  = sizeof (Elf64_Dyn);
+
+  while (true)
+  {
+    for(Elf64_Dyn *cur = dt_struct; ; ++cur)
+    {
+      remote.iov_base = cur;
+      process_vm_readv(pid_child, &local, 1, &remote, 1, 0);
+      if (child_dyn.d_tag == DT_DEBUG)
+        break;
+    }
+    if (child_dyn.d_un.d_ptr)
+      break;
+
+    ptrace(PTRACE_SINGLESTEP, pid_child, NULL, NULL);
+    waitpid(pid_child, 0, 0);
+  }
+
+  return reinterpret_cast<void*>(child_dyn.d_un.d_ptr);
+
+}
+
 void* get_pt_dynamic(unsigned long phent, unsigned long phnum,
                      pid_t pid_child, void* at_phdr)
 {
