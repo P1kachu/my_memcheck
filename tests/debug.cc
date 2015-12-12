@@ -8,7 +8,7 @@ int main()
 {
   struct r_debug *r_debug = NULL;
   ElfW(Dyn)* dyn = _DYNAMIC;
-  printf("%s[%d]%s Found _DYNAMIC:\t\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void*)dyn);
+  printf("%s[%d]%s Child _DYNAMIC:\t\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void*)dyn);
   for (; dyn->d_tag != DT_NULL; ++dyn)
   {
     //printf("size: %lu ", sizeof (ElfW(Dyn)));

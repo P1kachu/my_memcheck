@@ -19,7 +19,9 @@ static int mem_hook(std::string name, pid_t pid)
 
         Breaker b(name, pid);
         b.add_breakpoint(MAIN_CHILD, b.rr_brk);
-        b.print_bps();
+
+        // FIXME : DEADCODE
+        //b.print_bps();
 
         while (1)
         {
@@ -34,8 +36,8 @@ static int mem_hook(std::string name, pid_t pid)
                 if (WIFSIGNALED(status))
                         break;
 
-                fprintf(OUT, "[%d] Signal received: %p - %s\n", pid,
-                        (void*)bp, strsignal(WSTOPSIG(status)));
+                fprintf(OUT, "%s[%d]%s Signal received: %p - %s\n", GREEN, pid,
+                        NONE, (void*)bp, strsignal(WSTOPSIG(status)));
 
                 try
                 {

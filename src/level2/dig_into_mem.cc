@@ -78,7 +78,8 @@ void* get_pt_dynamic(unsigned long phent, unsigned long phnum,
         if (!dt_struct)
                 throw std::logic_error("PT_DYNAMIC not found");
 
-        printf("Found _DYNAMIC:\t\t%p\n", (void*)dt_struct);
+        // FIXME : Deadcode
+        // printf("Found _DYNAMIC:\t\t%p\n", (void*)dt_struct);
         return (void*) dt_struct;
 }
 
@@ -87,7 +88,6 @@ void* get_phdr(unsigned long& phent, unsigned long& phnum, pid_t pid_child)
 {
         // Open proc/[pid]/auxv
         std::ostringstream ss;
-        fprintf(OUT, "Pid %d\n", getpid());
         ss << "/proc/" << pid_child << "/auxv";
         auto file = ss.str();
         int fd = open(file.c_str(), std::ios::binary);
@@ -130,7 +130,8 @@ void* get_link_map(void* rr_debug, pid_t pid, int* status)
         struct link_map* link_map =
                 reinterpret_cast<struct r_debug*>(buffer)->r_map;
 
-        fprintf(OUT, "Found r_debug->r_map:\t\t%p\n", (void*)link_map);
+        // FIXME : Deadcode
+        // fprintf(OUT, "Found r_debug->r_map:\t\t%p\n", (void*)link_map);
         * status = reinterpret_cast<struct r_debug*>(buffer)->r_state;
         return link_map;
 }

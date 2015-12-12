@@ -31,9 +31,9 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
         rr_brk = get_r_brk(rr_debug, pid_child);
 
 
-        // FIXME : Remove debug fprintf
-        fprintf(OUT, "Found r_debug\t\t%p\n", rr_debug);
-        fprintf(OUT, "Found r_debug->r_brk\t%p\n", rr_brk);
+        // FIXME : Deadcode
+        //fprintf(OUT, "Found r_debug\t\t%p\n", rr_debug);
+        //fprintf(OUT, "Found r_debug->r_brk\t%p\n", rr_brk);
 
 
         // Return r_debug struct address
@@ -47,11 +47,9 @@ Breaker::Breaker(std::string binary_name, pid_t p)
         name = binary_name;
         if (!r_deb)
         {
-                fprintf(OUT,
-                        "%sERROR:%s Recovering r_debug struct failed\n",
+                fprintf(OUT, "%sERROR:%s Recovering r_debug struct failed\n",
                         RED, NONE);
-                throw std::logic_error(
-                        "r_debug not found. Statically linked perhaps ?");
+                throw std::logic_error("r_debug not found");
         }
 }
 
@@ -134,17 +132,19 @@ char Breaker::is_from_us(void* addr) const
 
 void Breaker::handle_bp(void* addr)
 {
-        printf("%%rip = %p ", addr);
+        printf("%s[%d]%s %%rip = %p ", GREEN, pid, NONE, addr);
         if (addr == rr_brk)
         {
                 printf("(brk)\n");
                 int state = 0;
                 void* link_map = get_link_map(r_deb, pid, &state);
-                printf("State: %s\n", state ? state > 1
+                printf("%s[%d]%s State: %s\n", GREEN, pid, NONE,
+                       state ? state > 1
                        ? "DELETE"
                        : "ADD"
                        : "CONSISTENT");
-                browse_link_map(link_map, pid);
+                if (state == r_debug::RT_CONSISTENT)
+                        browse_link_map(link_map, pid);
 
         }
         exec_breakpoint(addr);
