@@ -6,15 +6,11 @@ static int mem_hook(std::string name, pid_t pid)
   setenv("LD_BIND_NOW", "1", 1); //FIXME : Potential dead code
   int status = 0;
   waitpid(pid, &status, 0);
-//  if (ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD))
-//    fprintf(OUT, "%sERROR:%s PTRACE_O_TRACESYSGOOD failed\n", RED, NONE);
-
-
-  ptrace(PTRACE_CONT, pid, 0, 0);
   Breaker b(name, pid);
-  b.add_breakpoint(MAIN_CHILD, b.brk);
-  //b.print_bps();
-  b.remove_breakpoint(MAIN_CHILD, b.brk);
+  b.add_breakpoint(MAIN_CHILD, b.rr_brk);
+  b.print_bps();
+  b.remove_breakpoint(MAIN_CHILD, b.rr_brk);
+  ptrace(PTRACE_CONT, pid, 0, 0);
   return 0;
 }
 

@@ -34,9 +34,16 @@
 # define OUT stdout
 # define UNUSED(x) { (x) = (x); }
 # define BONUS 1
+# define print_errno()                                          \
+  {                                                             \
+    if (errno)                                                  \
+    {                                                           \
+      fprintf(OUT, "%sERROR%s Something went wrong: %s\n",      \
+              RED, NONE, strerror(errno));                      \
+      exit(-1);                                                 \
+    }                                                           \
+  }
 
-
-// mem_strace
 # define MAIN_CHILD         "MAIN"
 # define NULL_STRING        "NULL"
 # define MMAP_SYSCALL       9
@@ -69,8 +76,6 @@
 #  define TRAP_MASK   0xFFFFFFFFFFFFFF00
 
 # endif /* !ARCH */
-
-//mem_strace_hook
 
 
 

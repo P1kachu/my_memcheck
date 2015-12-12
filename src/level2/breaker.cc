@@ -1,11 +1,11 @@
 #include "level2.hh"
 
-static struct r_debug* get_r_debug(pid_t pid)
+struct r_debug* Breaker::get_r_debug(pid_t pid_child)
 {
   // Open proc/[pid]/auxv
   std::ostringstream ss;
   printf("Pid %d\n", getpid());
-  ss << "/proc/" << pid << "/auxv";
+  ss << "/proc/" << pid_child << "/auxv";
   auto file = ss.str();
   int fd = open(file.c_str(), std::ios::binary);
   ElfW(auxv_t) auxv_;
@@ -57,7 +57,7 @@ static struct r_debug* get_r_debug(pid_t pid)
     remote[0].iov_base = (char*)at_phdr + i * at_phent;
     remote[0].iov_len  = sizeof (Elf64_Phdr);
 
-    nread = process_vm_readv(pid, local, 1, remote, 1, 0);
+    nread = process_vm_readv(pid_child, local, 1, remote, 1, 0);
 
     phdr = reinterpret_cast<Elf64_Phdr*>(buffer);
     if (phdr->p_type == PT_DYNAMIC)
@@ -72,7 +72,7 @@ static struct r_debug* get_r_debug(pid_t pid)
   if (!dt_struct)
     throw std::logic_error("PT_DYNAMIC not found");
 
-  printf("Dyn Child:\t%p\n", (void*)dt_struct);
+  printf("Dyn Child:\t\t%p\n", (void*)dt_struct);
 
   Elf64_Dyn child_dyn;
   // Loop until DT_DEBUG
@@ -86,26 +86,36 @@ static struct r_debug* get_r_debug(pid_t pid)
     for(Elf64_Dyn *cur = dt_struct; ; ++cur)
     {
       remote[0].iov_base = cur;
-      nread = process_vm_readv(pid, local, 1, remote, 1, 0);
+      nread = process_vm_readv(pid_child, local, 1, remote, 1, 0);
       if (child_dyn.d_tag == DT_DEBUG)
         break;
     }
     if (child_dyn.d_un.d_ptr)
       break;
 
-    ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-    waitpid(pid, 0, 0);
+    ptrace(PTRACE_SINGLESTEP, pid_child, NULL, NULL);
+    waitpid(pid_child, 0, 0);
   }
 
   void* rr_debug = reinterpret_cast<void*>(child_dyn.d_un.d_ptr);
-
   UNUSED(nread);
 
-  // FIXME : Remove debug fprintf
-  fprintf(OUT, "Found r_debug   %p\n", rr_debug);
-  // Return r_debug struct address
+  // So fucking annoying ffs
+  local[0].iov_base = buffer;
+  local[0].iov_len  = sizeof (struct r_debug);;
+  remote[0].iov_base = rr_debug;
+  remote[0].iov_len  = sizeof (struct r_debug);
 
-  return (struct r_debug*)rr_debug;
+  nread = process_vm_readv(pid_child, local, 1, remote, 1, 0);
+
+  rr_brk = (void*)reinterpret_cast<struct r_debug*>(buffer)->r_brk;
+
+  // FIXME : Remove debug fprintf
+  fprintf(OUT, "Found r_debug\t\t%p\n", rr_debug);
+  fprintf(OUT, "Found r_debug->r_brk\t%p\n", rr_brk);
+
+  // Return r_debug struct address
+  return reinterpret_cast<struct r_debug*>(rr_debug);
 
 }
 
@@ -119,13 +129,14 @@ Breaker::Breaker(std::string binary_name, pid_t p)
     fprintf(OUT, "%sERROR:%s Recovering r_debug struct failed\n", RED, NONE);
     throw std::logic_error("r_debug not found. Statically linked perhaps ?");
   }
-
-  brk = reinterpret_cast<void*>(r_deb->r_brk);
 }
 
 void Breaker::remove_breakpoint(const char* region, void* addr)
 {
-  auto it = handled_syscalls.find(region);
+  UNUSED(region);
+/*  auto it = handled_syscalls.find(region);
+
+  printf("##%s##\n", it->first);
 
   if (it == handled_syscalls.end())
   {
@@ -133,7 +144,8 @@ void Breaker::remove_breakpoint(const char* region, void* addr)
     return;
   }
 
-  auto breaks = it->second;
+  auto breaks = it->second;*/
+  auto& breaks = handled_syscalls;
 
   if (breaks.find(addr) == breaks.end())
     return; // No breakpoint found at this address
@@ -142,51 +154,64 @@ void Breaker::remove_breakpoint(const char* region, void* addr)
   ptrace(PTRACE_POKEDATA, pid, addr, breaks.find(addr)->second);
 
   breaks.erase(addr);
+  printf("Breakpoint deleted\n");
 }
 
 void Breaker::add_breakpoint(const char* region, void* addr)
 {
   // Get origin instruction and save it
   unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, addr, 0);
+  UNUSED(region);
+  print_errno();
+  printf("LLLL\n");
+//  auto it = handled_syscalls.find(region);
 
-  auto it = handled_syscalls.find(region);
-
-  if (it == handled_syscalls.end())
+  /*if (it == handled_syscalls.end())
   {
-    std::map<void*, unsigned long> inner;
-    inner.insert(std::make_pair(addr, instr));
-    handled_syscalls.insert(std::pair<const char*, std::map<void*, unsigned long>>(region, inner));
+    printf("LOLO\n");
+    std::map<void*, unsigned long>* inner = new std::map<void*, unsigned long>;
+    inner->insert(std::make_pair(addr, instr));
+    handled_syscalls.insert(std::pair<const char*, std::map<void*, unsigned long>>(region, *inner));
     return;
-  }
+    }
 
-  auto breaks = it->second;
+  //auto breaks = it->second;
 
   if (breaks.find(addr) != breaks.end())
     return; // Address already patched
 
-  breaks.insert(std::pair<void*, unsigned long>(addr, instr));
+  breaks.insert(std::pair<void*, unsigned long>(addr, instr));*/
 
   // Replace it with an int3 (CC) opcode sequence
+
+//  if (handled_syscalls.find(addr) != handled_syscalls.end())
+//    return; // Address already patched
+
+  handled_syscalls.insert(std::pair<void*, unsigned long>(addr, instr));
+
+
   ptrace(PTRACE_POKETEXT, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
+  printf("Breakpoint added\n");
 }
 
 void Breaker::print_bps() const
 {
   int i = 0;
-  for (auto& region : handled_syscalls)
+/*  for (auto& region : handled_syscalls)
   {
     fprintf(OUT, "%s: ", region.first);
     for (auto& iter : region.second)
-    {
-      unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, iter.first, 0);
-      if (iter.first == brk)
-        fprintf(OUT, "%3d: %p (r_brk):\n", i, iter.first);
-      else
-        fprintf(OUT, "%3d: %p :\n", i, iter.first);
+    {*/
+  for (auto& iter : handled_syscalls)
+  {
+    unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, iter.first, 0);
+    if (iter.first == rr_brk)
+      fprintf(OUT, "%3d: %p (r_brk):\n", i, iter.first);
+    else
+      fprintf(OUT, "%3d: %p :\n", i, iter.first);
 
-      fprintf(OUT, "\t%8lx (origin)\n", iter.second);
-      fprintf(OUT, "\t%8lx (actual)\n", instr);
-    }
+    fprintf(OUT, "\t%8lx (origin)\n", iter.second);
+    fprintf(OUT, "\t%8lx (actual)\n", instr);
   }
 }
 
