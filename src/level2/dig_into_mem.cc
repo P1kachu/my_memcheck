@@ -4,7 +4,7 @@ void* get_phdr(unsigned long& phent, unsigned long& phnum, pid_t pid_child)
 {
     // Open proc/[pid]/auxv
   std::ostringstream ss;
-  printf("Pid %d\n", getpid());
+  fprintf(OUT, "Pid %d\n", getpid());
   ss << "/proc/" << pid_child << "/auxv";
   auto file = ss.str();
   int fd = open(file.c_str(), std::ios::binary);
@@ -32,7 +32,7 @@ void* get_phdr(unsigned long& phent, unsigned long& phnum, pid_t pid_child)
   return at_phdr;
 }
 
-void* get_link_map(void* rr_debug, pid_t pid)
+void* get_link_map(void* rr_debug, pid_t pid, int* status)
 {
   char buffer[128];
   struct iovec local;
@@ -46,8 +46,8 @@ void* get_link_map(void* rr_debug, pid_t pid)
 
   struct link_map *link_map = reinterpret_cast<struct r_debug*>(buffer)->r_map;
 
-  printf("Child r_map:\t\t%p\n", (void*)link_map);
-
+  fprintf(OUT, "Found r_debug->r_map:\t\t%p\n", (void*)link_map);
+  *status = reinterpret_cast<struct r_debug*>(buffer)->r_state;
   return link_map;
 }
 
@@ -64,7 +64,7 @@ void print_string_from_mem(void* str, pid_t pid)
   ssize_t read = process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
   if (read)
-    printf("%s\n", s);
+    fprintf(OUT, "%s\n", s);
 
 }
 
@@ -80,7 +80,7 @@ void browse_link_map(void* link_m, pid_t pid)
 
   process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-  printf("%sBrowsing link map%s: \n", YELLOW, NONE);
+  fprintf(OUT, "\n%sBrowsing link map%s:", YELLOW, NONE);
 
   do
   {
@@ -88,4 +88,7 @@ void browse_link_map(void* link_m, pid_t pid)
     print_string_from_mem(map.l_name, pid);
     remote.iov_base = map.l_next;
   } while (map.l_next);
+
+  fprintf(OUT, "\n");
+
 }

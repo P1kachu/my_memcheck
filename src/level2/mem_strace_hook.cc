@@ -27,20 +27,26 @@ static int mem_hook(std::string name, pid_t pid)
 
     waitpid(pid, &status, 0);
 
+    auto bp = reinterpret_cast<void*>(get_xip(pid) - 1);
+
     if (WIFEXITED(status))
       break;
     if (WIFSIGNALED(status))
       break;
 
-//    if b.is_from_us(
+    fprintf(OUT, "[%d] Signal received: %p - %s\n", pid, (void*)bp, strsignal(WSTOPSIG(status)));
 
-    printf("%%rip = 0x%lx\n", get_xip(pid));
+    try
+    {
+    if (b.is_from_us(bp))
+      b.handle_bp(bp);
+    }
+    catch (std::logic_error) { break; }
+
     print_errno();
   }
 
 
-  void* link_map = get_link_map(b.r_deb, b.pid);
-  browse_link_map(link_map, b.pid);
   ptrace(PTRACE_CONT, pid, 0, 0);
   return 0;
 }

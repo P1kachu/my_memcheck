@@ -11,6 +11,9 @@ public:
   void remove_breakpoint(const char* region, void* addr);
   void add_breakpoint(const char* region, void* addr);
   ssize_t find_syscalls(void* addr);
+  char is_from_us(void* addr) const;
+  void handle_bp(void* addr);
+  void exec_breakpoint(void* addr);
 
   void print_bps() const;
 

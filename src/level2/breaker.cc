@@ -43,7 +43,7 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
   if (!dt_struct)
     throw std::logic_error("PT_DYNAMIC not found");
 
-  printf("Child _DYNAMIC:\t\t%p\n", (void*)dt_struct);
+  printf("Found _DYNAMIC:\t\t%p\n", (void*)dt_struct);
 
   Elf64_Dyn child_dyn;
   // Loop until DT_DEBUG
@@ -123,7 +123,6 @@ void Breaker::remove_breakpoint(const char* region, void* addr)
   ptrace(PTRACE_POKEDATA, pid, addr, breaks.find(addr)->second);
 
   breaks.erase(addr);
-  printf("Breakpoint %p deleted\n", addr);
 }
 
 void Breaker::add_breakpoint(const char* region, void* addr)
@@ -155,11 +154,55 @@ void Breaker::add_breakpoint(const char* region, void* addr)
 //  if (handled_syscalls.find(addr) != handled_syscalls.end())
 //    return; // Address already patched
 
+  if (handled_syscalls.find(addr) != handled_syscalls.end())
+    return; // Address already patched
+
+
   handled_syscalls.insert(std::pair<void*, unsigned long>(addr, instr));
 
 
   ptrace(PTRACE_POKETEXT, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
-  printf("Breakpoint %p added\n", addr);
+}
+
+char Breaker::is_from_us(void* addr) const
+{
+  return handled_syscalls.find(addr) != handled_syscalls.end();
+}
+
+void Breaker::handle_bp(void* addr)
+{
+  printf("%%rip = %p ", addr);
+  if (addr == rr_brk)
+  {
+    printf("(brk)\n");
+    int state = 0;
+    void* link_map = get_link_map(r_deb, pid, &state);
+    printf("State: %s\n", state ? state > 1 ? "DELETE" : "ADD" : "CONSISTENT");
+    browse_link_map(link_map, pid);
+
+  }
+  exec_breakpoint(addr);
+}
+
+void Breaker::exec_breakpoint(void* addr)
+{
+  if (handled_syscalls.find(addr) == handled_syscalls.end())
+    return; // Not found
+  struct user_regs_struct regs;
+
+  ptrace(PTRACE_GETREGS, pid, 0, &regs);
+  regs.XIP -= 1;
+  ptrace(PTRACE_SETREGS, pid, 0, &regs);
+
+  remove_breakpoint(NULL, addr);
+  ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
+
+  int wait_status = 0;
+  waitpid(pid, &wait_status, 0);
+  if (WIFEXITED(wait_status))
+    throw std::logic_error("EXITED");
+
+  add_breakpoint(NULL, addr);
 }
 
 void Breaker::print_bps() const
