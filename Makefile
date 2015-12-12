@@ -24,7 +24,7 @@ INCLDIR   = src/includes/
 SRCS_1     = $(addsuffix .cc, $(addprefix src/level1/, strace syscalls mem_strace))
 SRCS_1    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
-SRCS_2     = $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook breaker))
+SRCS_2     = $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook breaker dig_into_mem))
 SRCS_2    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
 SRCS_2    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 

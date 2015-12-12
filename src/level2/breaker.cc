@@ -1,41 +1,5 @@
 #include "level2.hh"
 
-static void* get_phdr(unsigned long& at_phent,
-                      unsigned long& at_phnum,
-                      pid_t pid_child)
-{
-    // Open proc/[pid]/auxv
-  std::ostringstream ss;
-  printf("Pid %d\n", getpid());
-  ss << "/proc/" << pid_child << "/auxv";
-  auto file = ss.str();
-  int fd = open(file.c_str(), std::ios::binary);
-  ElfW(auxv_t) auxv_;
-
-  void* at_phdr;
-
-  // Read from flux until getting all the interesting data
-  while (read(fd, &auxv_, sizeof (auxv_)) > -1)
-  {
-    if (auxv_.a_type == AT_PHDR)
-      at_phdr = (void*)auxv_.a_un.a_val;
-
-    if (auxv_.a_type == AT_PHENT)
-      at_phent = auxv_.a_un.a_val;
-
-    if (auxv_.a_type == AT_PHNUM)
-      at_phnum = auxv_.a_un.a_val;
-
-    if (at_phnum && at_phent && at_phdr)
-      break;
-  }
-
-  close(fd);
-
-  return at_phdr;
-}
-
-
 struct r_debug* Breaker::get_r_debug(pid_t pid_child)
 {
   struct iovec local;
@@ -219,46 +183,3 @@ void Breaker::print_bps() const
     fprintf(OUT, "\t%8lx (actual)\n", instr);
   }
 }
-
-/*ssize_t Breaker::find_syscalls(void* addr)
-{
-  constexpr int page_size = 4096;
-  struct iovec local[1];
-  struct iovec remote[1];
-  char buf[page_size];
-  ssize_t nread;
-
-  local[0].iov_base = buf;
-  local[0].iov_len = 10;
-  remote[0].iov_base = addr;
-  remote[0].iov_len = page_size;
-
-  nread = process_vm_readv(pid, local, 1, remote, 1, 0);
-
-  csh handle;
-  cs_insn *insn;
-  size_t count;
-
-
-  if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
-    return -1;
-
-  count = cs_disasm(handle, buf, nread, 0x1000, 0, &insn);
-
-  if (count > 0)
-  {
-    size_t j;
-
-    for (j = 0; j < count; j++)
-      printf("0x%lx:\t%s\t\t%s\n", insn[j].address, insn[j].mnemonic, insn[j].op_str);
-
-    cs_free(insn, count);
-  }
-  else
-    printf("ERROR: Failed to disassemble given code!\n");
-
-  cs_close(&handle);
-
-  return nread;
-}
-*/
