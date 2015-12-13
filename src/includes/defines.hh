@@ -86,16 +86,16 @@ class Breaker
 public:
         Breaker(std::string binary_name, pid_t pid);
         struct r_debug* get_r_debug(pid_t pid);
-        void remove_breakpoint(const char* region, void* addr);
-        void add_breakpoint(const char* region, void* addr);
+        void remove_breakpoint(std::string, void* addr);
+        void add_breakpoint(std::string, void* addr);
         ssize_t find_syscalls(void* addr);
         char is_from_us(void* addr) const;
         void handle_bp(void* addr);
-        void exec_breakpoint(const char* region, void* addr);
+        void exec_breakpoint(std::string region, void* addr);
         void print_bps() const;
 
         // Vars
-        std::map<const char*, std::map<void*, unsigned long>> handled_syscalls;
+        std::map<std::string, std::map<void*, unsigned long>> handled_syscalls;
         void* rr_brk;
         pid_t pid;
         struct r_debug* r_deb;

@@ -53,7 +53,7 @@ Breaker::Breaker(std::string binary_name, pid_t p)
         }
 }
 
-void Breaker::remove_breakpoint(const char* region, void* addr)
+void Breaker::remove_breakpoint(std::string region, void* addr)
 {
         auto it = handled_syscalls.find(region);
 
@@ -61,7 +61,7 @@ void Breaker::remove_breakpoint(const char* region, void* addr)
         {
                 fprintf(OUT,
                         "%sERROR:%s Region %s not found in map (remove)\n",
-                        RED, NONE, region);
+                        RED, NONE, region.c_str());
                 return;
         }
 
@@ -73,27 +73,29 @@ void Breaker::remove_breakpoint(const char* region, void* addr)
 
         // Get saved instruction and rewrite it in memory
         ptrace(PTRACE_POKEDATA, pid, addr, breaks.find(addr)->second);
-        breaks.erase(addr);
-        fprintf(OUT, "%sDELETED%s\n", RED, NONE);
+        handled_syscalls[region].erase(addr);
+        // FIXME : Deadcode
+        // fprintf(OUT, "%sDELETED%s\n", RED, NONE);
 }
 
-void Breaker::add_breakpoint(const char* region, void* addr)
+void Breaker::add_breakpoint(std::string region, void* addr)
 {
         // Get origin instruction and save it
         unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, addr, 0);
-
         print_errno();
 
         // Address already patched
         if (handled_syscalls[region].find(addr) != handled_syscalls[region].end())
         {
                 handled_syscalls[region].find(addr)->second = instr;
-                fprintf(OUT, "Zone %s - size: %ld -- %sUPDATED%s\n", region, handled_syscalls[region].size(), RED, NONE);
+                // FIXME : Deadcode
+                // fprintf(OUT, "%sUPDATED%s\n", RED, NONE);
         }
         else
         {
-                handled_syscalls[region].insert(std::make_pair(addr, instr));
-                fprintf(OUT, "Zone %s - size: %ld -- %sADDED%s\n", region, handled_syscalls[region].size(), RED, NONE);
+                handled_syscalls[region][addr] = instr;
+                // FIXME : Deadcode
+                // fprintf(OUT, "%sADDED%s\n", RED, NONE);
         }
 
         // Replace it with an int3 (CC) opcode sequence
@@ -123,14 +125,13 @@ void Breaker::handle_bp(void* addr)
                        : "CONSISTENT");
                 if (state == r_debug::RT_CONSISTENT)
                         browse_link_map(link_map, pid, this);
-                print_bps();
         }
         for (auto it : handled_syscalls)
                         if (it.second.find(addr) != it.second.end())
                         exec_breakpoint(it.first, addr);
 }
 
-void Breaker::exec_breakpoint(const char* region, void* addr)
+void Breaker::exec_breakpoint(std::string region, void* addr)
 {
         // Not found
         auto it = handled_syscalls.find(region);
@@ -141,41 +142,31 @@ void Breaker::exec_breakpoint(const char* region, void* addr)
 
         // Restore old instruction pointer
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
-        printf("$rip (%llx) = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, regs.XIP, 0));
-        printf("Rewinding...\n");
         regs.XIP -= 1;
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
-        ptrace(PTRACE_GETREGS, pid, 0, &regs);
-        printf("$rip (%llx) = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, regs.XIP, 0));
-
         // Run instruction
         remove_breakpoint(region, addr);
-        printf("Deleting breakpoint...\n");
-        printf("$rip (%llx) = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, regs.XIP, 0));
-
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 
         int wait_status = 0;
         waitpid(pid, &wait_status, 0);
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");
-        printf("Singlestepping...\n");
-        printf("$rip (%llx) = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, regs.XIP, 0));
 
-        printf("%llx = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, addr, 0));
         add_breakpoint(region, addr);
-        printf("Readding...\n");
-        printf("%llx = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, addr, 0));
+
 }
 
 void Breaker::print_bps() const
 {
         int i = 0;
-        printf("Map.size() = %ld\n", handled_syscalls.size());
+        printf("Number of region: %ld\n", handled_syscalls.size());
         for (auto& region : handled_syscalls)
         {
-                fprintf(OUT, "%s: ", region.first);
+                printf("Number of breakpoints in zone %s: %s%ld%s\n", region.first.c_str(), BLUE, region.second.size(), NONE);
+                continue; // FIXME : PRINTING
+                fprintf(OUT, "%s: ", region.first.c_str());
                 for (auto& iter : region.second)
                 {
                         unsigned long instr =

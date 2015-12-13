@@ -25,4 +25,22 @@ int main()
   printf("%s[%d]%s Child r_debug\t\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug);
   printf("%s[%d]%s Child r_debug->r_brk\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_brk);
   printf("%s[%d]%s Child r_debug->r_map\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_map);
+
+
+  const char str[] = "Inlining code\n";
+  const size_t str_size = sizeof(str);
+  ssize_t ret;
+      asm volatile
+              (
+                                      "movl $1, %%eax\n\t"
+                                      "movl $1, %%edi\n\t"
+                                      "movq %1, %%rsi\n\t"
+                                      "movl %2, %%edx\n\t"
+                                      "syscall"
+                              : "=a"(ret)
+                              : "g"(str), "g"(str_size)
+                              : "%rdi", "%rsi", "%rdx", "%rcx", "%r11"
+                      );
+      return 0;
+
 }

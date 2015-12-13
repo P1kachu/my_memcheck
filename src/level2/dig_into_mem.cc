@@ -149,7 +149,8 @@ void *print_string_from_mem(void* str, pid_t pid)
 
         if (read)
         {
-                fprintf(OUT, "%s\n", s);
+                // FIXME : Deadcode
+                //fprintf(OUT, "%s\n", s);
                 return strdup(s);
         }
         return NULL;
@@ -208,8 +209,9 @@ std::pair<off_t, long>get_sections(const char* lib_name)
                         len += section_header.sh_size;
                         for (int j = section_header.sh_name; table[j] != '\0'; ++j)
                                 buff[j - section_header.sh_name] = table[j];
-
-                        fprintf(OUT, "%s - EX: %ld\n", buff, section_header.sh_flags & SHF_EXECINSTR);
+                        UNUSED(buff[0]);
+                        // FIXME : Deadcode
+                        // fprintf(OUT, "%s - Exec: %ld\n", buff, section_header.sh_flags & SHF_EXECINSTR);
                 }
 
                 lseek(fd, elf_header.e_shentsize, SEEK_CUR);
@@ -220,9 +222,10 @@ std::pair<off_t, long>get_sections(const char* lib_name)
         return std::pair<off_t, long>(offset, len);
 }
 
-int disass(const char* name, void* offset, long len, Breaker b, pid_t pid)
+int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
 {
-        printf("Disassembling %ld bytes of code at %p (zone %s)\n", len, offset, name);
+        fprintf(OUT, "%sZone%s: %s\n",  GREEN, NONE, name);
+        printf("Disassembling %ld bytes\n", len);
         errno = 0;
         csh handle;
         cs_insn *insn = NULL;
@@ -256,7 +259,7 @@ int disass(const char* name, void* offset, long len, Breaker b, pid_t pid)
                         {
                                 memset(insn, 0, sizeof(cs_insn));
                                 auto id = insn[j].id;
-#if 1 // FIXME : Deadcode
+#if 0 // FIXME : Deadcode
                                 printf("%lx\t", insn[j].address);
                                 for (int k = 0; k < 8; k++)
                                         printf("%2x ",insn[j].bytes[k]);
@@ -266,7 +269,7 @@ int disass(const char* name, void* offset, long len, Breaker b, pid_t pid)
                                 // If syscall, add breakpoint
                                 if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
                                     || (id == X86_INS_INT && insn[j].bytes[1] == 0x80))
-                                        b.add_breakpoint(name, reinterpret_cast<void*>(insn[j].address));
+                                        b.add_breakpoint(std::string(name), reinterpret_cast<void*>(insn[j].address));
                         }
 
                         cs_free(insn, count);
@@ -290,7 +293,8 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
 
         process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-        fprintf(OUT, "\n%sBrowsing link map%s:\n", YELLOW, NONE);
+        fprintf(OUT, "%s##################################################%s\n", RED, NONE);
+        fprintf(OUT, "%sBrowsing link map%s:\n", YELLOW, NONE);
 
         // FIXME : Useless ? Check if we missed some
         while (map.l_prev)
@@ -304,8 +308,6 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                 process_vm_readv(pid, &local, 1, &remote, 1, 0);
                 if (map.l_addr)
                 {
-                        fprintf(OUT, "%sl_name%s: ",  GREEN, NONE);
-
                         // Unlike what the elf.h file can say about it
                         // l_addr is not a difference or any stewpid thing
                         // like that apparently, but the base address the
@@ -322,11 +324,12 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                 remote.iov_base = map.l_next;
         } while (map.l_next);
 
-        fprintf(OUT, "\n");
-
         // Add binary own syscalls
         std::pair<off_t, long> sections = get_sections(b->name.c_str());
         if (sections.second)
-                disass(MAIN_CHILD, (char*)map.l_addr + sections.first, sections.second, *b, pid);
-
+                disass(MAIN_CHILD, (char*)0x400000 + sections.first, sections.second, *b, pid);
+        // FIXME : Get real address
+        fprintf(OUT, "%s##################################################%s\n", RED, NONE);
+        fprintf(OUT, "\n");
+        b->print_bps();
 }

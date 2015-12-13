@@ -35,8 +35,8 @@ static int mem_hook(std::string name, pid_t pid)
                 if (WIFSIGNALED(status))
                         break;
 
-                fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
-                        GREEN, pid, NONE, status, (void*)bp, RED,
+                fprintf(OUT, "%s[%d]%s %lx - Received %s%s%s\n",
+                        GREEN, pid, NONE, get_xip(pid), RED,
                         strsignal(WSTOPSIG(status)), NONE);
 
                 if (status == 2943)
