@@ -155,7 +155,7 @@ void *print_string_from_mem(void* str, pid_t pid)
         return NULL;
 }
 
-std::pair<off_t, int>get_sections(const char* lib_name)
+std::pair<off_t, long>get_sections(const char* lib_name)
 {
         int fd = open(lib_name, O_RDONLY);
         if (fd < 0)
@@ -169,7 +169,7 @@ std::pair<off_t, int>get_sections(const char* lib_name)
         ElfW(Shdr) string_header;
         bool in_executable = false;
         off_t offset = 0;
-        int len = 0;
+        long len = 0;
         // Elf header
         unsigned nread = read(fd, &elf_header, sizeof (ElfW(Ehdr)));
 
@@ -217,24 +217,23 @@ std::pair<off_t, int>get_sections(const char* lib_name)
 
         UNUSED(nread);
 
-        return std::pair<off_t, int>(offset, len);
-
+        return std::pair<off_t, long>(offset, len);
 }
 
-int disass(const char* name, void* phdr, int len, Breaker b, pid_t pid)
+int disass(const char* name, void* phdr, long len, Breaker b, pid_t pid)
 {
+        printf("Disassembling %ld  bytes of code\n", len);
         errno = 0;
-        UNUSED(len);
         csh handle;
         cs_insn *insn = NULL;
         size_t count = 0;
-        unsigned char buffer[DISASS_SIZE] = { 0 };
+        unsigned char* buffer = new unsigned char[len + 1];
         struct iovec local;
         struct iovec remote;
         local.iov_base  = &buffer;
-        local.iov_len   = DISASS_SIZE;
+        local.iov_len   = len;
         remote.iov_base = phdr;
-        remote.iov_len  = DISASS_SIZE;
+        remote.iov_len  = len;
         int nread = process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
         if (nread < 0)
@@ -245,7 +244,7 @@ int disass(const char* name, void* phdr, int len, Breaker b, pid_t pid)
                 return -1;
 
         cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
-        count = cs_disasm(handle, buffer, DISASS_SIZE - 1, (uintptr_t)phdr, 0, &insn);
+        count = cs_disasm(handle, buffer, len - 1, (uintptr_t)phdr, 0, &insn);
 
         if (count > 0)
         {
@@ -304,8 +303,9 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                         // shared object is loaded at.
                         char* dupp = (char*)print_string_from_mem(map.l_name, pid);
 
-                        std::pair<off_t, int> sections = get_sections(dupp);
-                        disass(dupp, (char*)map.l_addr + sections.first, sections.second, *b, pid);
+                        std::pair<off_t, long> sections = get_sections(dupp);
+                        if (sections.second)
+                                disass(dupp, (char*)map.l_addr + sections.first, sections.second, *b, pid);
 
                         free(dupp);
                         fprintf(OUT, "\n");
