@@ -18,7 +18,7 @@ static void print_syscall_name(int id)
 static void print_addresses(pid_t child, user_regs_struct& regs)
 {
 #if BONUS
-        fprintf(OUT, "[pid %04d][0x%08llx] ", child, regs.rip);
+        fprintf(OUT, "[%d][0x%08llx] ", child, regs.rip);
 #else
         UNUSED(child);
         UNUSED(regs);

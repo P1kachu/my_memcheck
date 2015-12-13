@@ -19,9 +19,6 @@ static int mem_hook(std::string name, pid_t pid)
         Breaker b(name, pid);
         b.add_breakpoint(MAIN_CHILD, b.rr_brk);
 
-        // FIXME : DEADCODE
-        b.print_bps();
-
         while (1)
         {
                 ptrace(PTRACE_CONT, pid, 0, 0);

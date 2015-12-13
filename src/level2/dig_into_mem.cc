@@ -280,11 +280,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                                 // If syscall, add breakpoint
                                 if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
                                     || (id == X86_INS_INT && insn[j].bytes[1] == 0x80))
-                                {
-                                        // printf(" XX %lx --> ", ptrace(PTRACE_PEEKDATA, pid, insn[j].address, 0));
                                         b.add_breakpoint(std::string(name), (void*)insn[j].address);
-                                        // printf("%lx\n\n", ptrace(PTRACE_PEEKDATA, pid, insn[j].address, 0));
-                                }
                                 counter += insn[j].size;
 
                         }
@@ -347,5 +343,4 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
         // FIXME : Get real address
         fprintf(OUT, "%s##################################################%s\n", RED, NONE);
         fprintf(OUT, "\n");
-        b->print_bps();
 }
