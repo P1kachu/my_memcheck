@@ -135,7 +135,7 @@ void* get_link_map(void* rr_debug, pid_t pid, int* status)
         return link_map;
 }
 
-void print_string_from_mem(void* str, pid_t pid)
+void *print_string_from_mem(void* str, pid_t pid)
 {
         char s[64] = {0};
         struct iovec local;
@@ -148,27 +148,94 @@ void print_string_from_mem(void* str, pid_t pid)
         ssize_t read = process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
         if (read)
+        {
                 fprintf(OUT, "%s\n", s);
+                return strdup(s);
+        }
+        return NULL;
+}
+
+void* get_sections(const char* lib_name)
+{
+        int fd = open(lib_name, O_RDONLY);
+        if (fd < 0)
+        {
+                fprintf(OUT, "%sERROR%s Couldn't open lib %s\n", RED, NONE, lib_name);
+                return NULL;
+        }
+
+        ElfW(Ehdr) elf_header;
+
+        unsigned nread = read(fd, &elf_header, sizeof (ElfW(Ehdr)));
+
+        if (nread < sizeof (ElfW(Ehdr)))
+                return NULL;
+
+        lseek(fd, elf_header.e_shoff, SEEK_CUR);
+
+        ElfW(Shdr) section_header;
+
+        int string_table_offset =  elf_header.e_shstrndx;
+
+        ElfW(Shdr) string_header;
+
+        lseek(fd, elf_header.e_shentsize * string_table_offset, SEEK_CUR);
+
+        nread = read(fd, &string_header, sizeof (ElfW(Shdr)));
+        off_t strtab = string_header.sh_offset;
+        lseek(fd, strtab, SEEK_SET);
+
+        char* table = new char[MAX_STRING_SIZE * elf_header.e_shnum];
+
+        nread = read(fd, table, sizeof (char) * MAX_STRING_SIZE * elf_header.e_shnum);
+
+        for (int j = 60; table[j] != '\0'; ++j)
+                fprintf(OUT, "%c", table[j]);
+        fprintf(OUT, "\n");
+
+        for (int i = 0; i < elf_header.e_shnum; ++i)
+        {
+                lseek(fd, elf_header.e_shoff + elf_header.e_shentsize * i, SEEK_SET);
+
+                nread = read(fd, &section_header, sizeof (ElfW(Shdr)));
+
+                if (nread < sizeof (ElfW(Shdr)))
+                        return NULL;
+
+                fprintf(OUT, "##");
+                for (int j = section_header.sh_name; table[j] != '\0'; ++j)
+                        fprintf(OUT, "%c", table[j]);
+
+                fprintf(OUT, "##\n");
+
+                lseek(fd, elf_header.e_shentsize, SEEK_CUR);
+        }
+
+        print_errno();
+
+
+        return NULL;
 
 }
 
-int disass(const char* name, ElfW(Phdr)* phdr, Breaker b, pid_t pid)
+int disass(const char* name, void* phdr, Breaker b, pid_t pid)
 {
         csh handle;
         cs_insn *insn = NULL;
         size_t count = 0;
-
         unsigned char buffer[DISASS_SIZE] = { 0 };
         struct iovec local;
         struct iovec remote;
+        printf("Bad address ? %p\n", phdr);
         local.iov_base  = &buffer;
         local.iov_len   = DISASS_SIZE;
-        printf("Phdr: %p\n", (void*) phdr);
         remote.iov_base = phdr;
         remote.iov_len  = DISASS_SIZE;
-        unsigned nread = process_vm_readv(pid, &local, 1, &remote, 1, 0);
-        printf("%d --> ", nread);
+        int nread = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+        if (nread < 0)
+                return -1;
         print_errno();
+
         if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
                 return -1;
 
@@ -179,8 +246,12 @@ int disass(const char* name, ElfW(Phdr)* phdr, Breaker b, pid_t pid)
         {
                 for (size_t j = 0; j < count; j++)
                 {
-                        printf("%lx\t%s\t\t%s\n", insn[j].address, insn[j].mnemonic, insn[j].op_str);
-                        if (insn[j].id == X86_INS_SYSCALL)
+                        //printf("%lx\t%s\t\t%s\n", insn[j].address, insn[j].mnemonic, insn[j].op_str);
+                        auto id = insn[j].id;
+
+                        // If syscall, add breakpoint
+                        if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
+                            || (id == X86_INS_INT && insn[j].bytes[1] == 0x80))
                                 b.add_breakpoint(name, reinterpret_cast<void*>(insn[j].address));
                 }
 
@@ -205,40 +276,42 @@ static void retrieve_infos(const char* name, void* elf_header, pid_t pid, Breake
         remote.iov_base = elf_header;
         remote.iov_len  = sizeof (ElfW(Ehdr));
         process_vm_readv(pid, &local, 1, &remote, 1, 0);
+        printf("-->%s\n", name);
+        unsigned long phent = header.e_phentsize;
+        unsigned long phnum = header.e_phnum;
+        void* at_phdr =  (void*)((uintptr_t)elf_header + (uintptr_t)header.e_phoff);
 
-        unsigned long phent = 0;
-        unsigned long phnum = 0;
-
-        void* at_phdr = get_phdr(phent, phnum, pid);
-
-
-        for (unsigned i = 0; i < header.e_phnum; ++i)
+        for (unsigned i = 0; i < phnum; ++i)
         {
                 local.iov_base = buffer;
                 local.iov_len  = sizeof (Elf64_Phdr);
-                remote.iov_base = (char*)at_phdr + i * phent;
+                remote.iov_base = (char*) at_phdr + i * phent;
                 remote.iov_len  = sizeof (Elf64_Phdr);
 
                 process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-                ElfW(Phdr)* phdr = reinterpret_cast<Elf64_Phdr*>(buffer);
+                ElfW(Phdr)* phdr = (ElfW(Phdr)*)buffer;
+
                 if (phdr->p_flags & PF_X)
                 {
                         if (phdr->p_type == PT_LOAD)
                                 printf("Executable PT_LOAD Found\n");
+
                         else if (phdr->p_type == PT_PHDR)
                                 printf("Executable PHDR Found\n");
-                        else
-                                printf("Weird shit Found\n");
 
-                        UNUSED(b);
+                        else
+                                continue;
+
                         printf("Offset: %lx\n", phdr->p_offset);
                         printf("vaddr: %lx\n", phdr->p_vaddr);
                         printf("paddr: %lx\n", phdr->p_paddr);
                         printf("filesz: %lx\n", phdr->p_filesz);
-                        printf("memsz: %lx\n", phdr->p_memsz);
-                        disass(name, phdr + phdr->p_vaddr, *b, pid);
-                        printf("Addition: %lx\n", (uintptr_t)elf_header + (uintptr_t)phdr->p_vaddr);
+                        printf("memsz: %lx\n\n", phdr->p_memsz);
+                        get_sections(name);
+                        UNUSED(b);
+                        UNUSED(name);
+                        //disass(name, (char*)at_phdr + phdr->p_paddr, *b, pid);
                 }
         }
 }
@@ -274,13 +347,15 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                         // l_addr is not a difference or any stewpid thing
                         // like that apparently, but the base address the
                         // shared object is loaded at.
-                        fprintf(OUT, "l_addr: %p\n", (void*)map.l_addr);
-                        fprintf(OUT, "%sl_name%s: ", YELLOW, NONE);
-                        print_string_from_mem(map.l_name, pid);
-                        fprintf(OUT, "l_ld: %p\n", (void*)map.l_ld);
-                        retrieve_infos(map.l_name, (void*)map.l_addr, pid, b);
+
+                        fprintf(OUT, "%sl_addr%s: %p\n", GREEN, NONE, (void*)map.l_addr);
+                        fprintf(OUT, "%sl_name%s: ",  GREEN, NONE);
+                        char* dupp = (char*)print_string_from_mem(map.l_name, pid);
+                        printf("#%p#\n", dupp);
+                        fprintf(OUT, "%sl_ld%s: %p\n", GREEN, NONE, (void*)map.l_ld);
+                        retrieve_infos(dupp, (void*)map.l_addr, pid, b);
+                        free(dupp);
                         fprintf(OUT, "\n");
-                        break;
                 }
                 remote.iov_base = map.l_next;
         } while (map.l_next);

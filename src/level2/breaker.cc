@@ -1,4 +1,4 @@
-#include "level2.hh"
+#include "dig_into_mem.hh"
 
 struct r_debug* Breaker::get_r_debug(pid_t pid_child)
 {
@@ -133,7 +133,7 @@ void Breaker::handle_bp(void* addr)
                        : "CONSISTENT");
                 if (state == r_debug::RT_CONSISTENT)
                         browse_link_map(link_map, pid, this);
-
+                print_bps();
         }
 
         for (auto it : handled_syscalls)
