@@ -320,6 +320,4 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
         } while (map.l_next);
 
         fprintf(OUT, "\n");
-        b->print_bps();
-        exit(0);
 }

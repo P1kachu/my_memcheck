@@ -35,10 +35,12 @@ static int mem_hook(std::string name, pid_t pid)
                 if (WIFSIGNALED(status))
                         break;
 
-                fprintf(OUT, "%s[%d]%s Signal received: %p - %s%s%s\n",
-                        GREEN, pid, NONE, (void*)bp, RED,
+                fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
+                        GREEN, pid, NONE, status, (void*)bp, RED,
                         strsignal(WSTOPSIG(status)), NONE);
 
+                if (status == 2943)
+                        break;
                 try
                 {
                         if (b.is_from_us(bp))
