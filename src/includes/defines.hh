@@ -37,6 +37,7 @@
 
 # include "colors.hh"
 # include "helpers.hh"
+# include "syscalls.hh"
 
 # define OUT stdout
 # define UNUSED(x) { (x) = (x); }
@@ -77,12 +78,14 @@
 
 #  define INSTR_REG   EIP
 #  define XIP         eip
+#  define XAX         eax
 #  define TRAP_MASK   0xFFFFFF00
 
 # elif defined(__x86_64)
 
 #  define INSTR_REG   RIP
 #  define XIP         rip
+#  define XAX         rax
 #  define TRAP_MASK   0xFFFFFFFFFFFFFF00
 
 # endif /* !ARCH */

@@ -167,7 +167,7 @@ static int print_exit(pid_t child, user_regs_struct& regs)
         fprintf(OUT, "exit(");
 
 #if BONUS
-        fprintf(OUT, "error_code = %d", static_cast<int>(regs.rdi));
+        fprintf(OUT, "%d", static_cast<int>(regs.rdi));
 #endif
 
         return static_cast<int>(regs.rdi);
@@ -179,7 +179,7 @@ static int print_exitgroup(pid_t child, user_regs_struct& regs)
         fprintf(OUT, "exit_group(");
 
 #if BONUS
-        fprintf(OUT, "error_code = %d", static_cast<int>(regs.rdi));
+        fprintf(OUT, "%d", static_cast<int>(regs.rdi));
 #endif
 
         return static_cast<int>(regs.rdi);

@@ -145,6 +145,7 @@ void Breaker::exec_breakpoint(std::string region, void* addr)
         // Restore old instruction pointer
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
         regs.XIP -= 1;
+        print_syscall(pid, regs.XAX);
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
         // Run instruction
@@ -153,8 +154,18 @@ void Breaker::exec_breakpoint(std::string region, void* addr)
 
         waitpid(pid, &wait_status, 0);
 
+
+        int retval = ptrace(PTRACE_PEEKUSER, pid,
+                        sizeof (long) * RAX);
+
+        if (retval >= 0)
+                fprintf(OUT, ") = %d\n", retval);
+        else
+                fprintf(OUT, ") = ?\n");
+
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");
+
 
         add_breakpoint(region, addr);
 }

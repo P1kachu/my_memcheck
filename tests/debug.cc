@@ -8,7 +8,7 @@ int main()
 {
   struct r_debug *r_debug = NULL;
   ElfW(Dyn)* dyn = _DYNAMIC;
-  printf("%s[%d]%s Child _DYNAMIC:\t\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void*)dyn);
+  printf("%s[C %d]%s Child _DYNAMIC: %p\n", "\033[31;1m", getpid(), "\033[0m", (void*)dyn);
   for (; dyn->d_tag != DT_NULL; ++dyn)
   {
     //printf("size: %lu ", sizeof (ElfW(Dyn)));
@@ -22,9 +22,9 @@ int main()
     }
   }
 
-  printf("%s[%d]%s Child r_debug\t\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug);
-  printf("%s[%d]%s Child r_debug->r_brk\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_brk);
-  printf("%s[%d]%s Child r_debug->r_map\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_map);
+  printf("%s[C %d]%s Child r_debug\t\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug);
+  printf("%s[C %d]%s Child r_debug->r_brk\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_brk);
+  printf("%s[C %d]%s Child r_debug->r_map\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_map);
 
 
   const char str[] = "Inlining code\n";
