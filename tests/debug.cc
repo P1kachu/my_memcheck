@@ -32,14 +32,14 @@ int main()
   ssize_t ret;
       asm volatile
               (
-                                      "movl $1, %%eax\n\t"
-                                      "movl $1, %%edi\n\t"
-                                      "movq %1, %%rsi\n\t"
-                                      "movl %2, %%edx\n\t"
-                                      "syscall"
-                              : "=a"(ret)
-                              : "g"(str), "g"(str_size)
-                              : "%rdi", "%rsi", "%rdx", "%rcx", "%r11"
+                      "movl $1, %%eax\n\t"
+                      "movl $1, %%edi\n\t"
+                      "movq %1, %%rsi\n\t"
+                      "movl %2, %%edx\n\t"
+                      "syscall"
+                      : "=a"(ret)
+                      : "g"(str), "g"(str_size)
+                      : "%rdi", "%rsi", "%rdx", "%rcx", "%r11"
                       );
       return 0;
 

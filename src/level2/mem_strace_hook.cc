@@ -24,25 +24,28 @@ static int mem_hook(std::string name, pid_t pid)
 
         while (1)
         {
+                printf("LOOP\n");
                 ptrace(PTRACE_CONT, pid, 0, 0);
 
                 waitpid(pid, &status, 0);
 
                 auto bp = reinterpret_cast<void*>(get_xip(pid) - 1);
 
-                if (WIFEXITED(status))
-                        break;
-                if (WIFSIGNALED(status))
-                        break;
+                if(WIFEXITED(status))
+                      break;
+                if(WIFSIGNALED(status))
+                      break;
 
-                fprintf(OUT, "%s[%d]%s %lx - Received %s%s%s\n",
-                        GREEN, pid, NONE, get_xip(pid), RED,
-                        strsignal(WSTOPSIG(status)), NONE);
+                fprintf(OUT, "%s[%d]%s 0x%lx : %lx - Received %s%s%s\n",
+                        GREEN, pid, NONE, get_xip(pid) - 1, ptrace(PTRACE_PEEKDATA, pid, get_xip(pid) - 1,0),
+                        RED, strsignal(WSTOPSIG(status)), NONE);
 
                 if (status == 2943)
                         break;
+
                 try
                 {
+                        UNUSED(bp);
                         if (b.is_from_us(bp))
                                 b.handle_bp(bp);
                 }

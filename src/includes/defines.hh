@@ -1,6 +1,13 @@
 #ifndef DEFINES_HH
 # define DEFINES_HH
 
+/*
+** Dirty to look at but easier to manage at the end
+** Every define should be here
+** Classes are here when I have no choice (else
+** I would have put them into their own header)
+*/
+
 # include <map>
 # include <string>
 # include <vector>
@@ -81,6 +88,9 @@
 # endif /* !ARCH */
 
 
+
+// Circular dependency...
+
 class Breaker
 {
 public:
@@ -93,6 +103,7 @@ public:
         void handle_bp(void* addr);
         void exec_breakpoint(std::string region, void* addr);
         void print_bps() const;
+        void reset_libs(void* link_map);
 
         // Vars
         std::map<std::string, std::map<void*, unsigned long>> handled_syscalls;

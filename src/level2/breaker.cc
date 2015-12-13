@@ -99,7 +99,7 @@ void Breaker::add_breakpoint(std::string region, void* addr)
         }
 
         // Replace it with an int3 (CC) opcode sequence
-        ptrace(PTRACE_POKETEXT, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
+        ptrace(PTRACE_POKEDATA, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
 }
 
 char Breaker::is_from_us(void* addr) const
@@ -125,14 +125,19 @@ void Breaker::handle_bp(void* addr)
                        : "CONSISTENT");
                 if (state == r_debug::RT_CONSISTENT)
                         browse_link_map(link_map, pid, this);
+                if (state == r_debug::RT_DELETE)
+                        reset_libs(link_map);
         }
-        for (auto it : handled_syscalls)
+        else
+                for (auto it : handled_syscalls)
                         if (it.second.find(addr) != it.second.end())
-                        exec_breakpoint(it.first, addr);
+                                exec_breakpoint(it.first, addr);
 }
 
 void Breaker::exec_breakpoint(std::string region, void* addr)
 {
+        int wait_status = 0;
+
         // Not found
         auto it = handled_syscalls.find(region);
         if (it->second.find(addr) == it->second.end())
@@ -146,16 +151,18 @@ void Breaker::exec_breakpoint(std::string region, void* addr)
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
         // Run instruction
+        printf("Exec %p %lx\n", addr,         ptrace(PTRACE_PEEKDATA, pid, addr,0));
         remove_breakpoint(region, addr);
+        printf("Exec %p %lx\n", addr,         ptrace(PTRACE_PEEKDATA, pid, addr,0));
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 
-        int wait_status = 0;
         waitpid(pid, &wait_status, 0);
+
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");
 
         add_breakpoint(region, addr);
-
+        printf("Exec %p %lx\n", addr,         ptrace(PTRACE_PEEKDATA, pid, addr,0));
 }
 
 void Breaker::print_bps() const
@@ -180,4 +187,19 @@ void Breaker::print_bps() const
                         fprintf(OUT, "\t%8lx (actual)\n", instr);
                 }
         }
+}
+
+void Breaker::reset_libs(void* link_map)
+{
+        // Crappy version
+        // Correct version would be to iterate through the libs
+        // list and check the one that is NOT into the map
+        // But fuck it, already short on time
+        for (auto& region : handled_syscalls)
+        {
+                if (!strcmp(region.first.c_str(), MAIN_CHILD))
+                    continue;
+                handled_syscalls.erase(region.first);
+        }
+        browse_link_map(link_map, pid, this);
 }
