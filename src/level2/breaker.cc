@@ -17,7 +17,6 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
 
         // FIXME : Check if ELF ? Get Ehdr, helpers/is_elf
 
-
         // Get PT_DYNAMIC entry
         dt_struct = (Elf64_Dyn*)get_pt_dynamic(at_phent, at_phnum,
                                                pid_child, at_phdr);
@@ -34,7 +33,6 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
         // FIXME : Deadcode
         //fprintf(OUT, "Found r_debug\t\t%p\n", rr_debug);
         //fprintf(OUT, "Found r_debug->r_brk\t%p\n", rr_brk);
-
 
         // Return r_debug struct address
         return reinterpret_cast<struct r_debug*>(rr_debug);
@@ -112,7 +110,6 @@ char Breaker::is_from_us(void* addr) const
 
 void Breaker::handle_bp(void* addr)
 {
-        printf("%s[%d]%s %%rip = %p ", GREEN, pid, NONE, addr);
         if (addr == rr_brk)
         {
                 printf("(brk)\n");
@@ -151,9 +148,7 @@ void Breaker::exec_breakpoint(std::string region, void* addr)
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
         // Run instruction
-        printf("Exec %p %lx\n", addr,         ptrace(PTRACE_PEEKDATA, pid, addr,0));
         remove_breakpoint(region, addr);
-        printf("Exec %p %lx\n", addr,         ptrace(PTRACE_PEEKDATA, pid, addr,0));
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 
         waitpid(pid, &wait_status, 0);
@@ -162,31 +157,32 @@ void Breaker::exec_breakpoint(std::string region, void* addr)
                 throw std::logic_error("EXITED");
 
         add_breakpoint(region, addr);
-        printf("Exec %p %lx\n", addr,         ptrace(PTRACE_PEEKDATA, pid, addr,0));
 }
 
 void Breaker::print_bps() const
 {
-        int i = 0;
-        printf("Number of region: %ld\n", handled_syscalls.size());
+        printf("Number of zones: %ld\n{\n", handled_syscalls.size());
         for (auto& region : handled_syscalls)
         {
-                printf("Number of breakpoints in zone %s: %s%ld%s\n", region.first.c_str(), BLUE, region.second.size(), NONE);
-                continue; // FIXME : PRINTING
-                fprintf(OUT, "%s: ", region.first.c_str());
+                printf("\tNumber of breakpoints in %s: %s%ld%s\n\t{\n",
+                       region.first.c_str(), BLUE, region.second.size(), NONE);
+                int i = 0;
                 for (auto& iter : region.second)
                 {
                         unsigned long instr =
                                 ptrace(PTRACE_PEEKDATA, pid, iter.first, 0);
                         if (iter.first == rr_brk)
-                                fprintf(OUT, "%3d: %p (r_brk):\n", i, iter.first);
+                                fprintf(OUT, "\t\t%3d: %p (r_brk):\n", i, iter.first);
                         else
-                                fprintf(OUT, "%3d: %p :\n", i, iter.first);
+                                fprintf(OUT, "\t\t%3d: %p :\n", i, iter.first);
 
-                        fprintf(OUT, "\t%8lx (origin)\n", iter.second);
-                        fprintf(OUT, "\t%8lx (actual)\n", instr);
+                        fprintf(OUT, "\t\t\t%8lx (origin)\n", iter.second);
+                        fprintf(OUT, "\t\t\t%8lx (actual)\n", instr);
+                        i++;
                 }
+                printf("\t}\n");
         }
+        printf("}\n");
 }
 
 void Breaker::reset_libs(void* link_map)

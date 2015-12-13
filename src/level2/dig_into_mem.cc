@@ -233,6 +233,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
         struct iovec local;
         struct iovec remote;
 
+        int counter = 0;
 
         for (unsigned i = 0; i < len / PAGE_SIZE + 1; ++i)
         {
@@ -251,25 +252,41 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                         return -1;
 
                 cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
-                count = cs_disasm(handle, buffer, nread, (uintptr_t)offset, 0, &insn);
+                count = cs_disasm(handle, buffer, nread, (uintptr_t)offset + PAGE_SIZE * i, 0, &insn);
 
                 if (count > 0)
                 {
-                        for (size_t j = 0; j < count; j++)
+                        for (size_t j = 0; j < count && counter <= len; j++)
                         {
                                 memset(insn, 0, sizeof(cs_insn));
                                 auto id = insn[j].id;
 #if 0 // FIXME : Deadcode
                                 printf("%lx\t", insn[j].address);
                                 for (int k = 0; k < 8; k++)
-                                        printf("%2x ",insn[j].bytes[k]);
+                                        printf("%02x ",insn[j].bytes[k]);
                                 printf("\t\t%s\t%s\n", insn[j].mnemonic, insn[j].op_str);
+#endif
+#if 0 // FIXME : Deadcode
+                                if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
+                                    || (id == X86_INS_INT && insn[j].bytes[1] == 0x80))
+                                {
+                                        printf("%lx\t", insn[j].address);
+                                        for (int k = 0; k < 8; k++)
+                                                printf("%02x ",insn[j].bytes[k]);
+                                        printf("\t\t%s\t%s\n", insn[j].mnemonic, insn[j].op_str);
+                                }
 #endif
 
                                 // If syscall, add breakpoint
                                 if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
                                     || (id == X86_INS_INT && insn[j].bytes[1] == 0x80))
-                                        b.add_breakpoint(std::string(name), reinterpret_cast<void*>(insn[j].address));
+                                {
+                                        // printf(" XX %lx --> ", ptrace(PTRACE_PEEKDATA, pid, insn[j].address, 0));
+                                        b.add_breakpoint(std::string(name), (void*)insn[j].address);
+                                        // printf("%lx\n\n", ptrace(PTRACE_PEEKDATA, pid, insn[j].address, 0));
+                                }
+                                counter += insn[j].size;
+
                         }
 
                         cs_free(insn, count);
@@ -309,8 +326,7 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                 if (map.l_addr)
                 {
                         // Unlike what the elf.h file can say about it
-                        // l_addr is not a difference or any stewpid thing
-                        // like that apparently, but the base address the
+                        // l_addr is not a difference but the base address the
                         // shared object is loaded at.
                         char* dupp = (char*)print_string_from_mem(map.l_name, pid);
 

@@ -24,7 +24,6 @@ static int mem_hook(std::string name, pid_t pid)
 
         while (1)
         {
-                printf("LOOP\n");
                 ptrace(PTRACE_CONT, pid, 0, 0);
 
                 waitpid(pid, &status, 0);
