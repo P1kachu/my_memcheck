@@ -152,32 +152,36 @@ void print_string_from_mem(void* str, pid_t pid)
 
 }
 
-int disass(ElfW(Phdr)* phdr, Breaker b, pid_t pid)
+int disass(const char* name, ElfW(Phdr)* phdr, Breaker b, pid_t pid)
 {
         csh handle;
-        cs_insn *insn;
-        size_t count;
+        cs_insn *insn = NULL;
+        size_t count = 0;
 
-        char buffer[DISASS_SIZE];
+        unsigned char buffer[DISASS_SIZE] = { 0 };
         struct iovec local;
         struct iovec remote;
         local.iov_base  = &buffer;
         local.iov_len   = DISASS_SIZE;
-        remote.iov_base = (void*)(phdr->p_vaddr + (char*)phdr->p_offset);
+        printf("Phdr: %p\n", (void*) phdr);
+        remote.iov_base = phdr;
         remote.iov_len  = DISASS_SIZE;
-
-        ssize_t nread = process_vm_readv(pid, &local, 1, &remote, 1, 0);
-
+        unsigned nread = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+        printf("%d --> ", nread);
+        print_errno();
         if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
                 return -1;
 
-        count = cs_disasm(handle, buffer, nread, 0x0, 0, &insn);
+        cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
+        count = cs_disasm(handle, buffer, DISASS_SIZE - 1, (uintptr_t)phdr, 0, &insn);
 
         if (count > 0)
         {
-                size_t j;
-                for (j = 0; j < count; j++)
+                for (size_t j = 0; j < count; j++)
                 {
+                        printf("%lx\t%s\t\t%s\n", insn[j].address, insn[j].mnemonic, insn[j].op_str);
+                        if (insn[j].id == X86_INS_SYSCALL)
+                                b.add_breakpoint(name, reinterpret_cast<void*>(insn[j].address));
                 }
 
                 cs_free(insn, count);
@@ -186,10 +190,11 @@ int disass(ElfW(Phdr)* phdr, Breaker b, pid_t pid)
                 printf("ERROR: Failed to disassemble given code!\n");
 
         cs_close(&handle);
+
         return 0;
 }
 
-static void retrieve_infos(void* elf_header, pid_t pid, Breaker* b)
+static void retrieve_infos(const char* name, void* elf_header, pid_t pid, Breaker* b)
 {
         ElfW(Ehdr) header;
         char buffer[1024];
@@ -225,8 +230,15 @@ static void retrieve_infos(void* elf_header, pid_t pid, Breaker* b)
                                 printf("Executable PHDR Found\n");
                         else
                                 printf("Weird shit Found\n");
+
                         UNUSED(b);
-                        disass(phdr, b, pid);
+                        printf("Offset: %lx\n", phdr->p_offset);
+                        printf("vaddr: %lx\n", phdr->p_vaddr);
+                        printf("paddr: %lx\n", phdr->p_paddr);
+                        printf("filesz: %lx\n", phdr->p_filesz);
+                        printf("memsz: %lx\n", phdr->p_memsz);
+                        disass(name, phdr + phdr->p_vaddr, *b, pid);
+                        printf("Addition: %lx\n", (uintptr_t)elf_header + (uintptr_t)phdr->p_vaddr);
                 }
         }
 }
@@ -266,8 +278,9 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                         fprintf(OUT, "%sl_name%s: ", YELLOW, NONE);
                         print_string_from_mem(map.l_name, pid);
                         fprintf(OUT, "l_ld: %p\n", (void*)map.l_ld);
-                        retrieve_infos((void*)map.l_addr, pid, b);
+                        retrieve_infos(map.l_name, (void*)map.l_addr, pid, b);
                         fprintf(OUT, "\n");
+                        break;
                 }
                 remote.iov_base = map.l_next;
         } while (map.l_next);

@@ -18,7 +18,7 @@ INCLDIR   = src/includes/
 
 ## LIBS ##
 
-#LDFLAGS = -lcapstone
+LDFLAGS = -lcapstone
 
 ## MAIN ##
 SRCS_1     = $(addsuffix .cc, $(addprefix src/level1/, strace syscalls mem_strace))
