@@ -44,7 +44,7 @@
                 }                                                                           \
         }
 
-# define MAIN_CHILD         "MAIN"
+# define MAIN_CHILD         "ORIGINS"
 # define NULL_STRING        "NULL"
 # define MAX_STRING_SIZE    255
 # define MMAP_SYSCALL       9

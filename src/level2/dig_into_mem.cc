@@ -222,7 +222,7 @@ std::pair<off_t, long>get_sections(const char* lib_name)
 
 int disass(const char* name, void* offset, long len, Breaker b, pid_t pid)
 {
-        printf("Disassembling %ld bytes of code at %p\n", len, offset);
+        printf("Disassembling %ld bytes of code at %p (zone %s)\n", len, offset, name);
         errno = 0;
         csh handle;
         cs_insn *insn = NULL;
@@ -235,9 +235,9 @@ int disass(const char* name, void* offset, long len, Breaker b, pid_t pid)
         {
                 unsigned char buffer[PAGE_SIZE];
                 local.iov_base  = &buffer;
-                local.iov_len   = PAGE_SIZE;
+                local.iov_len   = PAGE_SIZE - 1;
                 remote.iov_base = offset + i * PAGE_SIZE;
-                remote.iov_len  = PAGE_SIZE;
+                remote.iov_len  = PAGE_SIZE - 1;
                 int nread = process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
                 if (nread < 0)
@@ -248,17 +248,20 @@ int disass(const char* name, void* offset, long len, Breaker b, pid_t pid)
                         return -1;
 
                 cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
-                count = cs_disasm(handle, buffer, nread - 1, (uintptr_t)offset, 0, &insn);
+                count = cs_disasm(handle, buffer, nread, (uintptr_t)offset, 0, &insn);
 
                 if (count > 0)
                 {
                         for (size_t j = 0; j < count; j++)
                         {
-                                printf("%lx\t", insn[j].address);
-                                for (int k = 0; k < insn[j].size; k++)
-                                        printf("%x",insn[j].bytes[k]);
-                                printf("\t\t%s\t%s\n", insn[j].mnemonic, insn[j].op_str);
+                                memset(insn, 0, sizeof(cs_insn));
                                 auto id = insn[j].id;
+#if 1 // FIXME : Deadcode
+                                printf("%lx\t", insn[j].address);
+                                for (int k = 0; k < 8; k++)
+                                        printf("%2x ",insn[j].bytes[k]);
+                                printf("\t\t%s\t%s\n", insn[j].mnemonic, insn[j].op_str);
+#endif
 
                                 // If syscall, add breakpoint
                                 if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
@@ -320,4 +323,12 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
         } while (map.l_next);
 
         fprintf(OUT, "\n");
+
+        // Add binary own syscalls
+        std::pair<off_t, long> sections = get_sections(b->name.c_str());
+        if (sections.second)
+                disass(MAIN_CHILD, (char*)map.l_addr + sections.first, sections.second, *b, pid);
+
+        exit(0);
+
 }

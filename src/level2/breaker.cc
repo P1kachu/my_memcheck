@@ -74,6 +74,7 @@ void Breaker::remove_breakpoint(const char* region, void* addr)
         // Get saved instruction and rewrite it in memory
         ptrace(PTRACE_POKEDATA, pid, addr, breaks.find(addr)->second);
         breaks.erase(addr);
+        fprintf(OUT, "%sDELETED%s\n", RED, NONE);
 }
 
 void Breaker::add_breakpoint(const char* region, void* addr)
@@ -83,28 +84,17 @@ void Breaker::add_breakpoint(const char* region, void* addr)
 
         print_errno();
 
-
-        auto it = handled_syscalls.find(region);
-
-        if (it == handled_syscalls.end())
-        {
-                std::map<void*, unsigned long>* inner =
-                        new std::map<void*, unsigned long>;
-                inner->insert(std::make_pair(addr, instr));
-                handled_syscalls.insert(std::pair<const char*,
-                                        std::map<void*,
-                                        unsigned long>>(region, * inner));
-                ptrace(PTRACE_POKETEXT, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
-                return;
-        }
-
-        auto breaks = it->second;
-
         // Address already patched
-        if (breaks.find(addr) != breaks.end())
-                breaks.find(addr)->second = instr;
+        if (handled_syscalls[region].find(addr) != handled_syscalls[region].end())
+        {
+                handled_syscalls[region].find(addr)->second = instr;
+                fprintf(OUT, "Zone %s - size: %ld -- %sUPDATED%s\n", region, handled_syscalls[region].size(), RED, NONE);
+        }
         else
-                breaks.insert(std::pair<void*, unsigned long>(addr, instr));
+        {
+                handled_syscalls[region].insert(std::make_pair(addr, instr));
+                fprintf(OUT, "Zone %s - size: %ld -- %sADDED%s\n", region, handled_syscalls[region].size(), RED, NONE);
+        }
 
         // Replace it with an int3 (CC) opcode sequence
         ptrace(PTRACE_POKETEXT, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
@@ -170,6 +160,7 @@ void Breaker::exec_breakpoint(const char* region, void* addr)
 void Breaker::print_bps() const
 {
         int i = 0;
+        printf("Map.size() = %ld\n", handled_syscalls.size());
         for (auto& region : handled_syscalls)
         {
                 fprintf(OUT, "%s: ", region.first);
