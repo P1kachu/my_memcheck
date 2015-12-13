@@ -125,9 +125,8 @@ void Breaker::handle_bp(void* addr)
                         browse_link_map(link_map, pid, this);
                 print_bps();
         }
-
         for (auto it : handled_syscalls)
-                if (it.second.find(addr) != it.second.end())
+                        if (it.second.find(addr) != it.second.end())
                         exec_breakpoint(it.first, addr);
 }
 
@@ -142,19 +141,32 @@ void Breaker::exec_breakpoint(const char* region, void* addr)
 
         // Restore old instruction pointer
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
+        printf("$rip (%llx) = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, regs.XIP, 0));
+        printf("Rewinding...\n");
         regs.XIP -= 1;
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
+        ptrace(PTRACE_GETREGS, pid, 0, &regs);
+        printf("$rip (%llx) = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, regs.XIP, 0));
+
         // Run instruction
         remove_breakpoint(region, addr);
+        printf("Deleting breakpoint...\n");
+        printf("$rip (%llx) = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, regs.XIP, 0));
+
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 
         int wait_status = 0;
         waitpid(pid, &wait_status, 0);
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");
+        printf("Singlestepping...\n");
+        printf("$rip (%llx) = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, regs.XIP, 0));
 
+        printf("%llx = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, addr, 0));
         add_breakpoint(region, addr);
+        printf("Readding...\n");
+        printf("%llx = %lx\n", regs.XIP, ptrace(PTRACE_PEEKDATA, pid, addr, 0));
 }
 
 void Breaker::print_bps() const
@@ -177,10 +189,4 @@ void Breaker::print_bps() const
                         fprintf(OUT, "\t%8lx (actual)\n", instr);
                 }
         }
-}
-
-int Breaker::parse_elf(char* elf_name)
-{
-        UNUSED(elf_name);
-        return 0;
 }

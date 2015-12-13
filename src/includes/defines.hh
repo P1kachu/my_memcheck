@@ -44,7 +44,7 @@
                 }                                                                           \
         }
 
-# define MAIN_CHILD         "ORIGINS"
+# define MAIN_CHILD         "origins"
 # define NULL_STRING        "NULL"
 # define MAX_STRING_SIZE    255
 # define MMAP_SYSCALL       9
@@ -92,7 +92,6 @@ public:
         char is_from_us(void* addr) const;
         void handle_bp(void* addr);
         void exec_breakpoint(const char* region, void* addr);
-        int parse_elf(char* elf_name);
         void print_bps() const;
 
         // Vars

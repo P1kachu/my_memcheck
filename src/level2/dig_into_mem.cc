@@ -329,6 +329,4 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
         if (sections.second)
                 disass(MAIN_CHILD, (char*)map.l_addr + sections.first, sections.second, *b, pid);
 
-        exit(0);
-
 }
