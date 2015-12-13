@@ -34,14 +34,14 @@
 # define OUT stdout
 # define UNUSED(x) { (x) = (x); }
 # define BONUS 1
-# define print_errno()                                                       \
-        {                                                                    \
-                if (errno)                                                   \
-                {                                                            \
-                        fprintf(OUT, "%sERROR%s Something went wrong: %s\n", \
-                                RED, NONE, strerror(errno));                 \
-                        exit(-1);                                            \
-                }                                                            \
+# define print_errno()                                                                      \
+        {                                                                                   \
+                if (errno)                                                                  \
+                {                                                                           \
+                        fprintf(OUT, "%sERROR%s Something went wrong: %s (%s%s%s:%d)\n",    \
+                                RED, NONE, strerror(errno), RED, __FILE__, NONE, __LINE__); \
+                        exit(-1);                                                           \
+                }                                                                           \
         }
 
 # define MAIN_CHILD         "MAIN"
@@ -95,7 +95,6 @@ public:
         void exec_breakpoint(const char* region, void* addr);
         int parse_elf(char* elf_name);
         void print_bps() const;
-
 
         // Vars
         std::map<const char*, std::map<void*, unsigned long>> handled_syscalls;

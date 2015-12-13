@@ -155,66 +155,71 @@ void *print_string_from_mem(void* str, pid_t pid)
         return NULL;
 }
 
-void* get_sections(const char* lib_name)
+std::pair<off_t, int>get_sections(const char* lib_name)
 {
         int fd = open(lib_name, O_RDONLY);
         if (fd < 0)
         {
                 fprintf(OUT, "%sERROR%s Couldn't open lib %s\n", RED, NONE, lib_name);
-                return NULL;
+                return std::pair<off_t, int>(0,0);
         }
 
         ElfW(Ehdr) elf_header;
-
+        ElfW(Shdr) section_header;
+        ElfW(Shdr) string_header;
+        bool in_executable = false;
+        off_t offset = 0;
+        int len = 0;
+        // Elf header
         unsigned nread = read(fd, &elf_header, sizeof (ElfW(Ehdr)));
 
-        if (nread < sizeof (ElfW(Ehdr)))
-                return NULL;
-
+        // String table offset
         lseek(fd, elf_header.e_shoff, SEEK_CUR);
-
-        ElfW(Shdr) section_header;
-
         int string_table_offset =  elf_header.e_shstrndx;
+        lseek(fd, elf_header.e_shentsize * (string_table_offset - 1), SEEK_CUR);
 
-        ElfW(Shdr) string_header;
-
-        lseek(fd, elf_header.e_shentsize * string_table_offset, SEEK_CUR);
-
+        // String table
         nread = read(fd, &string_header, sizeof (ElfW(Shdr)));
         off_t strtab = string_header.sh_offset;
         lseek(fd, strtab, SEEK_SET);
-
         char* table = new char[MAX_STRING_SIZE * elf_header.e_shnum];
-
         nread = read(fd, table, sizeof (char) * MAX_STRING_SIZE * elf_header.e_shnum);
 
-        for (int j = 60; table[j] != '\0'; ++j)
-                fprintf(OUT, "%c", table[j]);
-        fprintf(OUT, "\n");
-
-        for (int i = 0; i < elf_header.e_shnum; ++i)
+        // Section headers
+        int i;
+        for (i = 0; i < elf_header.e_shnum; ++i)
         {
-                lseek(fd, elf_header.e_shoff + elf_header.e_shentsize * i, SEEK_SET);
+                char buff[255] = { 0 };
+                if (!in_executable)
+                        offset = lseek(fd, elf_header.e_shoff + elf_header.e_shentsize * i, SEEK_SET);
+                else
+                        lseek(fd, elf_header.e_shoff + elf_header.e_shentsize * i, SEEK_SET);
 
                 nread = read(fd, &section_header, sizeof (ElfW(Shdr)));
 
-                if (nread < sizeof (ElfW(Shdr)))
-                        return NULL;
+                if (in_executable && !(section_header.sh_flags & SHF_EXECINSTR))
+                        break;
 
-                fprintf(OUT, "##");
-                for (int j = section_header.sh_name; table[j] != '\0'; ++j)
-                        fprintf(OUT, "%c", table[j]);
+                if (!in_executable && section_header.sh_flags & SHF_EXECINSTR)
+                {
+                        in_executable = true;
+                        len = i;
+                }
 
-                fprintf(OUT, "##\n");
+                if (in_executable)
+                {
+                        for (int j = section_header.sh_name; table[j] != '\0'; ++j)
+                                buff[j - section_header.sh_name] = table[j];
+
+                        fprintf(OUT, "%s - EX: %ld\n", buff, section_header.sh_flags & SHF_EXECINSTR);
+                }
 
                 lseek(fd, elf_header.e_shentsize, SEEK_CUR);
         }
 
-        print_errno();
+        UNUSED(nread);
 
-
-        return NULL;
+        return std::pair<off_t, int>(offset, (i - len) * elf_header.e_shentsize);
 
 }
 
@@ -267,6 +272,7 @@ int disass(const char* name, void* phdr, Breaker b, pid_t pid)
 
 static void retrieve_infos(const char* name, void* elf_header, pid_t pid, Breaker* b)
 {
+        return; // FIXME : Deadcode
         ElfW(Ehdr) header;
         char buffer[1024];
         struct iovec local;
@@ -276,7 +282,6 @@ static void retrieve_infos(const char* name, void* elf_header, pid_t pid, Breake
         remote.iov_base = elf_header;
         remote.iov_len  = sizeof (ElfW(Ehdr));
         process_vm_readv(pid, &local, 1, &remote, 1, 0);
-        printf("-->%s\n", name);
         unsigned long phent = header.e_phentsize;
         unsigned long phnum = header.e_phnum;
         void* at_phdr =  (void*)((uintptr_t)elf_header + (uintptr_t)header.e_phoff);
@@ -290,8 +295,8 @@ static void retrieve_infos(const char* name, void* elf_header, pid_t pid, Breake
 
                 process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
+                UNUSED(b);
                 ElfW(Phdr)* phdr = (ElfW(Phdr)*)buffer;
-
                 if (phdr->p_flags & PF_X)
                 {
                         if (phdr->p_type == PT_LOAD)
@@ -303,17 +308,16 @@ static void retrieve_infos(const char* name, void* elf_header, pid_t pid, Breake
                         else
                                 continue;
 
-                        printf("Offset: %lx\n", phdr->p_offset);
-                        printf("vaddr: %lx\n", phdr->p_vaddr);
-                        printf("paddr: %lx\n", phdr->p_paddr);
-                        printf("filesz: %lx\n", phdr->p_filesz);
-                        printf("memsz: %lx\n\n", phdr->p_memsz);
-                        get_sections(name);
-                        UNUSED(b);
+                        //printf("Offset: %lx\n", phdr->p_offset);
+                        //printf("vaddr: %lx\n", phdr->p_vaddr);
+                        //printf("paddr: %lx\n", phdr->p_paddr);
+                        //printf("filesz: %lx\n", phdr->p_filesz);
+                        //printf("memsz: %lx\n\n", phdr->p_memsz);
                         UNUSED(name);
                         //disass(name, (char*)at_phdr + phdr->p_paddr, *b, pid);
                 }
         }
+
 }
 
 
@@ -351,8 +355,9 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                         fprintf(OUT, "%sl_addr%s: %p\n", GREEN, NONE, (void*)map.l_addr);
                         fprintf(OUT, "%sl_name%s: ",  GREEN, NONE);
                         char* dupp = (char*)print_string_from_mem(map.l_name, pid);
-                        printf("#%p#\n", dupp);
                         fprintf(OUT, "%sl_ld%s: %p\n", GREEN, NONE, (void*)map.l_ld);
+                        get_sections(dupp);
+                        UNUSED(b);
                         retrieve_infos(dupp, (void*)map.l_addr, pid, b);
                         free(dupp);
                         fprintf(OUT, "\n");
