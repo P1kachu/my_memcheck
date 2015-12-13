@@ -190,10 +190,7 @@ std::pair<off_t, int>get_sections(const char* lib_name)
         for (i = 0; i < elf_header.e_shnum; ++i)
         {
                 char buff[255] = { 0 };
-                if (!in_executable)
-                        offset = lseek(fd, elf_header.e_shoff + elf_header.e_shentsize * i, SEEK_SET);
-                else
-                        lseek(fd, elf_header.e_shoff + elf_header.e_shentsize * i, SEEK_SET);
+                lseek(fd, elf_header.e_shoff + elf_header.e_shentsize * i, SEEK_SET);
 
                 nread = read(fd, &section_header, sizeof (ElfW(Shdr)));
 
@@ -202,12 +199,13 @@ std::pair<off_t, int>get_sections(const char* lib_name)
 
                 if (!in_executable && section_header.sh_flags & SHF_EXECINSTR)
                 {
+                        offset = section_header.sh_offset;
                         in_executable = true;
-                        len = i;
                 }
 
                 if (in_executable)
                 {
+                        len += section_header.sh_size;
                         for (int j = section_header.sh_name; table[j] != '\0'; ++j)
                                 buff[j - section_header.sh_name] = table[j];
 
@@ -219,24 +217,26 @@ std::pair<off_t, int>get_sections(const char* lib_name)
 
         UNUSED(nread);
 
-        return std::pair<off_t, int>(offset, (i - len) * elf_header.e_shentsize);
+        return std::pair<off_t, int>(offset, len);
 
 }
 
-int disass(const char* name, void* phdr, Breaker b, pid_t pid)
+int disass(const char* name, void* phdr, int len, Breaker b, pid_t pid)
 {
+        errno = 0;
+        UNUSED(len);
         csh handle;
         cs_insn *insn = NULL;
         size_t count = 0;
         unsigned char buffer[DISASS_SIZE] = { 0 };
         struct iovec local;
         struct iovec remote;
-        printf("Bad address ? %p\n", phdr);
         local.iov_base  = &buffer;
         local.iov_len   = DISASS_SIZE;
         remote.iov_base = phdr;
         remote.iov_len  = DISASS_SIZE;
         int nread = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+
         if (nread < 0)
                 return -1;
         print_errno();
@@ -251,7 +251,7 @@ int disass(const char* name, void* phdr, Breaker b, pid_t pid)
         {
                 for (size_t j = 0; j < count; j++)
                 {
-                        //printf("%lx\t%s\t\t%s\n", insn[j].address, insn[j].mnemonic, insn[j].op_str);
+                        printf("%lx\t%s\t\t%s\n", insn[j].address, insn[j].mnemonic, insn[j].op_str);
                         auto id = insn[j].id;
 
                         // If syscall, add breakpoint
@@ -269,57 +269,6 @@ int disass(const char* name, void* phdr, Breaker b, pid_t pid)
 
         return 0;
 }
-
-static void retrieve_infos(const char* name, void* elf_header, pid_t pid, Breaker* b)
-{
-        return; // FIXME : Deadcode
-        ElfW(Ehdr) header;
-        char buffer[1024];
-        struct iovec local;
-        struct iovec remote;
-        local.iov_base  = &header;
-        local.iov_len   = sizeof (ElfW(Ehdr));
-        remote.iov_base = elf_header;
-        remote.iov_len  = sizeof (ElfW(Ehdr));
-        process_vm_readv(pid, &local, 1, &remote, 1, 0);
-        unsigned long phent = header.e_phentsize;
-        unsigned long phnum = header.e_phnum;
-        void* at_phdr =  (void*)((uintptr_t)elf_header + (uintptr_t)header.e_phoff);
-
-        for (unsigned i = 0; i < phnum; ++i)
-        {
-                local.iov_base = buffer;
-                local.iov_len  = sizeof (Elf64_Phdr);
-                remote.iov_base = (char*) at_phdr + i * phent;
-                remote.iov_len  = sizeof (Elf64_Phdr);
-
-                process_vm_readv(pid, &local, 1, &remote, 1, 0);
-
-                UNUSED(b);
-                ElfW(Phdr)* phdr = (ElfW(Phdr)*)buffer;
-                if (phdr->p_flags & PF_X)
-                {
-                        if (phdr->p_type == PT_LOAD)
-                                printf("Executable PT_LOAD Found\n");
-
-                        else if (phdr->p_type == PT_PHDR)
-                                printf("Executable PHDR Found\n");
-
-                        else
-                                continue;
-
-                        //printf("Offset: %lx\n", phdr->p_offset);
-                        //printf("vaddr: %lx\n", phdr->p_vaddr);
-                        //printf("paddr: %lx\n", phdr->p_paddr);
-                        //printf("filesz: %lx\n", phdr->p_filesz);
-                        //printf("memsz: %lx\n\n", phdr->p_memsz);
-                        UNUSED(name);
-                        //disass(name, (char*)at_phdr + phdr->p_paddr, *b, pid);
-                }
-        }
-
-}
-
 
 void browse_link_map(void* link_m, pid_t pid, Breaker* b)
 {
@@ -347,18 +296,17 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                 process_vm_readv(pid, &local, 1, &remote, 1, 0);
                 if (map.l_addr)
                 {
+                        fprintf(OUT, "%sl_name%s: ",  GREEN, NONE);
+
                         // Unlike what the elf.h file can say about it
                         // l_addr is not a difference or any stewpid thing
                         // like that apparently, but the base address the
                         // shared object is loaded at.
-
-                        fprintf(OUT, "%sl_addr%s: %p\n", GREEN, NONE, (void*)map.l_addr);
-                        fprintf(OUT, "%sl_name%s: ",  GREEN, NONE);
                         char* dupp = (char*)print_string_from_mem(map.l_name, pid);
-                        fprintf(OUT, "%sl_ld%s: %p\n", GREEN, NONE, (void*)map.l_ld);
-                        get_sections(dupp);
-                        UNUSED(b);
-                        retrieve_infos(dupp, (void*)map.l_addr, pid, b);
+
+                        std::pair<off_t, int> sections = get_sections(dupp);
+                        disass(dupp, (char*)map.l_addr + sections.first, sections.second, *b, pid);
+
                         free(dupp);
                         fprintf(OUT, "\n");
                 }
