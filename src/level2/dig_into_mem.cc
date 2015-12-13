@@ -220,52 +220,58 @@ std::pair<off_t, long>get_sections(const char* lib_name)
         return std::pair<off_t, long>(offset, len);
 }
 
-int disass(const char* name, void* phdr, long len, Breaker b, pid_t pid)
+int disass(const char* name, void* offset, long len, Breaker b, pid_t pid)
 {
-        printf("Disassembling %ld  bytes of code\n", len);
+        printf("Disassembling %ld bytes of code at %p\n", len, offset);
         errno = 0;
         csh handle;
         cs_insn *insn = NULL;
         size_t count = 0;
-        unsigned char* buffer = new unsigned char[len + 1];
         struct iovec local;
         struct iovec remote;
-        local.iov_base  = &buffer;
-        local.iov_len   = len;
-        remote.iov_base = phdr;
-        remote.iov_len  = len;
-        int nread = process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-        if (nread < 0)
-                return -1;
-        print_errno();
 
-        if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
-                return -1;
-
-        cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
-        count = cs_disasm(handle, buffer, len - 1, (uintptr_t)phdr, 0, &insn);
-
-        if (count > 0)
+        for (unsigned i = 0; i < len / PAGE_SIZE + 1; ++i)
         {
-                for (size_t j = 0; j < count; j++)
+                unsigned char buffer[PAGE_SIZE];
+                local.iov_base  = &buffer;
+                local.iov_len   = PAGE_SIZE;
+                remote.iov_base = offset + i * PAGE_SIZE;
+                remote.iov_len  = PAGE_SIZE;
+                int nread = process_vm_readv(pid, &local, 1, &remote, 1, 0);
+
+                if (nread < 0)
+                        return -1;
+                print_errno();
+
+                if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
+                        return -1;
+
+                cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
+                count = cs_disasm(handle, buffer, nread - 1, (uintptr_t)offset, 0, &insn);
+
+                if (count > 0)
                 {
-                        printf("%lx\t%s\t\t%s\n", insn[j].address, insn[j].mnemonic, insn[j].op_str);
-                        auto id = insn[j].id;
+                        for (size_t j = 0; j < count; j++)
+                        {
+                                printf("%lx\t", insn[j].address);
+                                for (int k = 0; k < insn[j].size; k++)
+                                        printf("%x",insn[j].bytes[k]);
+                                printf("\t\t%s\t%s\n", insn[j].mnemonic, insn[j].op_str);
+                                auto id = insn[j].id;
 
-                        // If syscall, add breakpoint
-                        if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
-                            || (id == X86_INS_INT && insn[j].bytes[1] == 0x80))
-                                b.add_breakpoint(name, reinterpret_cast<void*>(insn[j].address));
+                                // If syscall, add breakpoint
+                                if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
+                                    || (id == X86_INS_INT && insn[j].bytes[1] == 0x80))
+                                        b.add_breakpoint(name, reinterpret_cast<void*>(insn[j].address));
+                        }
+
+                        cs_free(insn, count);
                 }
-
-                cs_free(insn, count);
+                else
+                        printf("ERROR: Failed to disassemble given code!\n");
+                cs_close(&handle);
         }
-        else
-                printf("ERROR: Failed to disassemble given code!\n");
-
-        cs_close(&handle);
-
         return 0;
 }
 
@@ -314,4 +320,6 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
         } while (map.l_next);
 
         fprintf(OUT, "\n");
+        b->print_bps();
+        exit(0);
 }
