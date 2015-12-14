@@ -74,10 +74,10 @@ debug:
 	$(CXX) ./tests/debug.cc -o ./debug
 
 libhooks:
-	$(CC) -Wall -Wextra -Werror -pedantic -shared -fPIC src/level3/memory_hooks.c -o libhooks.so
+	$(CC) -Wall -Wextra -Werror -shared -fPIC src/level3/memory_hooks.c -o libhooks.so
 
 # Produce test binary, and launch #
-check: distclean multi
+check: libhooks distclean multi
 
 	./$(EXEC_1) ./debug
 	@echo -e "\n\n\033[33;1m###############################################################################\033[0m\n\n"
@@ -101,6 +101,7 @@ distclean:
 	$(RM) $(EXEC_1)
 	$(RM) $(EXEC_2)
 	$(RM) $(EXEC_3)
+	$(RM) $(libhooks)
 #	$(RM) $(EXEC_4)
 
 .PHONY: multi all check clean bonus
