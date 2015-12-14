@@ -13,9 +13,9 @@ public:
                 mapped_protections = prot;
         }
 
-        bool  area_contains(void* addr) const;
+        bool area_contains(unsigned long addr) const;
 
-        long mapped_begin;
+        unsigned long mapped_begin;
         unsigned long  mapped_length;
         long  mapped_protections;
 };
@@ -43,7 +43,7 @@ public:
         int handle_mremap(int syscall, Breaker& b, void* bp);
 
         bool remove_mapped(void* addr, long len);
-        std::list<Mapped>::iterator get_mapped(void* addr);
+        std::list<Mapped>::iterator get_mapped(unsigned long addr);
         void tail_remove(std::list<Mapped>::iterator it, int iteration);
 
         std::list<Mapped> mapped_areas;

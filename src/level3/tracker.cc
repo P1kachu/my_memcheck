@@ -7,12 +7,11 @@ static bool compare_address(Mapped first, Mapped second)
         return first_addr < second_addr;
 }
 
-bool Mapped::area_contains(void* addr) const
+bool Mapped::area_contains(unsigned long addr) const
 {
-        return (char*)addr < (char*)mapped_begin + mapped_length
-                             && (char*)addr >= (char*)mapped_begin;
+        int ret = (addr < mapped_begin + mapped_length) && addr >= mapped_begin;
+        return ret;
 }
-
 
 
 // ###############################################
@@ -25,21 +24,12 @@ bool Tracker::of_interest(int syscall) const
                 || syscall == BRK_SYSCALL;
 }
 
-std::list<Mapped>::iterator Tracker::get_mapped(void* addr)
+std::list<Mapped>::iterator Tracker::get_mapped(unsigned long addr)
 {
         for (auto it = mapped_areas.begin(); it != mapped_areas.end(); it++)
                 if(it->area_contains(addr))
                         return it;
         return mapped_areas.end();
-}
-
-void Tracker::tail_remove(std::list<Mapped>::iterator it, int iteration)
-{
-        if (iteration == 0 || std::next(it) != mapped_areas.end())
-                return;
-
-        tail_remove(std::next(it), iteration - 1);
-        mapped_areas.erase(it);
 }
 
 
@@ -54,8 +44,8 @@ int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
         if (retval < 0)
                 return retval;
 
-        auto it = get_mapped(bp);
-        if (it != mapped_areas.end())
+        auto it = get_mapped(regs.rdi);
+        if (it == mapped_areas.end())
                 return NOT_FOUND;
 
         long tmp = reinterpret_cast<long>(bp) - it->mapped_begin;
@@ -85,10 +75,11 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         if ((void*) retval == MAP_FAILED)
                 return retval;
 
-        auto it = get_mapped(bp);
-        if (it != mapped_areas.end())
+        auto it = get_mapped(regs.rdi);
+        if (it == mapped_areas.end())
                 return NOT_FOUND;
-        if (retval != it->mapped_begin)
+
+        if ((unsigned long)retval != it->mapped_begin)
         {
                 it->mapped_begin = retval;
                 it->mapped_length = regs.rdx;
@@ -183,6 +174,16 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
 
 }
 
+void Tracker::tail_remove(std::list<Mapped>::iterator it, int iteration)
+{
+        if (iteration <= 0
+            || (std::next(it) != mapped_areas.end()))
+                return;
+
+        tail_remove(std::next(it), iteration - 1);
+        mapped_areas.erase(it);
+}
+
 int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
 {
         print_syscall(pid, syscall);
@@ -191,21 +192,24 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
         long retval = b.handle_bp(bp, false);
         print_retval(pid, syscall);
 
+        print_errno();
         if (retval < 0)
                 return retval;
-
-        auto it = get_mapped(bp);
-        if (it != mapped_areas.end())
+        printf("LLL\n");
+        auto it = get_mapped(regs.rdi);
+        if (it == mapped_areas.end())
                 return NOT_FOUND;
 
+        printf("Munmap\n");
         long tmp = reinterpret_cast<long>(bp) - it->mapped_begin;
-        regs.rsi -= tmp;
+        long tmp2 = regs.rsi;
+        tmp2 -= tmp;
 
-        if (regs.rsi > 0)
-                regs.rsi = 0;
+        if (tmp2 < 0)
+                tmp2 = 0;
 
-        tail_remove(std::next(it), regs.rsi / PAGE_SIZE);
-
+        tail_remove(it, tmp2 / PAGE_SIZE + 1);
+        mapped_areas.erase(it);
         mapped_areas.sort(compare_address);
         return retval;
 }

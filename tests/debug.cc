@@ -16,6 +16,7 @@ extern ElfW(Dyn) _DYNAMIC[];
                 }                                                                           \
         }
 
+
 int main()
 {
   struct r_debug *r_debug = NULL;
@@ -23,12 +24,8 @@ int main()
   printf("%s[C %d]%s Child _DYNAMIC: %p\n", "\033[31;1m", getpid(), "\033[0m", (void*)dyn);
   for (; dyn->d_tag != DT_NULL; ++dyn)
   {
-    //printf("size: %lu ", sizeof (ElfW(Dyn)));
-    //printf("tag: %lu\n", dyn->d_tag);
-    //printf("%p->%p\n", (void *) dyn, (void *) dyn->d_un.d_ptr);
     if (dyn->d_tag == DT_DEBUG)
     {
-      //printf("TAG: %lu\n", dyn->d_tag);
       r_debug = (struct r_debug *) dyn->d_un.d_ptr;
       break;
     }
@@ -42,14 +39,20 @@ int main()
   printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m",
          mmap(0, 4096, 0, 34, -1, 0));
 
+  sbrk(0);
 
+  brk(0);
 
-  printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m",
-         mmap(0, 27, 0, 34, -1, 0));
+  brk((char*)sbrk(0) + 64);
 
+  void* ttt = mmap(0, 27, 0, 34, -1, 0);
+  printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", ttt);
 
-  printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m",
-         mmap(0, 20396, 0, 34, -1, 0));
+  munmap(ttt, 27);
+
+  void* uuu = mmap(0, 20396, 0, 34, -1, 0);
+
+  printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", uuu);
 
   return 0;
 }
