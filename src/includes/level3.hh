@@ -5,24 +5,46 @@
 
 class Mapped
 {
-        Mapped();
+public:
+        Mapped(void* b, int len, int prot)
+        {
+                mapped_begin_       = b;
+                mapped_length_      = len;
+                mapped_protections_ = prot;
+        }
 
-        void* mapped_begin;
-        void* mapped_end;
-        long mapped_length;
-        int protection;
-}
+        bool  area_contains(void* addr) const;
+        void* mapped_begin()            const { return mapped_begin_; }
+        long  mapped_length()           const { return mapped_length_; }
+        int   mapped_protections()      const { return mapped_protections_; }
+
+        bool compare_address (Mapped first, Mapped second);
+
+private:
+        void* mapped_begin_;
+        long  mapped_length_;
+        int   mapped_protections_;
+};
 
 
 class Tracker
 {
 public:
-        Tracker(std::string binary_name, pid_t pid);
+        Tracker(std::string binary_name, pid_t child)
+        {
+                pid = child;
+                name = binary_name;
+        }
+
+
         bool of_interest(int syscall) const;
+        void print_mapped_areas()     const;
 
+        int handle_syscall(int syscall);
 
-        std::string name;
-        pid_t pid;
+        std::list<Mapped> mapped_areas;
+        std::string       name;
+        pid_t             pid;
 };
 
 

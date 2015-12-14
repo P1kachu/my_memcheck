@@ -1,4 +1,4 @@
-Mandatory
+THIS IS A MANDATORY FILE
 
 print filenames from execve correctly
 print PROT with &

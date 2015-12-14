@@ -48,6 +48,9 @@ static int mem_tracker(std::string name, pid_t pid)
 
                         if (!t.of_interest(syscall))
                                 continue;
+
+                        t.handle_syscall(syscall);
+
                 }
                 catch (std::logic_error) { break; }
         }
