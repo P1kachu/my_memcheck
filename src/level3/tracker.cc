@@ -76,6 +76,24 @@ int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
         return retval;
 }
 
+int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
+{
+        print_syscall(pid, syscall);
+        struct user_regs_struct regs;
+        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+        long retval = b.handle_bp(bp, false);
+        print_retval(pid, syscall);
+
+        if ((void*) retval == MAP_FAILED)
+                return retval;
+
+        if ((regs.r10 & MAP_SHARED) || !(regs.r10 & MAP_ANONYMOUS))
+                return retval;
+
+
+        return retval;
+}
+
 int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 {
         print_syscall(pid, syscall);
@@ -169,6 +187,10 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
                         return handle_mmap(syscall, b, bp);
                 case MUNMAP_SYSCALL:
                         return handle_munmap(syscall, b, bp);
+                case MPROTECT_SYSCALL:
+                        return handle_mprotect(syscall, b, bp);
+                case MREMAP_SYSCALL:
+                        return handle_mremap(syscall, b, bp);
                 case BRK_SYSCALL:
                         return handle_brk(syscall, b, bp);
                 default:

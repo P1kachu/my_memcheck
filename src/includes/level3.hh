@@ -45,6 +45,8 @@ public:
         int handle_mmap(int syscall, Breaker& b, void* bp);
         int handle_syscall(int syscall, Breaker& b, void* bp);
         int handle_mprotect(int syscall, Breaker& b, void* bp);
+        int handle_mremap(int syscall, Breaker& b, void* bp);
+
         bool remove_mapped(void* addr, long len);
         std::list<Mapped>::iterator get_mapped(void* addr);
         void tail_remove(std::list<Mapped>::iterator it, int iteration);

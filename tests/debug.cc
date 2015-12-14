@@ -16,26 +16,6 @@ extern ElfW(Dyn) _DYNAMIC[];
                 }                                                                           \
         }
 
-int some_inline()
-{
-        printf("%s[C %d]%s Inline func\n", "\033[31;1m", getpid(), "\033[0m");
-
-        char str[] = "ASM Inline !\n";
-        long len = strlen(str);
-        int ret = 0;
-
-        asm volatile("movq $1, %%rax \n\t"
-                "movq $1, %%rdi \n\t"
-                "movq %1, %%rsi \n\t"
-                "movl %2, %%edx \n\t"
-                "syscall"
-                : "=g"(ret)
-                : "g"(str), "g" (len));
-
-        printf("%s[C %d]%s /Inline func\n", "\033[31;1m", getpid(), "\033[0m");
-        return ret;
-}
-
 int main()
 {
   struct r_debug *r_debug = NULL;
@@ -71,5 +51,5 @@ int main()
   printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m",
          mmap(0, 20396, 0, 34, -1, 0));
 
-  return some_inline();
+  return 0;
 }
