@@ -1,8 +1,29 @@
 #include <link.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 
 extern ElfW(Dyn) _DYNAMIC[];
+
+int some_inline()
+{
+        printf("%s[C %d]%s Inline func\n", "\033[31;1m", getpid(), "\033[0m");
+
+        char str[] = "ASM Inline !\n";
+        long len = strlen(str);
+        int ret = 0;
+
+        asm volatile("movq $1, %%rax \n\t"
+                "movq $1, %%rdi \n\t"
+                "movq %1, %%rsi \n\t"
+                "movl %2, %%edx \n\t"
+                "syscall"
+                : "=g"(ret)
+                : "g"(str), "g" (len));
+
+        printf("%s[C %d]%s /Inline func\n", "\033[31;1m", getpid(), "\033[0m");
+        return ret;
+}
 
 int main()
 {
@@ -27,20 +48,5 @@ int main()
   printf("%s[C %d]%s Child r_debug->r_map\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_map);
 
 
-  const char str[] = "Inlining code\n";
-  const size_t str_size = sizeof(str);
-  ssize_t ret;
-      asm volatile
-              (
-                      "movl $1, %%eax\n\t"
-                      "movl $1, %%edi\n\t"
-                      "movq %1, %%rsi\n\t"
-                      "movl %2, %%edx\n\t"
-                      "syscall"
-                      : "=a"(ret)
-                      : "g"(str), "g"(str_size)
-                      : "%rdi", "%rsi", "%rdx", "%rcx", "%r11"
-                      );
-      return 0;
-
+  return some_inline();
 }

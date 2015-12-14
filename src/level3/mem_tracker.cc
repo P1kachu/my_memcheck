@@ -19,6 +19,8 @@ static int mem_tracker(std::string name, pid_t pid)
         waitpid(pid, &status, 0);
 
         Breaker b(name, pid);
+        Tracker t(name, pid);
+
         b.add_breakpoint(MAIN_CHILD, b.rr_brk);
 
         while (1)
@@ -39,8 +41,13 @@ static int mem_tracker(std::string name, pid_t pid)
                         break;
                 try
                 {
-                        if (b.is_from_us(bp))
-                                b.handle_bp(bp, false);
+                        if (!b.is_from_us(bp))
+                                continue;
+
+                        int syscall = b.handle_bp(bp, false);
+
+                        if (!t.of_interest(syscall))
+                                continue;
                 }
                 catch (std::logic_error) { break; }
         }
@@ -69,6 +76,15 @@ int main(int argc, char** argv)
                 name = argv[3];
                 printf("Preloaded: %s\n", preload);
                 printf("Binary: %s\n", name.c_str());
+        }
+        else
+        {
+                if (!binary_exists(name) && name.find("--") != std::string::npos)
+                {
+                        fprintf(OUT, "%sERROR:%s Invalid command option (%s)\n",
+                                RED, NONE, name.c_str());
+                        exit(-1);
+                }
         }
 
         if (!binary_exists(name) && name.find("./") != std::string::npos)

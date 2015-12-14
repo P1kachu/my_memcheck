@@ -27,7 +27,7 @@ SRCS_2     = $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook breaker d
 SRCS_2    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
 SRCS_2    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
-SRCS_3     = $(addsuffix .cc, $(addprefix src/level3/, mem_tracker))
+SRCS_3     = $(addsuffix .cc, $(addprefix src/level3/, mem_tracker tracker))
 SRCS_3    += $(addsuffix .cc, $(addprefix src/level2/, breaker dig_into_mem))
 SRCS_3    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
 SRCS_3    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
@@ -61,14 +61,18 @@ multi:
 
 # Produce the final binary   #
 all: $(OBJS_1) $(OBJS_2) $(OBJS_3) #$(OBJS_4)
-	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
-	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
+#	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
+#	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
 	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
 #	$(CXX) $(OBJS_4) $(LDFLAGS) -o $(EXEC_4)
 
 # Produce test binary, and launch #
 check: distclean multi
-	g++ ./tests/debug.cc -o debug
+
+#	gcc ./tests/debug.cc -o c.o
+#	nasm -f elf64 casm.asm -o casm.o
+#	ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc casm.o c.o -o debug
+	$(CXX) ./tests/debug.cc -o ./debug
 	./$(EXEC_1) ./debug
 	./$(EXEC_2) ./debug
 	./$(EXEC_3) ./debug

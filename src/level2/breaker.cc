@@ -108,7 +108,7 @@ char Breaker::is_from_us(void* addr) const
         return 0;
 }
 
-void Breaker::handle_bp(void* addr, bool print)
+int Breaker::handle_bp(void* addr, bool print)
 {
         if (addr == rr_brk)
         {
@@ -124,21 +124,24 @@ void Breaker::handle_bp(void* addr, bool print)
                         browse_link_map(link_map, pid, this);
                 if (state == r_debug::RT_DELETE)
                         reset_libs(link_map);
+                return NO_SYSCALL;
         }
         else
                 for (auto it : handled_syscalls)
                         if (it.second.find(addr) != it.second.end())
-                                exec_breakpoint(it.first, addr, print);
+                                return exec_breakpoint(it.first, addr, print);
+
+        return SYSCALL_ERROR;
 }
 
-void Breaker::exec_breakpoint(std::string region, void* addr, bool print)
+int Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 {
         int wait_status = 0;
 
         // Not found
         auto it = handled_syscalls.find(region);
         if (it->second.find(addr) == it->second.end())
-                return;
+                return NO_SYSCALL;
 
         struct user_regs_struct regs;
 
@@ -149,6 +152,8 @@ void Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 
         if (print)
                 print_syscall(pid, regs.XAX);
+
+        int syscall_nb = regs.XAX;
 
         // Run instruction
         remove_breakpoint(region, addr);
@@ -170,8 +175,9 @@ void Breaker::exec_breakpoint(std::string region, void* addr, bool print)
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");
 
-
         add_breakpoint(region, addr);
+
+        return syscall_nb;
 }
 
 void Breaker::print_bps() const
