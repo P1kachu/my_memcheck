@@ -38,9 +38,13 @@ public:
         bool of_interest(int syscall) const;
         void print_mapped_areas()     const;
 
+        int handle_munmap(int syscall, Breaker& b, void* bp);
         int handle_mmap(int syscall, Breaker& b, void* bp);
         int handle_syscall(int syscall, Breaker& b, void* bp);
 
+        bool remove_mapped(void* addr, long len);
+        std::list<Mapped>::iterator get_mapped(void* addr);
+        void tail_remove(std::list<Mapped>::iterator it, int iteration);
 
         std::list<Mapped> mapped_areas;
         std::string       name;

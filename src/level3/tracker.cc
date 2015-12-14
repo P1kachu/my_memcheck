@@ -13,11 +13,48 @@ bool Mapped::area_contains(void* addr) const
                              && (char*)addr >= (char*)mapped_begin_;
 }
 
+
+
+// ###############################################
+
+
 bool Tracker::of_interest(int syscall) const
 {
         return syscall == MMAP_SYSCALL || syscall == MREMAP_SYSCALL
                 || syscall == MUNMAP_SYSCALL || syscall == MPROTECT_SYSCALL
                 || syscall == BRK_SYSCALL;
+}
+
+std::list<Mapped>::iterator Tracker::get_mapped(void* addr)
+{
+        for (auto it = mapped_areas.begin(); it != mapped_areas.end(); it++)
+                if(it->area_contains(addr))
+                        return it;
+        return mapped_areas.end();
+}
+
+void Tracker::tail_remove(std::list<Mapped>::iterator it, int iteration)
+{
+        if (iteration == 0 || std::next(it) != mapped_areas.end())
+                return;
+
+        tail_remove(std::next(it), iteration - 1);
+        mapped_areas.erase(it);
+}
+
+bool Tracker::remove_mapped(void* addr, long len)
+{
+        auto it = get_mapped(addr);
+        if (it != mapped_areas.end())
+                return false;
+
+        long tmp = reinterpret_cast<long>(addr) - it->mapped_begin();
+        printf("Gaby: %ld\n", tmp);
+        len -= tmp;
+
+        tail_remove(std::next(it), len / PAGE_SIZE);
+
+        return true;
 }
 
 int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
@@ -52,6 +89,26 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 
         return retval;
 }
+int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
+{
+        print_syscall(pid, syscall);
+        struct user_regs_struct regs;
+        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+        long retval = b.handle_bp(bp, false);
+        print_retval(pid, syscall);
+
+        if (retval < 0)
+                return retval;
+
+        if ((regs.r10 & MAP_SHARED) || !(regs.r10 & MAP_ANONYMOUS))
+                return retval;
+
+        remove_mapped(reinterpret_cast<void*>(retval), regs.rsi);
+
+        mapped_areas.sort(compare_address);
+
+        return retval;
+}
 
 
 
@@ -61,6 +118,8 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
         {
                 case MMAP_SYSCALL:
                         return handle_mmap(syscall, b, bp);
+                case MUNMAP_SYSCALL:
+                        return handle_munmap(syscall, b, bp);
                 default:
                         return b.handle_bp(bp, false);
 
@@ -79,7 +138,7 @@ void Tracker::print_mapped_areas() const
                 fprintf(OUT, "\tLength:\t%ld\n", it->mapped_length());
                 fprintf(OUT, "\tEnds  :\t%p\n", (char*)it->mapped_begin()
                         + it->mapped_length());
-                fprintf(OUT, "\tProtections:\t%ld\n\n", it->mapped_protections());
+                fprintf(OUT, "\tProt  :\t%ld\n\n", it->mapped_protections());
                 ++i;
         }
 }

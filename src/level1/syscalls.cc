@@ -19,7 +19,7 @@ int print_retval(pid_t child, int syscall)
 {
         long retval = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
 
-        if (retval >= 0)
+        if (retval >= 0 || errno == 0)
         {
                 switch(syscall)
                 {
