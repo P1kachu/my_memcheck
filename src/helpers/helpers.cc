@@ -19,7 +19,7 @@ char* get_cmd_opt(char** begin, char** end, const std::string& option)
 
         if (itr != end && ++itr != end)
                 return *itr;
-        return 0;
+        return NULL;
 }
 
 bool cmd_opt_exists(char** begin, char** end, const std::string& option)

@@ -68,5 +68,5 @@ int main(int argc, char** argv)
         if ((pid = fork()) != 0)
                 return mem_hook(name, pid);
 
-        return run_child(argc - 1, argv + 1);
+        return run_child(argc - 1, argv + 1, NULL);
 }

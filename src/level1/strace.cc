@@ -26,7 +26,7 @@ static int wait_for_syscall(pid_t child)
 }
 
 
-int run_child(int argc, char** argv)
+int run_child(int argc, char** argv, char* ld_preload)
 {
         char** args = new char* [argc + 1];
         memcpy(args, argv, argc * sizeof (char*));
@@ -37,8 +37,23 @@ int run_child(int argc, char** argv)
                         "%sERROR:%s PTRACE_TRACEME failed\n",
                         RED, NONE);
 
-        int ret = execvp(args[0], args);
-        delete[] args;
+        int ret = 0;
+        if (ld_preload)
+        {
+                std::stringstream ss;
+                ss << "LD_PRELOAD=" << ld_preload;
+                std::string s = ss.str();
+                char* tmp = strdup(s.c_str());
+                char* const envs[] = { tmp, NULL };
+                ret = execvpe(args[0], args, envs);
+                free(tmp);
+                delete[] args;
+        }
+        else
+        {
+                ret = execvp(args[0], args);
+                delete[] args;
+        }
         return ret;
 }
 

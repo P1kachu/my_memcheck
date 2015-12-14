@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 
         if (argc < 2)
         {
-                fprintf(OUT, "Usage: %s [--preload lib] binary_to_trace[ARGS]\n", argv[0]);
+                fprintf(OUT, "Usage: %s [--preload lib] binary_to_trace [ARGS]\n", argv[0]);
                 return 0;
         }
 
@@ -88,13 +88,11 @@ int main(int argc, char** argv)
         }
 
 
-
-
         pid_t pid = 0;
 
         if ((pid = fork()) != 0)
                 return mem_tracker(name, pid);
 
-        return run_child(argc - 1, argv + 1);
+        return run_child(argc - 1, argv + 1, preload);
 
 }

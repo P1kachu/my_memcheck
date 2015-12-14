@@ -122,14 +122,16 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
                 for (i = 0; i < regs.rdx / PAGE_SIZE; ++i)
                 {
                         long addr = retval + i * PAGE_SIZE;
-                        mapped_areas.push_back(Mapped(addr, PAGE_SIZE, it->mapped_protections, id_inc++));
+                        mapped_areas.push_back(Mapped(addr, PAGE_SIZE,
+                                                      it->mapped_protections, id_inc++));
                 }
 
                 if (regs.rdx % PAGE_SIZE)
                 {
                         long addr = retval + i * PAGE_SIZE;
                         long len = regs.rdx % PAGE_SIZE;
-                        mapped_areas.push_back(Mapped(addr, len, it->mapped_protections, id_inc++));
+                        mapped_areas.push_back(Mapped(addr, len,
+                                                      it->mapped_protections, id_inc++));
                 }
                 mapped_areas.erase(it);
 

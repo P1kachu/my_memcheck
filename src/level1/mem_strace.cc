@@ -32,7 +32,7 @@ int main(int argc, char** argv)
         pid_t pid = 0;
 
         if ((pid = fork()) == 0)
-                return run_child(argc - 1, argv + 1);
+                return run_child(argc - 1, argv + 1, NULL);
 
         return trace_child(pid);
 }
