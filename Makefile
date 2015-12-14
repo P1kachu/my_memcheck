@@ -16,7 +16,6 @@ CXXFLAGS += -O3
 INCLDIR   = src/includes/
 
 ## LIBS ##
-
 LDFLAGS = -lcapstone
 
 ## MAIN ##
@@ -74,6 +73,8 @@ debug:
 #	ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc casm.o c.o -o debug
 	$(CXX) ./tests/debug.cc -o ./debug
 
+libhooks:
+	$(CC) -Wall -Wextra -Werror -pedantic -shared -fPIC src/level3/memory_hooks.c -o libhooks.so
 
 # Produce test binary, and launch #
 check: distclean multi
