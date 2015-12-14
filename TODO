@@ -6,4 +6,4 @@ Delete NOMO tags
 follow_fork_mode (multi htreading)
 get rid of reinterpret_casts
 Find Ehdr
-map of map
+handle vdso

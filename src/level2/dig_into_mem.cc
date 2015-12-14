@@ -299,7 +299,7 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
         struct link_map map;
         struct iovec local;
         struct iovec remote;
-        local.iov_base  = &map;
+        local.iov_base = &map;
         local.iov_len   = sizeof (struct link_map);
         remote.iov_base = link_m;
         remote.iov_len  = sizeof (struct link_map);

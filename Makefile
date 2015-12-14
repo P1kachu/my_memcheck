@@ -38,22 +38,24 @@ EXEC_2      = mem_strace_hook
 
 # Multi threaded make of the final binary #
 multi:
-#	$(MAKE) $(QUIET) -Bj all
+	$(MAKE) $(QUIET) -Bj all
 	$(MAKE) $(QUIET) -j all
 
 # Produce the final binary   #
 all: $(OBJS_1) $(OBJS_2)
-#	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
+	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
 	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
 
 # Produce test binary, and launch #
 check: clean multi
-	./$(EXEC_1) ./hardcoded
-	./$(EXEC_2)
+	g++ ./tests/debug.cc -o debug
+	./$(EXEC_1) ./debug
+	./$(EXEC_2) ./debug
 
 # Clean repository           #
 clean:
 	./utils/repo_cleaner.sh
+	$(RM) debug
 	$(RM) $(OBJS_1) $(EXEC_1)
 	$(RM) $(OBJS_2) $(EXEC_2)
 
