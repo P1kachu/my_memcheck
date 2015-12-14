@@ -15,12 +15,23 @@ static void print_syscall_name(int id)
         fprintf(OUT, "%s(...", s.c_str());
 }
 
-int print_retval(pid_t child)
+int print_retval(pid_t child, int syscall)
 {
-        int retval = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
+        long retval = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
 
         if (retval >= 0)
-                fprintf(OUT, ") = %d\n", retval);
+        {
+                switch(syscall)
+                {
+                        case MMAP_SYSCALL:
+                        case MREMAP_SYSCALL:
+                                fprintf(OUT, ") = 0x%lx\n", retval);
+                                break;
+                        default:
+                                fprintf(OUT, ") = %ld\n", retval);
+                                break;
+                }
+        }
         else
                 fprintf(OUT, ") = ?\n");
 

@@ -70,7 +70,7 @@ int trace_child(pid_t child)
 
                 int tmp = wait_for_syscall(child);
 
-                retval = print_retval(child);
+                retval = print_retval(child, syscall);
 
                 if (syscall == EXIT_SYSCALL || syscall == EXIT_GROUP_SYSCALL)
                         retval = rdi;

@@ -28,7 +28,7 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         long retval = b.handle_bp(bp, false);
-        print_retval(pid);
+        print_retval(pid, syscall);
 
         if ((void*) retval == MAP_FAILED)
                 return retval;
@@ -38,10 +38,10 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 
         unsigned i = 0;
         for (i = 0; i < regs.rsi / PAGE_SIZE; ++i)
-                        mapped_areas.push_back(Mapped((char*)regs.rdi + i * 4096, 4096, regs.rdx));
+                mapped_areas.push_back(Mapped(retval + i * 4096, 4096, regs.rdx));
 
         if (regs.rsi % 4096)
-                mapped_areas.push_back(Mapped((char*)regs.rdi + i * 4096, regs.rsi % 4096, regs.rdx));
+                mapped_areas.push_back(Mapped(retval + i * 4096, regs.rsi % 4096, regs.rdx));
 
         mapped_areas.sort(compare_address);
 
@@ -68,11 +68,11 @@ void Tracker::print_mapped_areas() const
         for (auto it = mapped_areas.begin(); it != mapped_areas.end(); it++)
         {
                 fprintf(OUT, "Mapped area #%d\n", i);
-                fprintf(OUT, "\tBegins:\t%p\n", it->mapped_begin());
+                fprintf(OUT, "\tBegins:\t%p\n", (void*)it->mapped_begin());
                 fprintf(OUT, "\tLength:\t%ld\n", it->mapped_length());
                 fprintf(OUT, "\tEnds  :\t%p\n", (char*)it->mapped_begin()
                         + it->mapped_length());
-                fprintf(OUT, "\tProtections:\t%d\n", it->mapped_protections());
+                fprintf(OUT, "\tProtections:\t%ld\n", it->mapped_protections());
                 ++i;
         }
 

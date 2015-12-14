@@ -6,7 +6,7 @@
 class Mapped
 {
 public:
-        Mapped(void* b, int len, int prot)
+        Mapped(long b, int len, long prot)
         {
                 mapped_begin_       = b;
                 mapped_length_      = len;
@@ -14,14 +14,14 @@ public:
         }
 
         bool  area_contains(void* addr) const;
-        void* mapped_begin()            const { return mapped_begin_; }
+        long  mapped_begin()            const { return mapped_begin_; }
         long  mapped_length()           const { return mapped_length_; }
-        int   mapped_protections()      const { return mapped_protections_; }
+        long  mapped_protections()      const { return mapped_protections_; }
 
 private:
-        void* mapped_begin_;
+        long mapped_begin_;
         long  mapped_length_;
-        int   mapped_protections_;
+        long  mapped_protections_;
 };
 
 
