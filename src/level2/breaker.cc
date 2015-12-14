@@ -153,8 +153,6 @@ int Breaker::exec_breakpoint(std::string region, void* addr, bool print)
         if (print)
                 print_syscall(pid, regs.XAX);
 
-        int syscall_nb = regs.XAX;
-
         // Run instruction
         remove_breakpoint(region, addr);
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
@@ -164,12 +162,15 @@ int Breaker::exec_breakpoint(std::string region, void* addr, bool print)
         if (print)
                 print_retval(pid);
 
+        ptrace(PTRACE_GETREGS, pid, 0, &regs);
+        int retval = regs.XAX;
+
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");
 
         add_breakpoint(region, addr);
 
-        return syscall_nb;
+        return retval;
 }
 
 void Breaker::print_bps() const

@@ -8,6 +8,8 @@
 ** I would have put them into their own header)
 */
 
+
+/* Includes for the whole project */
 # include <map>
 # include <list>
 # include <string>
@@ -40,19 +42,9 @@
 # include "helpers.hh"
 # include "syscalls.hh"
 
+/* Macros */
 # define OUT stdout
-# define UNUSED(x) { (x) = (x); }
 # define BONUS 1
-# define print_errno()                                                                      \
-        {                                                                                   \
-                if (errno)                                                                  \
-                {                                                                           \
-                        fprintf(OUT, "%sERROR%s Something went wrong: %s (%s%s%s:%d)\n",    \
-                                RED, NONE, strerror(errno), RED, __FILE__, NONE, __LINE__); \
-                        exit(-1);                                                           \
-                }                                                                           \
-        }
-
 # define MAIN_CHILD         "origins"
 # define NULL_STRING        "NULL"
 # define NO_SYSCALL         -1
@@ -69,34 +61,57 @@
 # define EXECVE_SYSCALL     59
 # define EXIT_SYSCALL       60
 # define EXIT_GROUP_SYSCALL 231
-# define FOLLOW_FORK_MODE   PTRACE_O_TRACEFORK  \
-        | PTRACE_O_TRACEVFORK                   \
-        | PTRACE_O_TRACECLONE                   \
-        | PTRACE_O_TRACEEXIT
-
 # define TRAP_LEN    1
 # define TRAP_INST   0xCC
 
 # if defined(__i386)
 
 #  define INSTR_REG   EIP
-#  define XIP         eip
 #  define XAX         eax
+#  define XIP         eip
+#  define O_XAX       ORIG_EAX
+#  define P_XAX       EAX
 #  define TRAP_MASK   0xFFFFFF00
 
 # elif defined(__x86_64)
 
 #  define INSTR_REG   RIP
-#  define XIP         rip
 #  define XAX         rax
+#  define XIP         rip
+#  define O_XAX       ORIG_RAX
+#  define P_XAX       RAX
 #  define TRAP_MASK   0xFFFFFFFFFFFFFF00
 
 # endif /* !ARCH */
 
 
+/* "Functions" */
+# define UNUSED(x) { (x) = (x); }
+# define print_errno()                                                                      \
+        {                                                                                   \
+                if (errno)                                                                  \
+                {                                                                           \
+                        fprintf(OUT, "%sERROR%s Something went wrong: %s (%s%s%s:%d)\n",    \
+                                RED, NONE, strerror(errno), RED, __FILE__, NONE, __LINE__); \
+                        exit(-1);                                                           \
+                }                                                                           \
+        }
+# define print_instruction(pid, xip)                             \
+        {                                                        \
+                printf("Instruction: %lx\n",                     \
+                                         ptrace(PTRACE_PEEKDATA, \
+                                                pid,             \
+                                                xip,             \
+                                                0));             \
+        }
+# define get_orig_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * O_XAX) }
+# define get_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * P_XAX) }
+# define get_xip(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * INSTR_REG) }
 
-// Circular dependency...
 
+
+
+/* Thank you circular dependencies... */
 class Breaker
 {
 public:

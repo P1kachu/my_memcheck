@@ -56,11 +56,6 @@ int trace_child(pid_t child)
                         "%sERROR:%s PTRACE_O_TRACESYSGOOD failed\n",
                         RED, NONE);
 
-        // FOLLOW_FORK_MODE Bonus
-        //if (ptrace(PTRACE_SETOPTIONS, child, 0, FOLLOW_FORK_MODE) == -1)
-        //  fprintf(OUT, "%sERROR:%s FOLLOW_FORK_MODE failed\n", RED, NONE);
-        // TODO : ASK ACU why the output disappear
-
         while (true)
         {
 
@@ -69,8 +64,7 @@ int trace_child(pid_t child)
 
 
                 // Retrieve data from $rax
-                int syscall = ptrace(PTRACE_PEEKUSER, child,
-                                     sizeof (long) * ORIG_RAX);
+                long syscall = get_orig_xax(child);
 
                 int rdi = print_syscall(child, syscall);
 

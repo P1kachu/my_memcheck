@@ -22,25 +22,27 @@ bool Tracker::of_interest(int syscall) const
                 || syscall == BRK_SYSCALL;
 }
 
-int Tracker::handle_mmap(int syscall)
+int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 {
-        struct user_regs_struct regs;
-
-        ptrace(PTRACE_GETREGS, pid, 0, &regs);
         print_syscall(pid, syscall);
-        print_retval(pid);
-        return 0;
+        int retval = b.handle_bp(bp, false);
+        if (retval > NO_SYSCALL)
+                print_retval(pid);
+        return retval;
 }
 
-int Tracker::handle_syscall(int syscall)
+int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
 {
         switch (syscall)
         {
                 case MMAP_SYSCALL:
-                        handle_mmap(syscall);
+                        return handle_mmap(syscall, b, bp);
+                default:
+                        return b.handle_bp(bp, false);
+
         }
 
-        return 0;
+        return NO_SYSCALL;
 }
 
 void Tracker::print_mapped_areas() const

@@ -1,16 +1,6 @@
 #include "level1.hh"
 #include "level2.hh"
 
-static unsigned long get_xip(pid_t pid)
-{
-        struct user_regs_struct regs;
-
-        // Get child register and store them into regs
-        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-        return regs.XIP;
-
-}
-
 static int mem_hook(std::string name, pid_t pid)
 {
         setenv("LD_BIND_NOW", "1", 1); //FIXME : Potentialy bad
@@ -26,7 +16,9 @@ static int mem_hook(std::string name, pid_t pid)
 
                 waitpid(pid, &status, 0);
 
-                auto bp = reinterpret_cast<void*>(get_xip(pid) - 1);
+                long addr = get_xip(pid);
+                auto bp = (void*)(addr - 1);
+
 
                 if (WIFEXITED(status))
                       break;

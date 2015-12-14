@@ -65,6 +65,7 @@ all: $(OBJS_1) $(OBJS_2) $(OBJS_3) #$(OBJS_4)
 	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
 	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
 #	$(CXX) $(OBJS_4) $(LDFLAGS) -o $(EXEC_4)
+	clear
 
 # Produce test binary, and launch #
 check: distclean multi
@@ -74,8 +75,11 @@ check: distclean multi
 #	ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc casm.o c.o -o debug
 	$(CXX) ./tests/debug.cc -o ./debug
 	./$(EXEC_1) ./debug
+	@echo -e "\n\n\033[31;1m###############################################################################\033[0m\n\n"
 	./$(EXEC_2) ./debug
+	@echo -e "\n\n\033[31;1m###############################################################################\033[0m\n\n"
 	./$(EXEC_3) ./debug
+	@echo -e "\n\n\033[31;1m###############################################################################\033[0m\n\n"
 #	./$(EXEC_4) ./debug
 
 # Clean repository           #

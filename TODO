@@ -7,3 +7,4 @@ follow_fork_mode (multi htreading)
 get rid of reinterpret_casts
 Find Ehdr
 handle vdso
+Refactor child digging

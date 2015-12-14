@@ -2,16 +2,6 @@
 #include "level2.hh"
 #include "level3.hh"
 
-static unsigned long get_xip(pid_t pid)
-{
-        struct user_regs_struct regs;
-
-        // Get child register and store them into regs
-        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-        return regs.XIP;
-
-}
-
 static int mem_tracker(std::string name, pid_t pid)
 {
         setenv("LD_BIND_NOW", "1", 1); //FIXME : Potentialy bad
@@ -29,27 +19,27 @@ static int mem_tracker(std::string name, pid_t pid)
 
                 waitpid(pid, &status, 0);
 
-                auto bp = (void*)(get_xip(pid) - 1);
+                long addr = get_xip(pid);
+                auto bp = (void*)(addr - 1);
 
                 if (WIFEXITED(status))
                       break;
+
                 if (WIFSIGNALED(status))
                       break;
 
                 // Segfault
-                if (status == 2943)
+                if (WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV)
                         break;
                 try
                 {
                         if (!b.is_from_us(bp))
                                 continue;
 
-                        int syscall = b.handle_bp(bp, false);
-
-                        if (!t.of_interest(syscall))
-                                continue;
-
-                        t.handle_syscall(syscall);
+                        long syscall = NO_SYSCALL;
+                        if (bp != b.rr_brk)
+                                syscall = get_xax(pid);
+                        t.handle_syscall(syscall, b, bp);
 
                 }
                 catch (std::logic_error) { break; }
