@@ -57,11 +57,19 @@ int main(int argc, char** argv)
 
         if (argc < 2)
         {
-                fprintf(OUT, "Usage: %s binary_to_trace[ARGS]\n", argv[0]);
+                fprintf(OUT, "Usage: %s [--preload lib] binary_to_trace[ARGS]\n", argv[0]);
                 return 0;
         }
 
         std::string name = argv[1];
+
+        char* preload = get_cmd_opt(argv, argv + argc, "--preload");
+        if (preload)
+        {
+                name = argv[3];
+                printf("Preloaded: %s\n", preload);
+                printf("Binary: %s\n", name.c_str());
+        }
 
         if (!binary_exists(name) && name.find("./") != std::string::npos)
         {
@@ -70,12 +78,13 @@ int main(int argc, char** argv)
                 exit(-1);
         }
 
+
+
+
         pid_t pid = 0;
 
         if ((pid = fork()) != 0)
-        {
                 return mem_tracker(name, pid);
-        }
 
         return run_child(argc - 1, argv + 1);
 

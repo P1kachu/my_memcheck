@@ -5,5 +5,6 @@
 
 bool binary_exists(const std::string& name);
 bool is_elf(Elf64_Ehdr* hdr);
-
+char* get_cmd_opt(char** begin, char** end, const std::string& option);
+bool cmd_opt_exists(char** begin, char** end, const std::string& option);
 #endif /* !HELPERS_HH */
