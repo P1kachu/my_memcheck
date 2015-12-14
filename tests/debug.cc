@@ -10,9 +10,8 @@ extern ElfW(Dyn) _DYNAMIC[];
         {                                                                                   \
                 if (errno)                                                                  \
                 {                                                                           \
-                        fprintf(OUT, "%sERROR%s Something went wrong: %s (%s%s%s:%d)\n",    \
-                                RED, NONE, strerror(errno), RED, __FILE__, NONE, __LINE__); \
-                        exit(-1);                                                           \
+                        printf("%sERROR%s Something went wrong: %s (%s%s%s:%d)\n",    \
+                                "\033[31;1m", "\033[0m", strerror(errno), "\033[31;1m", __FILE__, "\033[0m", __LINE__); \
                 }                                                                           \
         }
 
@@ -53,6 +52,10 @@ int main()
   void* uuu = mmap(0, 20396, 0, 34, -1, 0);
 
   printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", uuu);
+
+
+  mremap(uuu, 20396, 4096, 0, 0);
+  print_errno();
 
   return 0;
 }

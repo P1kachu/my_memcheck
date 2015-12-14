@@ -131,8 +131,8 @@ static void print_mremap(pid_t child, user_regs_struct& regs)
                 static_cast<size_t>(regs.rdx), regs.r10);
 
         sprintf(buffer + strlen(buffer),
-                "flags = %d,[new_addr = 0x%llx]",
-                static_cast<int>(regs.r8), regs.r9);
+                "[new_addr = 0x%llx]",
+                regs.r8);
 
         fprintf(OUT, buffer);
 #endif

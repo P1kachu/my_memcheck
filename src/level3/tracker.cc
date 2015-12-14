@@ -79,36 +79,44 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         if (it == mapped_areas.end())
                 return NOT_FOUND;
 
+        print_mapped_areas();
+
         if ((unsigned long)retval != it->mapped_begin)
         {
+                printf("NOT MOVE\n");
                 it->mapped_begin = retval;
                 it->mapped_length = regs.rdx;
+                tail_remove(it, regs.rsi / regs.rdx);
         }
 
+        // Old size == New size
         else if(regs.rsi == regs.rdx)
                 return retval;
 
-        else if (it->mapped_length > regs.rdx)
+        // Old size > New size <==> Shrinking
+        else if (regs.rsi > regs.rdx)
         {
+                printf("Shrink\n");
                 it->mapped_length = regs.rdx;
-                tail_remove(it, regs.rsi /  regs.rdx);
+                auto tmp = regs.rsi /  regs.rdx;
+                tail_remove(it, tmp);
         }
 
         else
         {
-
+                printf("EXPAND\n");
                 unsigned i;
                 for (i = 0; i < regs.rdx / PAGE_SIZE; ++i)
                 {
                         long addr = retval + i * PAGE_SIZE;
-                        mapped_areas.push_back(Mapped(addr, PAGE_SIZE, it->mapped_protections));
+                        mapped_areas.push_back(Mapped(addr, PAGE_SIZE, it->mapped_protections, id_inc++));
                 }
 
                 if (regs.rdx % PAGE_SIZE)
                 {
                         long addr = retval + i * PAGE_SIZE;
                         long len = regs.rdx % PAGE_SIZE;
-                        mapped_areas.push_back(Mapped(addr, len, it->mapped_protections));
+                        mapped_areas.push_back(Mapped(addr, len, it->mapped_protections, id_inc++));
                 }
 
         }
@@ -134,14 +142,14 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
         for (i = 0; i < regs.rsi / PAGE_SIZE; ++i)
         {
                 long addr = retval + i * PAGE_SIZE;
-                mapped_areas.push_back(Mapped(addr, PAGE_SIZE, regs.rdx));
+                mapped_areas.push_back(Mapped(addr, PAGE_SIZE, regs.rdx, id_inc++));
         }
 
         if (regs.rsi % PAGE_SIZE)
         {
                 long addr = retval + i * PAGE_SIZE;
                 long len = regs.rsi % PAGE_SIZE;
-                mapped_areas.push_back(Mapped(addr, len, regs.rdx));
+                mapped_areas.push_back(Mapped(addr, len, regs.rdx, id_inc++));
         }
 
         mapped_areas.sort(compare_address);
@@ -176,6 +184,7 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
 
 void Tracker::tail_remove(std::list<Mapped>::iterator it, int iteration)
 {
+        printf("Tail\n");
         if (iteration <= 0
             || (std::next(it) != mapped_areas.end()))
                 return;
@@ -195,12 +204,10 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
         print_errno();
         if (retval < 0)
                 return retval;
-        printf("LLL\n");
         auto it = get_mapped(regs.rdi);
         if (it == mapped_areas.end())
                 return NOT_FOUND;
 
-        printf("Munmap\n");
         long tmp = reinterpret_cast<long>(bp) - it->mapped_begin;
         long tmp2 = regs.rsi;
         tmp2 -= tmp;
@@ -238,17 +245,15 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
 
 void Tracker::print_mapped_areas() const
 {
-        int i = 0;
         printf("Old process break %p\n", origin_program_break);
         printf("Actual process break %p\n", actual_program_break);
         for (auto it = mapped_areas.begin(); it != mapped_areas.end(); it++)
         {
-                fprintf(OUT, "Mapped area #%d\n", i);
+                fprintf(OUT, "Mapped area #%d\n", it->id);
                 fprintf(OUT, "\tBegins:\t%p\n", (void*)it->mapped_begin);
                 fprintf(OUT, "\tLength:\t%ld\n", it->mapped_length);
                 fprintf(OUT, "\tEnds  :\t%p\n", (char*)it->mapped_begin
                         + it->mapped_length);
                 fprintf(OUT, "\tProt  :\t%ld\n\n", it->mapped_protections);
-                ++i;
         }
 }

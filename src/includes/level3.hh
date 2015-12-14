@@ -6,11 +6,12 @@
 class Mapped
 {
 public:
-        Mapped(long b, int len, long prot)
+        Mapped(long b, int len, long prot, int id_inc)
         {
                 mapped_begin       = b;
                 mapped_length      = len;
                 mapped_protections = prot;
+                id = id_inc;
         }
 
         bool area_contains(unsigned long addr) const;
@@ -18,6 +19,7 @@ public:
         unsigned long mapped_begin;
         unsigned long  mapped_length;
         long  mapped_protections;
+        int id;
 };
 
 
@@ -29,6 +31,7 @@ public:
                 pid = child;
                 name = binary_name;
                 origin_program_break = 0;
+                id_inc = 0;
         }
 
 
@@ -51,6 +54,7 @@ public:
         pid_t             pid;
         void*             actual_program_break;
         void*             origin_program_break;
+        int               id_inc;
 };
 
 

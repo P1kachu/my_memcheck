@@ -20,7 +20,9 @@ void* get_r_brk(void* rr_debug, pid_t pid_child)
 
         process_vm_readv(pid_child, &local, 1, &remote, 1, 0);
 
-        return (void*)reinterpret_cast<struct r_debug*>(buffer)->r_brk;
+        auto tmp = reinterpret_cast<struct r_debug*>(buffer);
+
+        return (void*)tmp->r_brk;
 }
 
 void* get_final_r_debug(Elf64_Dyn* dt_struct, pid_t pid_child)
@@ -101,7 +103,7 @@ void* get_phdr(unsigned long& phent, unsigned long& phnum, pid_t pid_child)
         int fd = open(file.c_str(), std::ios::binary);
         ElfW(auxv_t) auxv_;
 
-        void* at_phdr;
+        void* at_phdr = NULL;
 
         // Read from flux until getting all the interesting data
         while (read(fd, &auxv_, sizeof (auxv_)) > -1)
@@ -135,11 +137,14 @@ void* get_link_map(void* rr_debug, pid_t pid, int* status)
 
         process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-        struct link_map* link_map = ((struct r_debug*)buffer)->r_map;
+        auto tmp = (struct r_debug*)buffer;
+
+        struct link_map* link_map = tmp->r_map;
 
         // FIXME : Deadcode
         // fprintf(OUT, "Found r_debug->r_map:\t\t%p\n", (void*)link_map);
-       * status = ((struct r_debug*)buffer)->r_state;
+        tmp = (struct r_debug*)buffer;
+        *status = tmp->r_state;
         return link_map;
 }
 
