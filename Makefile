@@ -60,20 +60,24 @@ multi:
 	$(MAKE) $(QUIET) -j all
 
 # Produce the final binary   #
-all: $(OBJS_1) $(OBJS_2) $(OBJS_3) #$(OBJS_4)
+all: debug $(OBJS_1) $(OBJS_2) $(OBJS_3) #$(OBJS_4)
 	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
 	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
 	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
 #	$(CXX) $(OBJS_4) $(LDFLAGS) -o $(EXEC_4)
 	clear
 
-# Produce test binary, and launch #
-check: distclean multi
-
+# Produce debug binary #
+debug:
 #	gcc ./tests/debug.cc -o c.o
 #	nasm -f elf64 casm.asm -o casm.o
 #	ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc casm.o c.o -o debug
 	$(CXX) ./tests/debug.cc -o ./debug
+
+
+# Produce test binary, and launch #
+check: distclean multi
+
 	./$(EXEC_1) ./debug
 	@echo -e "\n\n\033[33;1m###############################################################################\033[0m\n\n"
 	./$(EXEC_2) ./debug

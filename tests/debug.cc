@@ -54,9 +54,7 @@ int main()
   printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", uuu);
 
 
-  mremap(uuu, 20396, 4096, 0, 0);
+  uuu = mremap(uuu, 20396, 4096, 0, 0);
   mremap(uuu, 4096, 8192, 0, 0);
-  print_errno();
-
   return 0;
 }

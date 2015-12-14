@@ -112,9 +112,9 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
                 printf("Shrink\n");
                 it->mapped_length = regs.rdx;
                 auto tmp = regs.rsi /  regs.rdx;
-                tail_remove(it, tmp);
+                tail_remove(std::next(it), tmp - 1);
         }
-        // Expanding
+        // Expand
         else
         {
                 printf("EXPAND\n");
@@ -131,6 +131,7 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
                         long len = regs.rdx % PAGE_SIZE;
                         mapped_areas.push_back(Mapped(addr, len, it->mapped_protections, id_inc++));
                 }
+                mapped_areas.erase(it);
 
         }
         mapped_areas.sort(compare_address);
