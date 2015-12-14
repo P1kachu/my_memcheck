@@ -68,10 +68,8 @@ int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
         for (unsigned i = 0; i < regs.rsi / PAGE_SIZE; ++i)
         {
                 it = std::next(it);
-                it->mapped_protections_set(regs.rdx);
+                it->mapped_protections = regs.rdx;
         }
-
-        mapped_areas.sort(compare_address);
 
         return retval;
 }
@@ -87,10 +85,17 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         if ((void*) retval == MAP_FAILED)
                 return retval;
 
-        if ((regs.r10 & MAP_SHARED) || !(regs.r10 & MAP_ANONYMOUS))
-                return retval;
+        auto it = get_mapped(bp);
+        if (it != mapped_areas.end())
+                return NOT_FOUND;
+        if (retval != it->mapped_begin())
+        {
+                it->mapped_begin = retval;
+                it->mapped_length = regs.rdx;
+        }
+        else if (it->mapped_length > )
 
-
+        mapped_areas.sort(compare_address);
         return retval;
 }
 

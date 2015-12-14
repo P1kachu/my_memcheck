@@ -17,12 +17,10 @@ public:
         long  mapped_begin()            const { return mapped_begin_; }
         long  mapped_length()           const { return mapped_length_; }
         long  mapped_protections()      const { return mapped_protections_; }
-        void  mapped_protections_set(long prot) { mapped_protections_ = prot; }
 
-private:
-        long mapped_begin_;
-        long  mapped_length_;
-        long  mapped_protections_;
+        long mapped_begin;
+        long  mapped_length;
+        long  mapped_protections;
 };
 
 
