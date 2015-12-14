@@ -18,8 +18,6 @@ public:
         long  mapped_length()           const { return mapped_length_; }
         int   mapped_protections()      const { return mapped_protections_; }
 
-        bool compare_address (Mapped first, Mapped second);
-
 private:
         void* mapped_begin_;
         long  mapped_length_;

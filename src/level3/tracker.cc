@@ -1,6 +1,6 @@
 #include "level3.hh"
 
-bool Mapped::compare_address (Mapped first, Mapped second)
+static bool compare_address(Mapped first, Mapped second)
 {
         char* first_addr = (char*)first.mapped_begin();
         char* second_addr = (char*)second.mapped_begin();
@@ -42,6 +42,8 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 
         if (regs.rsi % 4096)
                 mapped_areas.push_back(Mapped((char*)regs.rdi + i * 4096, regs.rsi % 4096, regs.rdx));
+
+        mapped_areas.sort(compare_address);
 
         return retval;
 }
