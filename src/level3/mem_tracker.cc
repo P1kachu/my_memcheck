@@ -2,6 +2,61 @@
 #include "level2.hh"
 #include "level3.hh"
 
+static unsigned long get_xip(pid_t pid)
+{
+        struct user_regs_struct regs;
+
+        // Get child register and store them into regs
+        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+        return regs.XIP;
+
+}
+
+static int mem_tracker(std::string name, pid_t pid)
+{
+        setenv("LD_BIND_NOW", "1", 1); //FIXME : Potentialy bad
+        int status = 0;
+        waitpid(pid, &status, 0);
+
+        Breaker b(name, pid);
+        b.add_breakpoint(MAIN_CHILD, b.rr_brk);
+
+        while (1)
+        {
+                ptrace(PTRACE_CONT, pid, 0, 0);
+
+                waitpid(pid, &status, 0);
+
+                auto bp = (void*)(get_xip(pid) - 1);
+
+                if (WIFEXITED(status))
+                      break;
+                if (WIFSIGNALED(status))
+                      break;
+#if 0
+                fprintf(OUT, "%s[F %d]%s 0x%lx : %lx - Received %s%s%s\n",
+                        GREEN, pid, NONE, get_xip(pid) - 1, ptrace(PTRACE_PEEKDATA, pid, get_xip(pid) - 1, 0),
+                        RED, strsignal(WSTOPSIG(status)), NONE);
+#endif
+                if (status == 2943)
+                        break;
+
+                try
+                {
+                        UNUSED(bp);
+                        if (b.is_from_us(bp))
+                                b.handle_bp(bp);
+                }
+                catch (std::logic_error) { break; }
+        }
+
+
+        ptrace(PTRACE_CONT, pid, 0, 0);
+        return 0;
+}
+
+
+
 int main(int argc, char** argv)
 {
 
@@ -24,7 +79,7 @@ int main(int argc, char** argv)
 
         if ((pid = fork()) != 0)
         {
-                //       return mem_hook(name, pid);
+                return mem_tracker(name, pid);
         }
 
         return run_child(argc - 1, argv + 1);
