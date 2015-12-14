@@ -1,9 +1,20 @@
 #include <link.h>
+#include <sys/mman.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 extern ElfW(Dyn) _DYNAMIC[];
+# define print_errno()                                                                      \
+        {                                                                                   \
+                if (errno)                                                                  \
+                {                                                                           \
+                        fprintf(OUT, "%sERROR%s Something went wrong: %s (%s%s%s:%d)\n",    \
+                                RED, NONE, strerror(errno), RED, __FILE__, NONE, __LINE__); \
+                        exit(-1);                                                           \
+                }                                                                           \
+        }
 
 int some_inline()
 {
@@ -47,6 +58,18 @@ int main()
   printf("%s[C %d]%s Child r_debug->r_brk\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_brk);
   printf("%s[C %d]%s Child r_debug->r_map\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_map);
 
+
+  printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m",
+         mmap(0, 4096, 0, 34, -1, 0));
+
+
+
+  printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m",
+         mmap(0, 27, 0, 34, -1, 0));
+
+
+  printf("%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m",
+         mmap(0, 20396, 0, 34, -1, 0));
 
   return some_inline();
 }

@@ -7,13 +7,11 @@ static bool compare_address(Mapped first, Mapped second)
         return first_addr < second_addr;
 }
 
-
 bool Mapped::area_contains(void* addr) const
 {
         return (char*)addr < (char*)mapped_begin_ + mapped_length_
                              && (char*)addr >= (char*)mapped_begin_;
 }
-
 
 bool Tracker::of_interest(int syscall) const
 {
@@ -38,15 +36,24 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 
         unsigned i = 0;
         for (i = 0; i < regs.rsi / PAGE_SIZE; ++i)
-                mapped_areas.push_back(Mapped(retval + i * 4096, 4096, regs.rdx));
+        {
+                long addr = retval + i * PAGE_SIZE;
+                mapped_areas.push_back(Mapped(addr, PAGE_SIZE, regs.rdx));
+        }
 
-        if (regs.rsi % 4096)
-                mapped_areas.push_back(Mapped(retval + i * 4096, regs.rsi % 4096, regs.rdx));
+        if (regs.rsi % PAGE_SIZE)
+        {
+                long addr = retval + i * PAGE_SIZE;
+                long len = regs.rsi % PAGE_SIZE;
+                mapped_areas.push_back(Mapped(addr, len, regs.rdx));
+        }
 
         mapped_areas.sort(compare_address);
 
         return retval;
 }
+
+
 
 int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
 {
@@ -72,8 +79,7 @@ void Tracker::print_mapped_areas() const
                 fprintf(OUT, "\tLength:\t%ld\n", it->mapped_length());
                 fprintf(OUT, "\tEnds  :\t%p\n", (char*)it->mapped_begin()
                         + it->mapped_length());
-                fprintf(OUT, "\tProtections:\t%ld\n", it->mapped_protections());
+                fprintf(OUT, "\tProtections:\t%ld\n\n", it->mapped_protections());
                 ++i;
         }
-
 }

@@ -10,7 +10,7 @@ CXXFLAGS += -Wcast-align
 CXXFLAGS += -Wmissing-declarations
 CXXFLAGS += -Wunreachable-code
 CXXFLAGS += -fdiagnostics-color=always
-#CXXFLAGS += -O3
+CXXFLAGS += -O3
 
 ## INCLUDES DIRECTORY ##
 INCLDIR   = src/includes/
@@ -57,7 +57,7 @@ EXEC_3      = mem_tracker
 
 # Multi threaded make of the final binary #
 multi:
-	$(MAKE) $(QUIET) -Bj all
+	$(MAKE) $(QUIET) -j all
 
 # Produce the final binary   #
 all: $(OBJS_1) $(OBJS_2) $(OBJS_3) #$(OBJS_4)
