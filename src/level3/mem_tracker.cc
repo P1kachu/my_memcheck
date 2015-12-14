@@ -65,11 +65,7 @@ int main(int argc, char** argv)
 
         char* preload = get_cmd_opt(argv, argv + argc, "--preload");
         if (preload)
-        {
                 name = argv[3];
-                printf("Preloaded: %s\n", preload);
-                printf("Binary: %s\n", name.c_str());
-        }
         else
         {
                 if (!binary_exists(name) && name.find("--") != std::string::npos)

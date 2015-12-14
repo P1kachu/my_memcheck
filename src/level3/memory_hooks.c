@@ -11,6 +11,7 @@ void* (*mallocp)(size_t);
 void* (*reallocp)(void*, size_t);
 void* (*memalignp)(size_t, size_t);
 void  (*freep)(void*);
+
 static void __attribute__((constructor)) init(void)
 {
         callocp   = (void* (*) (size_t, size_t)) dlsym (RTLD_NEXT, "calloc");

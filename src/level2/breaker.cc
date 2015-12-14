@@ -10,6 +10,8 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
         // Get interesting Phdr
         void* at_phdr  = get_phdr(at_phent, at_phnum, pid_child);
 
+        print_errno();
+
         // Something went wrong ?
         if (!at_phdr)
                 return NULL;
