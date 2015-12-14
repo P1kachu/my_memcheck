@@ -55,6 +55,7 @@ int main()
 
 
   mremap(uuu, 20396, 4096, 0, 0);
+  mremap(uuu, 4096, 8192, 0, 0);
   print_errno();
 
   return 0;

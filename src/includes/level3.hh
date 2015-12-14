@@ -19,7 +19,7 @@ public:
         unsigned long mapped_begin;
         unsigned long  mapped_length;
         long  mapped_protections;
-        int id;
+        int id; // For debug purposes
 };
 
 

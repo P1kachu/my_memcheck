@@ -6,8 +6,6 @@
 ** access interesting stuff
 */
 
-
-
 void* get_r_brk(void* rr_debug, pid_t pid_child)
 {
         struct iovec local;
