@@ -8,18 +8,15 @@ class Mapped
 public:
         Mapped(long b, int len, long prot)
         {
-                mapped_begin_       = b;
-                mapped_length_      = len;
-                mapped_protections_ = prot;
+                mapped_begin       = b;
+                mapped_length      = len;
+                mapped_protections = prot;
         }
 
         bool  area_contains(void* addr) const;
-        long  mapped_begin()            const { return mapped_begin_; }
-        long  mapped_length()           const { return mapped_length_; }
-        long  mapped_protections()      const { return mapped_protections_; }
 
         long mapped_begin;
-        long  mapped_length;
+        unsigned long  mapped_length;
         long  mapped_protections;
 };
 

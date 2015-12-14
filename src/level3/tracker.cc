@@ -2,15 +2,15 @@
 
 static bool compare_address(Mapped first, Mapped second)
 {
-        char* first_addr = (char*)first.mapped_begin();
-        char* second_addr = (char*)second.mapped_begin();
+        char* first_addr = (char*)first.mapped_begin;
+        char* second_addr = (char*)second.mapped_begin;
         return first_addr < second_addr;
 }
 
 bool Mapped::area_contains(void* addr) const
 {
-        return (char*)addr < (char*)mapped_begin_ + mapped_length_
-                             && (char*)addr >= (char*)mapped_begin_;
+        return (char*)addr < (char*)mapped_begin + mapped_length
+                             && (char*)addr >= (char*)mapped_begin;
 }
 
 
@@ -58,13 +58,13 @@ int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
         if (it != mapped_areas.end())
                 return NOT_FOUND;
 
-        long tmp = reinterpret_cast<long>(bp) - it->mapped_begin();
+        long tmp = reinterpret_cast<long>(bp) - it->mapped_begin;
         regs.rsi -= tmp;
 
         if (regs.rsi > 0)
                 regs.rsi = 0;
 
-        it->mapped_protections_set(regs.rdx);
+        it->mapped_protections = regs.rdx;
         for (unsigned i = 0; i < regs.rsi / PAGE_SIZE; ++i)
         {
                 it = std::next(it);
@@ -88,13 +88,39 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         auto it = get_mapped(bp);
         if (it != mapped_areas.end())
                 return NOT_FOUND;
-        if (retval != it->mapped_begin())
+        if (retval != it->mapped_begin)
         {
                 it->mapped_begin = retval;
                 it->mapped_length = regs.rdx;
         }
-        else if (it->mapped_length > )
 
+        else if(regs.rsi == regs.rdx)
+                return retval;
+
+        else if (it->mapped_length > regs.rdx)
+        {
+                it->mapped_length = regs.rdx;
+                tail_remove(it, regs.rsi /  regs.rdx);
+        }
+
+        else
+        {
+
+                unsigned i;
+                for (i = 0; i < regs.rdx / PAGE_SIZE; ++i)
+                {
+                        long addr = retval + i * PAGE_SIZE;
+                        mapped_areas.push_back(Mapped(addr, PAGE_SIZE, it->mapped_protections));
+                }
+
+                if (regs.rdx % PAGE_SIZE)
+                {
+                        long addr = retval + i * PAGE_SIZE;
+                        long len = regs.rdx % PAGE_SIZE;
+                        mapped_areas.push_back(Mapped(addr, len, it->mapped_protections));
+                }
+
+        }
         mapped_areas.sort(compare_address);
         return retval;
 }
@@ -172,7 +198,7 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
         if (it != mapped_areas.end())
                 return NOT_FOUND;
 
-        long tmp = reinterpret_cast<long>(bp) - it->mapped_begin();
+        long tmp = reinterpret_cast<long>(bp) - it->mapped_begin;
         regs.rsi -= tmp;
 
         if (regs.rsi > 0)
@@ -214,11 +240,11 @@ void Tracker::print_mapped_areas() const
         for (auto it = mapped_areas.begin(); it != mapped_areas.end(); it++)
         {
                 fprintf(OUT, "Mapped area #%d\n", i);
-                fprintf(OUT, "\tBegins:\t%p\n", (void*)it->mapped_begin());
-                fprintf(OUT, "\tLength:\t%ld\n", it->mapped_length());
-                fprintf(OUT, "\tEnds  :\t%p\n", (char*)it->mapped_begin()
-                        + it->mapped_length());
-                fprintf(OUT, "\tProt  :\t%ld\n\n", it->mapped_protections());
+                fprintf(OUT, "\tBegins:\t%p\n", (void*)it->mapped_begin);
+                fprintf(OUT, "\tLength:\t%ld\n", it->mapped_length);
+                fprintf(OUT, "\tEnds  :\t%p\n", (char*)it->mapped_begin
+                        + it->mapped_length);
+                fprintf(OUT, "\tProt  :\t%ld\n\n", it->mapped_protections);
                 ++i;
         }
 }
