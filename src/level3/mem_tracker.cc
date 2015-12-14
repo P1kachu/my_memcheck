@@ -34,9 +34,9 @@ static int mem_tracker(std::string name, pid_t pid)
                 if (WIFSIGNALED(status))
                       break;
 
+                // Segfault
                 if (status == 2943)
                         break;
-
                 try
                 {
                         if (b.is_from_us(bp))
