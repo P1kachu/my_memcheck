@@ -32,12 +32,14 @@ public:
         {
                 pid = child;
                 name = binary_name;
+                origin_program_break = 0;
         }
 
 
         bool of_interest(int syscall) const;
         void print_mapped_areas()     const;
 
+        int handle_brk(int syscall, Breaker& b, void* bp);
         int handle_munmap(int syscall, Breaker& b, void* bp);
         int handle_mmap(int syscall, Breaker& b, void* bp);
         int handle_syscall(int syscall, Breaker& b, void* bp);
@@ -49,6 +51,8 @@ public:
         std::list<Mapped> mapped_areas;
         std::string       name;
         pid_t             pid;
+        void*             actual_program_break;
+        void*             origin_program_break;
 };
 
 

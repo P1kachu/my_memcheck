@@ -25,6 +25,7 @@ int print_retval(pid_t child, int syscall)
                 {
                         case MMAP_SYSCALL:
                         case MREMAP_SYSCALL:
+                        case BRK_SYSCALL:
                                 fprintf(OUT, ") = 0x%lx\n", retval);
                                 break;
                         default:

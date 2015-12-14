@@ -49,9 +49,10 @@ bool Tracker::remove_mapped(void* addr, long len)
                 return false;
 
         long tmp = reinterpret_cast<long>(addr) - it->mapped_begin();
-        printf("Gaby: %ld\n", tmp);
         len -= tmp;
 
+        if (len >0)
+                len = 0;
         tail_remove(std::next(it), len / PAGE_SIZE);
 
         return true;
@@ -89,6 +90,30 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 
         return retval;
 }
+
+int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
+{
+        static int origin_set = 0;
+
+        print_syscall(pid, syscall);
+        struct user_regs_struct regs;
+        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+        long retval = b.handle_bp(bp, false);
+        print_retval(pid, syscall);
+        if (retval < 0)
+                return 0;
+
+        if (!origin_set)
+        {
+                origin_set = 1;
+                origin_program_break = (void*)retval;
+        }
+        else
+                actual_program_break = (void*)retval;
+
+        return 0;
+
+}
 int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
 {
         print_syscall(pid, syscall);
@@ -106,11 +131,8 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
         remove_mapped(reinterpret_cast<void*>(retval), regs.rsi);
 
         mapped_areas.sort(compare_address);
-
         return retval;
 }
-
-
 
 int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
 {
@@ -120,6 +142,8 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
                         return handle_mmap(syscall, b, bp);
                 case MUNMAP_SYSCALL:
                         return handle_munmap(syscall, b, bp);
+                case BRK_SYSCALL:
+                        return handle_brk(syscall, b, bp);
                 default:
                         return b.handle_bp(bp, false);
 
@@ -131,6 +155,8 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
 void Tracker::print_mapped_areas() const
 {
         int i = 0;
+        printf("Old process break %p\n", origin_program_break);
+        printf("Actual process break %p\n", actual_program_break);
         for (auto it = mapped_areas.begin(); it != mapped_areas.end(); it++)
         {
                 fprintf(OUT, "Mapped area #%d\n", i);
