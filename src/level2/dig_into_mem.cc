@@ -218,7 +218,7 @@ std::pair<off_t, long>get_sections(const char* lib_name)
         }
 
         UNUSED(nread);
-
+        delete[] table;
         return std::pair<off_t, long>(offset, len);
 }
 
