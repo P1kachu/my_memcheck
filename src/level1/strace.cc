@@ -75,13 +75,8 @@ int trace_child(pid_t child)
                 int rdi = print_syscall(child, syscall);
 
                 int tmp = wait_for_syscall(child);
-                retval = ptrace(PTRACE_PEEKUSER, child,
-                                sizeof (long) * RAX);
 
-                if (retval >= 0)
-                        fprintf(OUT, ") = %d\n", retval);
-                else
-                        fprintf(OUT, ") = ?\n");
+                retval = print_retval(child);
 
                 if (syscall == EXIT_SYSCALL || syscall == EXIT_GROUP_SYSCALL)
                         retval = rdi;

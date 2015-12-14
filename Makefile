@@ -61,8 +61,8 @@ multi:
 
 # Produce the final binary   #
 all: $(OBJS_1) $(OBJS_2) $(OBJS_3) #$(OBJS_4)
-#	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
-#	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
+	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
+	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
 	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
 #	$(CXX) $(OBJS_4) $(LDFLAGS) -o $(EXEC_4)
 

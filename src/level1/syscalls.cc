@@ -15,6 +15,19 @@ static void print_syscall_name(int id)
         fprintf(OUT, "%s(...", s.c_str());
 }
 
+int print_retval(pid_t child)
+{
+        int retval = ptrace(PTRACE_PEEKUSER, child, sizeof (long) * RAX);
+
+        if (retval >= 0)
+                fprintf(OUT, ") = %d\n", retval);
+        else
+                fprintf(OUT, ") = ?\n");
+
+        return retval;
+
+}
+
 static void print_addresses(pid_t child, user_regs_struct& regs)
 {
 #if BONUS

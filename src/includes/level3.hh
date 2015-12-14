@@ -40,7 +40,9 @@ public:
         bool of_interest(int syscall) const;
         void print_mapped_areas()     const;
 
+        int handle_mmap(int syscall);
         int handle_syscall(int syscall);
+
 
         std::list<Mapped> mapped_areas;
         std::string       name;

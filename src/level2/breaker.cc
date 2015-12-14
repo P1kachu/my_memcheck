@@ -162,15 +162,7 @@ int Breaker::exec_breakpoint(std::string region, void* addr, bool print)
         waitpid(pid, &wait_status, 0);
 
         if (print)
-        {
-                int retval = ptrace(PTRACE_PEEKUSER, pid,
-                                    sizeof (long) * RAX);
-
-                if (retval >= 0)
-                        fprintf(OUT, ") = %d\n", retval);
-                else
-                        fprintf(OUT, ") = ?\n");
-        }
+                print_retval(pid);
 
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");

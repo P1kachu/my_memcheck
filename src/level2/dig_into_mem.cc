@@ -1,5 +1,13 @@
 #include "level2.hh"
 
+/*
+** Very large chunk of functions used to
+** dig into (mostly the child's) memory and
+** access interesting stuff
+*/
+
+
+
 void* get_r_brk(void* rr_debug, pid_t pid_child)
 {
         struct iovec local;
