@@ -42,20 +42,38 @@ void Tracker::tail_remove(std::list<Mapped>::iterator it, int iteration)
         mapped_areas.erase(it);
 }
 
-bool Tracker::remove_mapped(void* addr, long len)
+
+int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
 {
-        auto it = get_mapped(addr);
+        print_syscall(pid, syscall);
+        struct user_regs_struct regs;
+        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+        long retval = b.handle_bp(bp, false);
+        print_retval(pid, syscall);
+
+        if (retval < 0)
+                return retval;
+
+        auto it = get_mapped(bp);
         if (it != mapped_areas.end())
-                return false;
+                return NOT_FOUND;
 
-        long tmp = reinterpret_cast<long>(addr) - it->mapped_begin();
-        len -= tmp;
+        long tmp = reinterpret_cast<long>(bp) - it->mapped_begin();
+        regs.rsi -= tmp;
 
-        if (len >0)
-                len = 0;
-        tail_remove(std::next(it), len / PAGE_SIZE);
+        if (regs.rsi > 0)
+                regs.rsi = 0;
 
-        return true;
+        it->mapped_protections_set(regs.rdx);
+        for (unsigned i = 0; i < regs.rsi / PAGE_SIZE; ++i)
+        {
+                it = std::next(it);
+                it->mapped_protections_set(regs.rdx);
+        }
+
+        mapped_areas.sort(compare_address);
+
+        return retval;
 }
 
 int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
@@ -100,6 +118,7 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         long retval = b.handle_bp(bp, false);
         print_retval(pid, syscall);
+
         if (retval < 0)
                 return 0;
 
@@ -114,6 +133,7 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
         return 0;
 
 }
+
 int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
 {
         print_syscall(pid, syscall);
@@ -125,10 +145,17 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
         if (retval < 0)
                 return retval;
 
-        if ((regs.r10 & MAP_SHARED) || !(regs.r10 & MAP_ANONYMOUS))
-                return retval;
+        auto it = get_mapped(bp);
+        if (it != mapped_areas.end())
+                return NOT_FOUND;
 
-        remove_mapped(reinterpret_cast<void*>(retval), regs.rsi);
+        long tmp = reinterpret_cast<long>(bp) - it->mapped_begin();
+        regs.rsi -= tmp;
+
+        if (regs.rsi > 0)
+                regs.rsi = 0;
+
+        tail_remove(std::next(it), regs.rsi / PAGE_SIZE);
 
         mapped_areas.sort(compare_address);
         return retval;

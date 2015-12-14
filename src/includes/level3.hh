@@ -17,6 +17,7 @@ public:
         long  mapped_begin()            const { return mapped_begin_; }
         long  mapped_length()           const { return mapped_length_; }
         long  mapped_protections()      const { return mapped_protections_; }
+        void  mapped_protections_set(long prot) { mapped_protections_ = prot; }
 
 private:
         long mapped_begin_;
@@ -43,7 +44,7 @@ public:
         int handle_munmap(int syscall, Breaker& b, void* bp);
         int handle_mmap(int syscall, Breaker& b, void* bp);
         int handle_syscall(int syscall, Breaker& b, void* bp);
-
+        int handle_mprotect(int syscall, Breaker& b, void* bp);
         bool remove_mapped(void* addr, long len);
         std::list<Mapped>::iterator get_mapped(void* addr);
         void tail_remove(std::list<Mapped>::iterator it, int iteration);
