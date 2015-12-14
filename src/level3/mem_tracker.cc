@@ -33,19 +33,14 @@ static int mem_tracker(std::string name, pid_t pid)
                       break;
                 if (WIFSIGNALED(status))
                       break;
-#if 0
-                fprintf(OUT, "%s[F %d]%s 0x%lx : %lx - Received %s%s%s\n",
-                        GREEN, pid, NONE, get_xip(pid) - 1, ptrace(PTRACE_PEEKDATA, pid, get_xip(pid) - 1, 0),
-                        RED, strsignal(WSTOPSIG(status)), NONE);
-#endif
+
                 if (status == 2943)
                         break;
 
                 try
                 {
-                        UNUSED(bp);
                         if (b.is_from_us(bp))
-                                b.handle_bp(bp);
+                                b.handle_bp(bp, false);
                 }
                 catch (std::logic_error) { break; }
         }

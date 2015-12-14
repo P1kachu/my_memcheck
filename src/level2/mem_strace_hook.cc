@@ -42,9 +42,9 @@ static int mem_hook(std::string name, pid_t pid)
 
                 try
                 {
-                        UNUSED(bp);
                         if (b.is_from_us(bp))
-                                b.handle_bp(bp);
+                                b.handle_bp(bp, true);
+
                 }
                 catch (std::logic_error) { break; }
         }

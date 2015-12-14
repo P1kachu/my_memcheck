@@ -108,7 +108,7 @@ char Breaker::is_from_us(void* addr) const
         return 0;
 }
 
-void Breaker::handle_bp(void* addr)
+void Breaker::handle_bp(void* addr, bool print)
 {
         if (addr == rr_brk)
         {
@@ -128,10 +128,10 @@ void Breaker::handle_bp(void* addr)
         else
                 for (auto it : handled_syscalls)
                         if (it.second.find(addr) != it.second.end())
-                                exec_breakpoint(it.first, addr);
+                                exec_breakpoint(it.first, addr, print);
 }
 
-void Breaker::exec_breakpoint(std::string region, void* addr)
+void Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 {
         int wait_status = 0;
 
@@ -145,8 +145,10 @@ void Breaker::exec_breakpoint(std::string region, void* addr)
         // Restore old instruction pointer
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
         regs.XIP -= 1;
-        print_syscall(pid, regs.XAX);
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
+
+        if (print)
+                print_syscall(pid, regs.XAX);
 
         // Run instruction
         remove_breakpoint(region, addr);
@@ -154,14 +156,16 @@ void Breaker::exec_breakpoint(std::string region, void* addr)
 
         waitpid(pid, &wait_status, 0);
 
+        if (print)
+        {
+                int retval = ptrace(PTRACE_PEEKUSER, pid,
+                                    sizeof (long) * RAX);
 
-        int retval = ptrace(PTRACE_PEEKUSER, pid,
-                        sizeof (long) * RAX);
-
-        if (retval >= 0)
-                fprintf(OUT, ") = %d\n", retval);
-        else
-                fprintf(OUT, ") = ?\n");
+                if (retval >= 0)
+                        fprintf(OUT, ") = %d\n", retval);
+                else
+                        fprintf(OUT, ") = ?\n");
+        }
 
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");

@@ -103,8 +103,8 @@ public:
         void add_breakpoint(std::string, void* addr);
         ssize_t find_syscalls(void* addr);
         char is_from_us(void* addr) const;
-        void handle_bp(void* addr);
-        void exec_breakpoint(std::string region, void* addr);
+        void handle_bp(void* addr, bool print);
+        void exec_breakpoint(std::string region, void* addr, bool print);
         void print_bps() const;
         void reset_libs(void* link_map);
 
