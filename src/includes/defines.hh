@@ -114,6 +114,7 @@ public:
         pid_t pid;
         struct r_debug* r_deb;
         std::string name;
+        void* program_entry_point;
 };
 
 

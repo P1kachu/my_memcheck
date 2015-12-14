@@ -1,4 +1,4 @@
-#include "dig_into_mem.hh"
+#include "level2.hh"
 
 void* get_r_brk(void* rr_debug, pid_t pid_child)
 {
@@ -131,11 +131,11 @@ void* get_link_map(void* rr_debug, pid_t pid, int* status)
 
         // FIXME : Deadcode
         // fprintf(OUT, "Found r_debug->r_map:\t\t%p\n", (void*)link_map);
-        *status = ((struct r_debug*)buffer)->r_state;
+       * status = ((struct r_debug*)buffer)->r_state;
         return link_map;
 }
 
-void *print_string_from_mem(void* str, pid_t pid)
+void* print_string_from_mem(void* str, pid_t pid)
 {
         char s[64] = {0};
         struct iovec local;
@@ -156,13 +156,13 @@ void *print_string_from_mem(void* str, pid_t pid)
         return NULL;
 }
 
-std::pair<off_t, long>get_sections(const char* lib_name)
+std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
 {
         int fd = open(lib_name, O_RDONLY);
         if (fd < 0)
         {
                 fprintf(OUT, "%sERROR%s Couldn't open lib %s\n", RED, NONE, lib_name);
-                return std::pair<off_t, int>(0,0);
+                return std::pair<off_t, int>(0, 0);
         }
 
         ElfW(Ehdr) elf_header;
@@ -173,6 +173,7 @@ std::pair<off_t, long>get_sections(const char* lib_name)
         long len = 0;
         // Elf header
         unsigned nread = read(fd, &elf_header, sizeof (ElfW(Ehdr)));
+        b.program_entry_point = (void*)elf_header.e_entry;
 
         // String table offset
         lseek(fd, elf_header.e_shoff, SEEK_CUR);
@@ -228,7 +229,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
         printf("Disassembling %ld bytes\n", len);
         errno = 0;
         csh handle;
-        cs_insn *insn = NULL;
+        cs_insn* insn = NULL;
         size_t count = 0;
         struct iovec local;
         struct iovec remote;
@@ -258,12 +259,12 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                 {
                         for (size_t j = 0; j < count && counter <= len; j++)
                         {
-                                memset(insn, 0, sizeof(cs_insn));
+                                memset(insn, 0, sizeof (cs_insn));
                                 auto id = insn[j].id;
 #if 0 // FIXME : Deadcode
                                 printf("%lx\t", insn[j].address);
                                 for (int k = 0; k < 8; k++)
-                                        printf("%02x ",insn[j].bytes[k]);
+                                        printf("%02x ", insn[j].bytes[k]);
                                 printf("\t\t%s\t%s\n", insn[j].mnemonic, insn[j].op_str);
 #endif
 #if 0 // FIXME : Deadcode
@@ -272,7 +273,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                                 {
                                         printf("%lx\t", insn[j].address);
                                         for (int k = 0; k < 8; k++)
-                                                printf("%02x ",insn[j].bytes[k]);
+                                                printf("%02x ", insn[j].bytes[k]);
                                         printf("\t\t%s\t%s\n", insn[j].mnemonic, insn[j].op_str);
                                 }
 #endif
@@ -289,7 +290,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                 }
                 else
                         printf("ERROR: Failed to disassemble given code!\n");
-                cs_close(&handle);
+                cs_close(& handle);
         }
         return 0;
 }
@@ -326,7 +327,7 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                         // shared object is loaded at.
                         char* dupp = (char*)print_string_from_mem(map.l_name, pid);
 
-                        std::pair<off_t, long> sections = get_sections(dupp);
+                        std::pair<off_t, long> sections = get_sections(dupp, *b);
                         if (sections.second)
                                 disass(dupp, (char*)map.l_addr + sections.first, sections.second, *b, pid);
 
@@ -337,10 +338,9 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
         } while (map.l_next);
 
         // Add binary own syscalls
-        std::pair<off_t, long> sections = get_sections(b->name.c_str());
+        std::pair<off_t, long> sections = get_sections(b->name.c_str(), *b);
         if (sections.second)
-                disass(MAIN_CHILD, (char*)0x400000 + sections.first, sections.second, *b, pid);
-        // FIXME : Get real address
+                disass(MAIN_CHILD, (char*)b->program_entry_point + sections.first, sections.second, * b, pid);
         fprintf(OUT, "%s##################################################%s\n", RED, NONE);
         fprintf(OUT, "\n");
 }

@@ -14,19 +14,16 @@ func()
         cd $D
 
         for file in *.cc; do
-            emacs -nw $file
             /home/Stan/Dropbox/OTHERS/useful-stuff/moulinette.py $file ||
                 ~/Downloads/useful_stuff/moulinette.py $file vv
         done
 
         for file in *.hh; do
-            emacs -nw $file
             /home/Stan/Dropbox/OTHERS/useful-stuff/moulinette.py $file ||
                 ~/Downloads/useful_stuff/moulinette.py $file vv
         done
 
         for file in *.hxx; do
-            emacs -nw $file
             /home/Stan/Dropbox/OTHERS/useful-stuff/moulinette.py $file ||
                 ~/Downloads/useful_stuff/moulinette.py $file vv
         done
