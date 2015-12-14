@@ -108,7 +108,7 @@ char Breaker::is_from_us(void* addr) const
         return 0;
 }
 
-int Breaker::handle_bp(void* addr, bool print)
+long Breaker::handle_bp(void* addr, bool print)
 {
         if (addr == rr_brk)
         {
@@ -134,7 +134,7 @@ int Breaker::handle_bp(void* addr, bool print)
         return SYSCALL_ERROR;
 }
 
-int Breaker::exec_breakpoint(std::string region, void* addr, bool print)
+long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 {
         int wait_status = 0;
 

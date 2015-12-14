@@ -25,9 +25,24 @@ bool Tracker::of_interest(int syscall) const
 int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 {
         print_syscall(pid, syscall);
-        int retval = b.handle_bp(bp, false);
-        if (retval > NO_SYSCALL)
-                print_retval(pid);
+        struct user_regs_struct regs;
+        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+        long retval = b.handle_bp(bp, false);
+        print_retval(pid);
+
+        if ((void*) retval == MAP_FAILED)
+                return retval;
+
+        if ((regs.r10 & MAP_SHARED) || !(regs.r10 & MAP_ANONYMOUS))
+                return retval;
+
+        unsigned i = 0;
+        for (i = 0; i < regs.rsi / PAGE_SIZE; ++i)
+                        mapped_areas.push_back(Mapped((char*)regs.rdi + i * 4096, 4096, regs.rdx));
+
+        if (regs.rsi % 4096)
+                mapped_areas.push_back(Mapped((char*)regs.rdi + i * 4096, regs.rsi % 4096, regs.rdx));
+
         return retval;
 }
 
@@ -56,6 +71,7 @@ void Tracker::print_mapped_areas() const
                 fprintf(OUT, "\tEnds  :\t%p\n", (char*)it->mapped_begin()
                         + it->mapped_length());
                 fprintf(OUT, "\tProtections:\t%d\n", it->mapped_protections());
+                ++i;
         }
 
 }
