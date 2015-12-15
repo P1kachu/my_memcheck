@@ -10,7 +10,7 @@ extern ElfW(Dyn) _DYNAMIC[];
         {                                                                                   \
                 if (errno)                                                                  \
                 {                                                                           \
-                        printf("%sERROR%s Something went wrong: %s (%s%s%s:%d)\n",    \
+                        fprintf(OUT, "%sERROR%s Something went wrong: %s (%s%s%s:%d)\n", \
                                 "\033[31;1m", "\033[0m", strerror(errno), "\033[31;1m", __FILE__, "\033[0m", __LINE__); \
                 }                                                                           \
         }
@@ -20,7 +20,8 @@ int main()
 {
   struct r_debug *r_debug = NULL;
   ElfW(Dyn)* dyn = _DYNAMIC;
-  printf("\t%s[C %d]%s Child _DYNAMIC: %p\n", "\033[31;1m", getpid(), "\033[0m", (void*)dyn);
+  FILE* OUT = stderr;//fopen("/dev/null",0);
+  fprintf(OUT, "\t%s[C %d]%s Child _DYNAMIC: %p\n", "\033[31;1m", getpid(), "\033[0m", (void*)dyn);
   for (; dyn->d_tag != DT_NULL; ++dyn)
   {
     if (dyn->d_tag == DT_DEBUG)
@@ -30,12 +31,12 @@ int main()
     }
   }
 
-  printf("\t%s[C %d]%s Child r_debug\t\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug);
-  printf("\t%s[C %d]%s Child r_debug->r_brk\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_brk);
-  printf("\t%s[C %d]%s Child r_debug->r_map\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_map);
+  fprintf(OUT, "\t%s[C %d]%s Child r_debug\t\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug);
+  fprintf(OUT, "\t%s[C %d]%s Child r_debug->r_brk\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_brk);
+  fprintf(OUT, "\t%s[C %d]%s Child r_debug->r_map\t%p\n", "\033[31;1m", getpid(), "\033[0m", (void *) r_debug->r_map);
 
 
-  printf("\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m",
+  fprintf(OUT, "\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m",
          mmap(0, 4096, 0, 34, -1, 0));
 
   sbrk(0);
@@ -45,13 +46,13 @@ int main()
   brk((char*)sbrk(0) + 64);
 
   void* ttt = mmap(0, 27, 0, 34, -1, 0);
-  printf("\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", ttt);
+  fprintf(OUT, "\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", ttt);
 
   munmap(ttt, 27);
 
   void* uuu = mmap(0, 20396, 0, 34, -1, 0);
 
-  printf("\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", uuu);
+  fprintf(OUT, "\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", uuu);
 
 
   uuu = mremap(uuu, 20396, 4096, 0, 0);

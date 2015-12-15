@@ -141,11 +141,10 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
 
 int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 {
-        print_syscall(pid, syscall);
+        UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         long retval = b.handle_bp(bp, false);
-        print_retval(pid, syscall);
 
         if ((void*) retval == MAP_FAILED)
                 return retval;
@@ -166,6 +165,9 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
                 long len = regs.rsi % PAGE_SIZE;
                 mapped_areas.push_back(Mapped(addr, len, regs.rdx, id_inc++));
         }
+
+        fprintf(OUT, "mmap   { addr = 0x%llx, len = 0x%llx, prot = %lld } \n",
+                regs.rdi, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
 
@@ -203,11 +205,10 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
 
 int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
 {
-        print_syscall(pid, syscall);
+        UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         long retval = b.handle_bp(bp, false);
-        print_retval(pid, syscall);
 
         print_errno();
         if (retval < 0)
@@ -224,6 +225,9 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
                 tmp2 = 0;
 
         tail_remove(it, tmp2 / PAGE_SIZE);
+        fprintf(OUT, "munmap { addr = 0x%llx, len = 0x%llx } \n",
+                regs.rdi, regs.rsi);
+
         mapped_areas.sort(compare_address);
         return retval;
 }
