@@ -31,23 +31,23 @@ SRCS_3    += $(addsuffix .cc, $(addprefix src/level2/, breaker dig_into_mem))
 SRCS_3    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
 SRCS_3    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
-#SRCS_4     = $(addsuffix .cc, $(addprefix src/level4/, ))
-
-#SRCS_4    += $(addsuffix .cc, $(addprefix src/level2/, breaker dig_into_mem))
-#SRCS_4    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
-#SRCS_4    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
+SRCS_4     = $(addsuffix .cc, $(addprefix src/level4/, mem_checker))
+SRCS_4    += $(addsuffix .cc, $(addprefix src/level3/, tracker))
+SRCS_4    += $(addsuffix .cc, $(addprefix src/level2/, breaker dig_into_mem))
+SRCS_4    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
+SRCS_4    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
 ## OBJ CREATION ##
 OBJS_1      = $(SRCS_1:.cc=.o)
 OBJS_2      = $(SRCS_2:.cc=.o)
 OBJS_3      = $(SRCS_3:.cc=.o)
-#OBJS_4      = $(SRCS_4:.cc=.o)
+OBJS_4      = $(SRCS_4:.cc=.o)
 
 ## EXEC NAME ##
 EXEC_1      = mem_strace
 EXEC_2      = mem_strace_hook
 EXEC_3      = mem_tracker
-#EXEC_4      = mem_checker
+EXEC_4      = mem_checker
 
 
 ###############################################################################
@@ -63,7 +63,7 @@ all: libhooks debug $(OBJS_1) $(OBJS_2) $(OBJS_3) #$(OBJS_4)
 	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
 	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
 	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
-#	$(CXX) $(OBJS_4) $(LDFLAGS) -o $(EXEC_4)
+	$(CXX) $(OBJS_4) $(LDFLAGS) -o $(EXEC_4)
 	clear
 
 # Produce debug binary #
@@ -79,22 +79,22 @@ libhooks:
 # Produce test binary, and launch #
 check: libhooks distclean multi
 	clear
-	@echo -e "\n\n\033[33;1m###################################################################################\
-###################################\033[0m"
 	@echo -e "\033[33;1m###################################################################################\
-###################################\033[0m\n\n"
+#######################\033[0m\n\n"
+	@echo -e "\033[33;1m###################################################################################\
+#######################\033[0m\n\n"
 	./$(EXEC_1) ./debug 2> /dev/null
-	@echo -e "\n\n\033[33;1m###################################################################################\
-###################################\033[0m\n\n"
+	@echo -e "\033[33;1m###################################################################################\
+#######################\033[0m\n\n"
 	./$(EXEC_2) ./debug 2> /dev/null
-	@echo -e "\n\n\033[33;1m###################################################################################\
-###################################\033[0m\n\n"
+	@echo -e "\033[33;1m###################################################################################\
+#######################\033[0m\n\n"
 	./$(EXEC_3) ./debug 2> /dev/null
-	@echo -e "\n\n\033[33;1m###################################################################################\
-###################################\033[0m\n\n"
+	@echo -e "\033[33;1m###################################################################################\
+#######################\033[0m\n\n"
 	./$(EXEC_3) --preload ./libhooks.so ./debug 2> /dev/null
-	@echo -e "\n\n\033[33;1m###################################################################################\
-###################################\033[0m\n\n"
+	@echo -e "\033[33;1m###################################################################################\
+#######################\033[0m\n\n"
 #	./$(EXEC_4) ./debug
 
 # Clean repository           #
@@ -104,7 +104,7 @@ clean:
 	$(RM) $(OBJS_1)
 	$(RM) $(OBJS_2)
 	$(RM) $(OBJS_3)
-#	$(RM) $(OBJS_4)
+	$(RM) $(OBJS_4)
 
 distclean:
 	$(RM) debug
@@ -112,6 +112,6 @@ distclean:
 	$(RM) $(EXEC_2)
 	$(RM) $(EXEC_3)
 	$(RM) $(libhooks)
-#	$(RM) $(EXEC_4)
+	$(RM) $(EXEC_4)
 
 .PHONY: multi all clean bonus libhook debug distclean
