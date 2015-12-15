@@ -45,6 +45,7 @@ public:
         int handle_syscall(int syscall, Breaker& b, void* bp);
         int handle_mprotect(int syscall, Breaker& b, void* bp);
         int handle_mremap(int syscall, Breaker& b, void* bp);
+        int custom_malloc(Breaker& b, void* bp);
 
         bool remove_mapped(void* addr, long len);
         std::list<Mapped>::iterator get_mapped(unsigned long addr);
