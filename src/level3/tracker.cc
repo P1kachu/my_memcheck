@@ -176,19 +176,12 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
 {
         static int origin_set = 0;
         UNUSED(syscall);
-//        print_syscall(pid, syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
 
-        long len = origin_program_break ?
-                (char*)actual_program_break - (char*)origin_program_break
-                : 0;
-
-        fprintf(OUT, "brk { addr = %p, len = 0x%lx, prot = 3 }\n",
-                (void*)actual_program_break, len);
+        lvl3_print_brk(0, origin_program_break, actual_program_break);
 
         long retval = b.handle_bp(bp, false);
-//        print_retval(pid, syscall);
 
         if (retval < 0)
                 return 0;
@@ -202,11 +195,7 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
         else
                 actual_program_break = (void*)retval;
 
-
-        len = (char*)actual_program_break - (char*)origin_program_break;
-
-        fprintf(OUT, " to { addr = %p, len = 0x%lx, prot = 3 }\n",
-                (void*)actual_program_break, len);
+        lvl3_print_brk(1, origin_program_break, actual_program_break);
 
         return 0;
 

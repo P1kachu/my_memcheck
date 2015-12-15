@@ -7,4 +7,7 @@ bool binary_exists(const std::string& name);
 bool is_elf(Elf64_Ehdr* hdr);
 char* get_cmd_opt(char** begin, char** end, const std::string& option);
 bool cmd_opt_exists(char** begin, char** end, const std::string& option);
+
+void lvl3_print_brk(int prefix, void* origin_break, void* actual_break);
+
 #endif /* !HELPERS_HH */
