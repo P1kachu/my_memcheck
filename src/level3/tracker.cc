@@ -251,14 +251,14 @@ int Tracker::custom_malloc(Breaker& b, void* bp)
         for (i = 0; i < regs.rdi / PAGE_SIZE; ++i)
         {
                 long addr = retval + i * PAGE_SIZE;
-                mapped_areas.push_back(Mapped(addr, PAGE_SIZE, PROT_READ | PROT_WRITE, id_inc++));
+                mapped_areas.push_back(Mapped(addr, PAGE_SIZE, MALLOC_CHILD, id_inc++));
         }
 
         if (regs.rdi % PAGE_SIZE)
         {
                 long addr = retval + i * PAGE_SIZE;
                 long len = regs.rsi % PAGE_SIZE;
-                mapped_areas.push_back(Mapped(addr, len, PROT_READ | PROT_WRITE, id_inc++));
+                mapped_areas.push_back(Mapped(addr, len, MALLOC_CHILD, id_inc++));
         }
 
         fprintf(OUT, "malloc   { addr = 0x%lx, len = 0x%llx } \n",
