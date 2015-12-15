@@ -63,3 +63,13 @@ void lvl3_print_mprotect(int prefix, long addr, long len, int prot)
                 fprintf(OUT, "|_    to { addr = %p, len = 0x%lx, prot = %d }\n",
                         (void*)addr, len, prot);
 }
+
+void lvl3_print_realloc(int prefix, long from, long to, long len)
+{
+        if (!prefix)
+                fprintf(OUT, "realloc  { addr = %p, len = 0x%lx }\n",
+                        (void*)from, len);
+        else
+                fprintf(OUT, "|_    to { addr = %p, len = 0x%lx }\n",
+                        (void*)to, len);
+}

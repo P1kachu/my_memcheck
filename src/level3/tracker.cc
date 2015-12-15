@@ -283,6 +283,43 @@ int Tracker::custom_free(Breaker& b, void* bp)
 
         mapped_areas.erase(it);
 
+        return 0;
+}
+
+
+int Tracker::custom_realloc(Breaker& b, void* bp)
+{
+        struct user_regs_struct regs;
+        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+        b.handle_bp(bp, false);
+
+	auto rbx = regs.rbx;
+	auto rcx = regs.rcx;
+	auto rdx = regs.rdx;
+
+        auto it = get_mapped(rbx);
+
+	lvl3_print_realloc(0, rdx, rbx, rcx);
+
+        if (it == mapped_areas.end() || it->mapped_protections != MALLOC_CHILD)
+        {
+                // TODO : Invalid free
+		return -1;
+        }
+
+        fprintf(OUT, "free     { addr = 0x%llx, len = 0x%lx } \n",
+                rbx, it->mapped_length);
+
+	lvl3_print_realloc(0, rdx, rbx, rcx);
+
+        if (rbx != rcx)
+	{
+		mapped_areas.erase(it);
+		mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
+	}
+	else
+		it->mapped_length = rcx;
+
         mapped_areas.sort(compare_address);
         return 0;
 }
@@ -307,7 +344,7 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
                 case CUSTOM_SYSCALL_CALLOC:
                         return custom_alloc(1, b, bp);
                 case CUSTOM_SYSCALL_REALLOC:
-                        fprintf(OUT, "%sRealloc custom%s\n", GREEN, NONE);
+                        return custom_realloc(b, bp);
                         break;
                 case CUSTOM_SYSCALL_FREE:
 			return custom_free(b, bp);

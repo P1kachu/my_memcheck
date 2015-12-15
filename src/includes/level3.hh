@@ -47,7 +47,7 @@ public:
         int handle_mremap(int syscall, Breaker& b, void* bp);
         int custom_alloc(int prefix, Breaker& b, void* bp);
         int custom_free(Breaker& b, void* bp);
-
+	int custom_realloc(Breaker& b, void* bp);
         bool remove_mapped(void* addr, long len);
         std::list<Mapped>::iterator get_mapped(unsigned long addr);
         void tail_remove(std::list<Mapped>::iterator it, int iteration);
