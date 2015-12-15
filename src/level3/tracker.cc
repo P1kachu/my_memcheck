@@ -41,11 +41,10 @@ std::list<Mapped>::iterator Tracker::get_mapped(unsigned long addr)
 
 int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
 {
-        print_syscall(pid, syscall);
+        UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         long retval = b.handle_bp(bp, false);
-        print_retval(pid, syscall);
 
         if (retval < 0)
                 return retval;
@@ -53,6 +52,8 @@ int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
         auto it = get_mapped(regs.rdi);
         if (it == mapped_areas.end())
                 return NOT_FOUND;
+
+        lvl3_print_mprotect(0, regs.rdi, regs.rsi, it->mapped_protections);
 
         long tmp = reinterpret_cast<long>(bp) - it->mapped_begin;
         regs.rsi -= tmp;
@@ -66,6 +67,8 @@ int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
                 it = std::next(it);
                 it->mapped_protections = regs.rdx;
         }
+
+        lvl3_print_mprotect(1, regs.rdi, regs.rsi, it->mapped_protections);
 
         return retval;
 }
@@ -83,6 +86,7 @@ void Tracker::tail_remove(std::list<Mapped>::iterator it, int iteration)
 
 int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
 {
+        UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         long retval = b.handle_bp(bp, false);
@@ -95,7 +99,7 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
                 return NOT_FOUND;
 
 
-        lvl3_print_mremap(prefix, regs.rdi, regs.rsi, it->mapped_protections);
+        lvl3_print_mremap(0, regs.rdi, regs.rsi, it->mapped_protections);
 
         if ((unsigned long)retval != it->mapped_begin)
         {
@@ -136,7 +140,7 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
                 mapped_areas.erase(it);
 
         }
-        lvl3_print_mremap(prefix, retval, regs.rdx, it->mapped_protections);
+        lvl3_print_mremap(1, retval, regs.rdx, it->mapped_protections);
         mapped_areas.sort(compare_address);
         return retval;
 }
@@ -168,7 +172,7 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
                 mapped_areas.push_back(Mapped(addr, len, regs.rdx, id_inc++));
         }
 
-        fprintf(OUT, "mmap   { addr = 0x%llx, len = 0x%llx, prot = %lld } \n",
+        fprintf(OUT, "mmap    { addr = 0x%llx, len = 0x%llx, prot = %lld } \n",
                 regs.rdi, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
@@ -227,7 +231,7 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
                 tmp2 = 0;
 
         tail_remove(it, tmp2 / PAGE_SIZE);
-        fprintf(OUT, "munmap { addr = 0x%llx, len = 0x%llx } \n",
+        fprintf(OUT, "munmap  { addr = 0x%llx, len = 0x%llx } \n",
                 regs.rdi, regs.rsi);
 
         mapped_areas.sort(compare_address);
