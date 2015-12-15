@@ -22,8 +22,6 @@ static int mem_tracker(std::string name, pid_t pid)
 
                 long addr = get_xip(pid);
 
-                print_errno();
-
                 auto bp = (void*)(addr - 1);
 
                 if (WIFEXITED(status))
@@ -37,13 +35,17 @@ static int mem_tracker(std::string name, pid_t pid)
                         break;
                 try
                 {
-                        printf("%p - TEST %d\n", (void*)addr, b.is_from_us(bp));
+                        if (!addr)
+                                break;
+
                         if (!b.is_from_us(bp))
                                 continue;
-                        printf("TEST2\n");
+
                         long syscall = NO_SYSCALL;
+
                         if (bp != b.rr_brk)
                                 syscall = get_xax(pid);
+
                         t.handle_syscall(syscall, b, bp);
 
                 }

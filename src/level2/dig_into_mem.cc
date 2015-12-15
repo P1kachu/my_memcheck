@@ -322,7 +322,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                                 // If syscall, add breakpoint
                                 if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
                                     || (id == X86_INS_INT && insn[j].bytes[1] == 0x80)
-                                    || id == X86_INS_INT3)
+                                        || id == X86_INS_INT3)
                                 {
                                         syscall_counter++;
                                         b.add_breakpoint(std::string(name), (void*)insn[j].address);

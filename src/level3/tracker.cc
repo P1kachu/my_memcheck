@@ -247,18 +247,20 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
                         return handle_brk(syscall, b, bp);
                 case CUSTOM_SYSCALL_MALLOC:
                         printf("Malloc\n");
+                        break;
                 case CUSTOM_SYSCALL_CALLOC:
                         printf("Calloc\n");
+                        break;
                 case CUSTOM_SYSCALL_REALLOC:
                         printf("Realloc\n");
+                        break;
                 case CUSTOM_SYSCALL_FREE:
                         printf("Free\n");
-                default:
-                        return b.handle_bp(bp, false);
-
+                        break;
         }
+        return b.handle_bp(bp, false);
 
-        return NO_SYSCALL;
+
 }
 
 void Tracker::print_mapped_areas() const

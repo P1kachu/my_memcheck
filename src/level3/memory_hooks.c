@@ -38,7 +38,6 @@ void *malloc (size_t len)
 
 void *calloc (size_t n, size_t len)
 {
-        printf("##\n");
         void *ret;
         if (no_hook)
         {
@@ -59,7 +58,6 @@ void *calloc (size_t n, size_t len)
 
 void *realloc (void* ptr, size_t len)
 {
-        printf("###\n");
         no_hook = 1;
         void* ret = (*reallocp)(ptr, len);
         asm volatile ("int3" : : "a" (CUSTOM_SYSCALL_REALLOC));
@@ -70,7 +68,6 @@ void *realloc (void* ptr, size_t len)
 
 void free (void* ptr)
 {
-        printf("####\n");
         no_hook = 1;
         (*freep)(ptr);
         asm volatile ("int3" : : "a" (CUSTOM_SYSCALL_FREE));
