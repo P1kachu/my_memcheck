@@ -97,7 +97,7 @@ int trace_child(pid_t child)
 
         }
 
-        fprintf(OUT, "\n+++ Process %d exited with %d +++\n", child, retval);
+        fprintf(OUT, "\n+++ Process %d exited with %d+++\n", child, retval);
         return 0;
 
 }

@@ -33,7 +33,7 @@ bool Tracker::of_interest(int syscall) const
 std::list<Mapped>::iterator Tracker::get_mapped(unsigned long addr)
 {
         for (auto it = mapped_areas.begin(); it != mapped_areas.end(); it++)
-                if(it->area_contains(addr))
+                if (it->area_contains(addr))
                         return it;
         return mapped_areas.end();
 }
@@ -109,7 +109,7 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         }
 
         // Old size == New size
-        else if(regs.rsi == regs.rdx)
+        else if (regs.rsi == regs.rdx)
                 return retval;
 
         // Old size > New size <==> Shrinking

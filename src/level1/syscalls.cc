@@ -21,7 +21,7 @@ int print_retval(pid_t child, int syscall)
 
         if (retval >= 0 || errno == 0)
         {
-                switch(syscall)
+                switch (syscall)
                 {
                         case MMAP_SYSCALL:
                         case MREMAP_SYSCALL:

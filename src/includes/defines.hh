@@ -39,9 +39,9 @@
 # include <capstone/capstone.h>
 
 # include "colors.hh"
+# include "shared.hh"
 # include "helpers.hh"
 # include "syscalls.hh"
-# include "shared.hh"
 
 /* Macros */
 # define OUT                      stdout

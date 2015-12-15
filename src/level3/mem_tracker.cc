@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 
         if (argc < 2)
         {
-                fprintf(OUT, "Usage: %s [--preload lib] binary_to_trace [ARGS]\n", argv[0]);
+                fprintf(OUT, "Usage: %s[--preload lib] binary_to_trace[ARGS]\n", argv[0]);
                 return 0;
         }
 
