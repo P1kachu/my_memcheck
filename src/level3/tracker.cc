@@ -1,4 +1,4 @@
-#include "level3.hh"
+#include "level4.hh"
 
 static bool compare_address(Mapped first, Mapped second)
 {
@@ -182,7 +182,7 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
                 regs.rdi, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
-
+	remove_page_protection((void*)regs.rdi, regs.rsi, *this, pid);
         return retval;
 }
 
