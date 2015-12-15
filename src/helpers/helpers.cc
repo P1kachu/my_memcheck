@@ -43,3 +43,19 @@ void lvl3_print_brk(int prefix, void* origin_break, void* actual_break)
 
         }
 }
+
+void lvl3_print_mremap(int prefix, long addr, long len, int prot)
+{
+        if (!prefix)
+        {
+                fprintf(OUT, "brk    { addr = %p, len = 0x%lx, prot = 3 }\n",
+                        (void*)actual_break, len);
+        }
+        else
+        {
+                long len = origin_break ? (char*)actual_break - (char*)origin_break : 0;
+                fprintf(OUT, "|_  to { addr = %p, len = 0x%lx, prot = 3 }\n",
+                        (void*)actual_break, len);
+
+        }
+}

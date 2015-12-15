@@ -83,11 +83,9 @@ void Tracker::tail_remove(std::list<Mapped>::iterator it, int iteration)
 
 int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
 {
-        print_syscall(pid, syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         long retval = b.handle_bp(bp, false);
-        print_retval(pid, syscall);
 
         if ((void*) retval == MAP_FAILED)
                 return retval;
@@ -95,6 +93,9 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         auto it = get_mapped(regs.rdi);
         if (it == mapped_areas.end())
                 return NOT_FOUND;
+
+
+        lvl3_print_mremap(prefix, regs.rdi, regs.rsi, it->mapped_protections);
 
         if ((unsigned long)retval != it->mapped_begin)
         {
@@ -135,6 +136,7 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
                 mapped_areas.erase(it);
 
         }
+        lvl3_print_mremap(prefix, retval, regs.rdx, it->mapped_protections);
         mapped_areas.sort(compare_address);
         return retval;
 }

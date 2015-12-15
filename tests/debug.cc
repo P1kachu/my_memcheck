@@ -54,6 +54,7 @@ int main()
 
   fprintf(OUT, "\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", uuu);
 
+  mprotect(uuu, 1, 31);
 
   uuu = mremap(uuu, 20396, 4096, 0, 0);
   mremap(uuu, 4096, 8192, 0, 0);
