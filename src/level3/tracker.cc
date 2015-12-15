@@ -172,7 +172,7 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
                 mapped_areas.push_back(Mapped(addr, len, regs.rdx, id_inc++));
         }
 
-        fprintf(OUT, "mmap    { addr = 0x%llx, len = 0x%llx, prot = %lld } \n",
+        fprintf(OUT, "mmap     { addr = 0x%llx, len = 0x%llx, prot = %lld } \n",
                 regs.rdi, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
@@ -231,7 +231,7 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
                 tmp2 = 0;
 
         tail_remove(it, tmp2 / PAGE_SIZE);
-        fprintf(OUT, "munmap  { addr = 0x%llx, len = 0x%llx } \n",
+        fprintf(OUT, "munmap   { addr = 0x%llx, len = 0x%llx } \n",
                 regs.rdi, regs.rsi);
 
         mapped_areas.sort(compare_address);

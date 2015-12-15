@@ -32,13 +32,13 @@ void lvl3_print_brk(int prefix, void* origin_break, void* actual_break)
         if (!prefix)
         {
                 long len = origin_break ? (char*)actual_break - (char*)origin_break : 0;
-                fprintf(OUT, "brk     { addr = %p, len = 0x%lx, prot = 3 }\n",
+                fprintf(OUT, "brk      { addr = %p, len = 0x%lx, prot = 3 }\n",
                         (void*)actual_break, len);
         }
         else
         {
                 long len = origin_break ? (char*)actual_break - (char*)origin_break : 0;
-                fprintf(OUT, "|_   to { addr = %p, len = 0x%lx, prot = 3 }\n",
+                fprintf(OUT, "|_    to { addr = %p, len = 0x%lx, prot = 3 }\n",
                         (void*)actual_break, len);
 
         }
@@ -47,10 +47,10 @@ void lvl3_print_brk(int prefix, void* origin_break, void* actual_break)
 void lvl3_print_mremap(int prefix, long addr, long len, int prot)
 {
         if (!prefix)
-                fprintf(OUT, "mremap  { addr = %p, len = 0x%lx, prot = %d }\n",
+                fprintf(OUT, "mremap   { addr = %p, len = 0x%lx, prot = %d }\n",
                         (void*)addr, len, prot);
         else
-                fprintf(OUT, "|_  to  { addr = %p, len = 0x%lx, prot = %d }\n",
+                fprintf(OUT, "|_  to   { addr = %p, len = 0x%lx, prot = %d }\n",
                         (void*)addr, len, prot);
 }
 
@@ -60,6 +60,6 @@ void lvl3_print_mprotect(int prefix, long addr, long len, int prot)
                 fprintf(OUT, "mprotect { addr = %p, len = 0x%lx, prot = %d }\n",
                         (void*)addr, len, prot);
         else
-                fprintf(OUT, "|_   to { addr = %p, len = 0x%lx, prot = %d }\n",
+                fprintf(OUT, "|_    to { addr = %p, len = 0x%lx, prot = %d }\n",
                         (void*)addr, len, prot);
 }

@@ -1,4 +1,4 @@
-QUIET=-s
+QUIET=#-s
 ## COMPILER ##
 CXX       = g++
 
@@ -116,4 +116,4 @@ distclean:
 	$(RM) $(libhooks)
 #	$(RM) $(EXEC_4)
 
-.PHONY: multi all check clean bonus
+.PHONY: multi all clean bonus libhook debug distclean

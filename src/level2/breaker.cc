@@ -114,18 +114,12 @@ long Breaker::handle_bp(void* addr, bool print)
 {
         if (addr == rr_brk)
         {
-                printf("(brk)\n");
                 int state = 0;
                 void* link_map = get_link_map(r_deb, pid, &state);
-                printf("%s[%d]%s State: %s\n", GREEN, pid, NONE,
-                       state ? state > 1
-                       ? "DELETE"
-                       : "ADD"
-                       : "CONSISTENT");
+
                 if (state == r_debug::RT_CONSISTENT)
                         browse_link_map(link_map, pid, this);
-                if (state == r_debug::RT_DELETE)
-                        reset_libs(link_map);
+
                 return NO_SYSCALL;
         }
         else
