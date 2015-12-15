@@ -9,7 +9,8 @@ static bool compare_address(Mapped first, Mapped second)
 
 bool Mapped::area_contains(unsigned long addr) const
 {
-        int ret = (addr < mapped_begin + mapped_length) && addr >= mapped_begin;
+        int ret = (addr < mapped_begin + mapped_length)
+		&& addr >= mapped_begin;
         return ret;
 }
 
@@ -127,7 +128,8 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
                 {
                         long addr = retval + i * PAGE_SIZE;
                         mapped_areas.push_back(Mapped(addr, PAGE_SIZE,
-                                                      it->mapped_protections, id_inc++));
+                                                      it->mapped_protections,
+						      id_inc++));
                 }
 
                 if (regs.rdx % PAGE_SIZE)
@@ -135,7 +137,8 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
                         long addr = retval + i * PAGE_SIZE;
                         long len = regs.rdx % PAGE_SIZE;
                         mapped_areas.push_back(Mapped(addr, len,
-                                                      it->mapped_protections, id_inc++));
+                                                      it->mapped_protections,
+						      id_inc++));
                 }
                 mapped_areas.erase(it);
 
@@ -162,17 +165,20 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
         for (i = 0; i < regs.rsi / PAGE_SIZE; ++i)
         {
                 long addr = retval + i * PAGE_SIZE;
-                mapped_areas.push_back(Mapped(addr, PAGE_SIZE, regs.rdx, id_inc++));
+                mapped_areas.push_back(Mapped(addr, PAGE_SIZE,
+					      regs.rdx, id_inc++));
         }
 
         if (regs.rsi % PAGE_SIZE)
         {
                 long addr = retval + i * PAGE_SIZE;
                 long len = regs.rsi % PAGE_SIZE;
-                mapped_areas.push_back(Mapped(addr, len, regs.rdx, id_inc++));
+                mapped_areas.push_back(Mapped(addr, len,
+					      regs.rdx, id_inc++));
         }
 
-        fprintf(OUT, "mmap     { addr = 0x%llx, len = 0x%llx, prot = %lld } \n",
+        fprintf(OUT,
+		"mmap     { addr = 0x%llx, len = 0x%llx, prot = %lld } \n",
                 regs.rdi, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
@@ -242,8 +248,8 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-	auto rbx = regs.rbx;
-	auto rcx = regs.rcx;
+        auto rbx = regs.rbx;
+        auto rcx = regs.rcx;
 
         auto retval = b.handle_bp(bp, false);
 
@@ -252,12 +258,12 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp)
 
         mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
 
-	if (!prefix)
-		fprintf(OUT, "malloc   { addr = 0x%llx, len = 0x%llx } \n",
-			rbx, rcx);
-	else
-		fprintf(OUT, "calloc   { addr = 0x%llx, len = 0x%llx } \n",
-			rbx, rcx);
+        if (!prefix)
+                fprintf(OUT, "malloc   { addr = 0x%llx, len = 0x%llx } \n",
+                        rbx, rcx);
+        else
+                fprintf(OUT, "calloc   { addr = 0x%llx, len = 0x%llx } \n",
+                        rbx, rcx);
 
         mapped_areas.sort(compare_address);
         return retval;
@@ -269,13 +275,13 @@ int Tracker::custom_free(Breaker& b, void* bp)
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         b.handle_bp(bp, false);
 
-	auto rbx = regs.rbx;
+        auto rbx = regs.rbx;
         auto it = get_mapped(rbx);
 
         if (it == mapped_areas.end() || it->mapped_protections != MALLOC_CHILD)
         {
                 // TODO : Invalid free
-		return -1;
+                return -1;
         }
 
         fprintf(OUT, "free     { addr = 0x%llx, len = 0x%lx } \n",
@@ -293,32 +299,32 @@ int Tracker::custom_realloc(Breaker& b, void* bp)
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         b.handle_bp(bp, false);
 
-	auto rbx = regs.rbx;
-	auto rcx = regs.rcx;
-	auto rdx = regs.rdx;
+        auto rbx = regs.rbx;
+        auto rcx = regs.rcx;
+        auto rdx = regs.rdx;
 
         auto it = get_mapped(rbx);
 
-	lvl3_print_realloc(0, rdx, rbx, rcx);
+        lvl3_print_realloc(0, rdx, rbx, rcx);
 
         if (it == mapped_areas.end() || it->mapped_protections != MALLOC_CHILD)
         {
                 // TODO : Invalid free
-		return -1;
+                return -1;
         }
 
         fprintf(OUT, "free     { addr = 0x%llx, len = 0x%lx } \n",
                 rbx, it->mapped_length);
 
-	lvl3_print_realloc(0, rdx, rbx, rcx);
+        lvl3_print_realloc(0, rdx, rbx, rcx);
 
         if (rbx != rcx)
-	{
-		mapped_areas.erase(it);
-		mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
-	}
-	else
-		it->mapped_length = rcx;
+        {
+                mapped_areas.erase(it);
+                mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
+        }
+        else
+                it->mapped_length = rcx;
 
         mapped_areas.sort(compare_address);
         return 0;
@@ -347,7 +353,7 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
                         return custom_realloc(b, bp);
                         break;
                 case CUSTOM_SYSCALL_FREE:
-			return custom_free(b, bp);
+                        return custom_free(b, bp);
         }
         return b.handle_bp(bp, false);
 

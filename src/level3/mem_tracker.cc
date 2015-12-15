@@ -63,7 +63,9 @@ int main(int argc, char** argv)
 
         if (argc < 2)
         {
-                fprintf(OUT, "Usage: %s[--preload lib] binary_to_trace[ARGS]\n", argv[0]);
+                fprintf(OUT,
+			"Usage: %s[--preload lib] binary_to_trace[ARGS]\n",
+			argv[0]);
                 return 0;
         }
 
@@ -74,9 +76,11 @@ int main(int argc, char** argv)
                 name = argv[3];
         else
         {
-                if (!binary_exists(name) && name.find("--") != std::string::npos)
+                if (!binary_exists(name)
+		    && name.find("--") != std::string::npos)
                 {
-                        fprintf(OUT, "%sERROR:%s Invalid command option (%s)\n",
+                        fprintf(OUT,
+				"%sERROR:%s Invalid command option (%s)\n",
                                 RED, NONE, name.c_str());
                         exit(-1);
                 }

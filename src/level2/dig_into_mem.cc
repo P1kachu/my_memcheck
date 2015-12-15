@@ -377,11 +377,11 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
 
                         // vdso special case
                         if (std::string(dupp).find(std::string("vdso")) != std::string::npos)
-                                sections = get_vdso((void*)map.l_addr,* b);
+                                sections = get_vdso((void*)map.l_addr, * b);
                         else
-                                sections = get_sections(dupp,* b);
+                                sections = get_sections(dupp, * b);
                         if (sections.second)
-                                disass(dupp, (char*)map.l_addr + sections.first, sections.second,* b, pid);
+                                disass(dupp, (char*)map.l_addr + sections.first, sections.second, * b, pid);
 
                         free(dupp);
                         fprintf(OUT, "\n");
@@ -390,7 +390,7 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
         } while (map.l_next);
 
         // Add binary own syscalls
-        std::pair<off_t, long> sections = get_sections(b->name.c_str(),* b);
+        std::pair<off_t, long> sections = get_sections(b->name.c_str(), * b);
         if (sections.second)
                 disass(MAIN_CHILD, (char*)b->program_entry_point + sections.first, sections.second, * b, pid);
         fprintf(OUT, "%s##################################################%s\n", RED, NONE);

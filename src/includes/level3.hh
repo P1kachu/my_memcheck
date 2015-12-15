@@ -47,7 +47,7 @@ public:
         int handle_mremap(int syscall, Breaker& b, void* bp);
         int custom_alloc(int prefix, Breaker& b, void* bp);
         int custom_free(Breaker& b, void* bp);
-	int custom_realloc(Breaker& b, void* bp);
+        int custom_realloc(Breaker& b, void* bp);
         bool remove_mapped(void* addr, long len);
         std::list<Mapped>::iterator get_mapped(unsigned long addr);
         void tail_remove(std::list<Mapped>::iterator it, int iteration);
@@ -55,8 +55,8 @@ public:
         std::list<Mapped> mapped_areas;
         std::string       name;
         pid_t             pid;
-        void*            actual_program_break;
-        void*            origin_program_break;
+        void*           actual_program_break;
+        void*           origin_program_break;
         int               id_inc;
 };
 
