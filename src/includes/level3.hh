@@ -6,7 +6,7 @@
 class Mapped
 {
 public:
-        Mapped(unsigned long b, unsigned long len, long prot, int id_inc)
+        Mapped(unsigned long b, unsigned long len, unsigned long prot, int id_inc)
         {
                 mapped_begin       = b;
                 mapped_length      = len;
@@ -18,7 +18,7 @@ public:
 
         unsigned long mapped_begin;
         unsigned long  mapped_length;
-        long  mapped_protections;
+        unsigned long  mapped_protections;
         int id; // For debug purposes
 };
 

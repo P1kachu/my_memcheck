@@ -250,7 +250,7 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp)
         if (retval != CUSTOM_BREAKPOINT)
                 return retval;
 
-        mapped_areas.push_back(Mapped(retval, rcx, MALLOC_CHILD, id_inc++));
+        mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
 
 	if (!prefix)
 		fprintf(OUT, "malloc   { addr = 0x%llx, len = 0x%llx } \n",
@@ -270,19 +270,17 @@ int Tracker::custom_free(Breaker& b, void* bp)
         b.handle_bp(bp, false);
 
 	auto rbx = regs.rbx;
-
         auto it = get_mapped(rbx);
 
         if (it == mapped_areas.end() || it->mapped_protections != MALLOC_CHILD)
         {
                 // TODO : Invalid free
-		//return -1;
+		return -1;
         }
 
         fprintf(OUT, "free     { addr = 0x%llx, len = 0x%lx } \n",
                 rbx, it->mapped_length);
 
-	return -1;
         mapped_areas.erase(it);
 
         mapped_areas.sort(compare_address);
