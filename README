@@ -1,7 +1,5 @@
-THIS IS A MANDATORY FILE
-
-Level1:
-       mem_strace
+Level1 - Strace:
+       src/level1
        Use of ptrace to track system calls from a traced program
        Prints arguments for execve, fork, vfork, clone, exit,
        exit_group, brk, mmap, munmap, mremap, mprotect
@@ -9,12 +7,21 @@ Level1:
        prints PID and where the error was raised
        Prints other functions names, but no arguments
 
-Level2:
-        mem_strace_hook
-        #include Level1
-        - PTRACE_SYSCALL
-        + HOOK ON SYSCALLS
-        1 line against 700 less effective but hey, WE rule
+Level2 - Hooked Strace:
+       src/level2
+       #include Level1
+       - PTRACE_SYSCALL
+       + HOOK ON SYSCALLS
+       1 line against 700 less effective but hey, WE rule the stuff now
 
-Level3:
-        mem_tracker
+Level3 - Memory tracer:
+       src/level3
+       #include Level{1,2}
+       Hooks on frequently used function that play with memory
+       malloc, realloc, free, calloc
+       Save each allocated area, to check if we are not out of bound
+       Pretty neat
+
+Level4 - Memory checker:
+       src/level4
+       #include Level{1...3}
