@@ -73,8 +73,6 @@ int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
 
 void Tracker::tail_remove(std::list<Mapped>::iterator it, int iteration)
 {
-        printf("Id: %d\n", it->id);
-
         if (iteration > 0 && (std::next(it) != mapped_areas.end()))
                 tail_remove(std::next(it), iteration - 1);
 
@@ -97,8 +95,6 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         auto it = get_mapped(regs.rdi);
         if (it == mapped_areas.end())
                 return NOT_FOUND;
-
-        print_mapped_areas();
 
         if ((unsigned long)retval != it->mapped_begin)
         {
@@ -246,16 +242,16 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
                 case BRK_SYSCALL:
                         return handle_brk(syscall, b, bp);
                 case CUSTOM_SYSCALL_MALLOC:
-                        printf("Malloc\n");
+                        fprintf(OUT, "%sMalloc custom%s\n", GREEN, NONE);
                         break;
                 case CUSTOM_SYSCALL_CALLOC:
-                        printf("Calloc\n");
+                        fprintf(OUT, "%sCalloc custom%s\n", GREEN, NONE);
                         break;
                 case CUSTOM_SYSCALL_REALLOC:
-                        printf("Realloc\n");
+                        fprintf(OUT, "%sRealloc custom%s\n", GREEN, NONE);
                         break;
                 case CUSTOM_SYSCALL_FREE:
-                        printf("Free\n");
+                        fprintf(OUT, "%sFree custom%s\n", GREEN, NONE);
                         break;
         }
         return b.handle_bp(bp, false);

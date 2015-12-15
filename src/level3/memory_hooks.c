@@ -7,10 +7,10 @@
 
 static __thread int no_hook;
 
-void* (*callocp)(size_t, size_t);
-void* (*mallocp)(size_t);
-void* (*reallocp)(void*, size_t);
-void  (*freep)(void*);
+static void* (*callocp)(size_t, size_t) = NULL;
+static void* (*mallocp)(size_t) = NULL;
+static void* (*reallocp)(void*, size_t) = NULL;
+static void  (*freep)(void*) = NULL;
 
 static void __attribute__((constructor)) init(void)
 {

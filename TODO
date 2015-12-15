@@ -1,10 +1,13 @@
-THIS IS A MANDATORY FILE
-
-print filenames from execve correctly
-print PROT with &
-Delete NOMO tags
-follow_fork_mode (multi htreading)
-get rid of reinterpret_casts
-Find Ehdr
-handle vdso
-Refactor child digging
+===============================================
+#                   TODO                      #
+===============================================
+Print filenames from execve correctly       [ ]
+Print PROT with &                           [ ]
+Delete NOMO tags                            [ ]
+Follow_fork_mode (multi threading)          [ ]
+Get rid of reinterpret_casts                [ ]
+Find Ehdr                                   [ ]
+Handle vdso                                 [ ]
+Refactor child digging                      [ ]
+Handle ld.so                                [ ]
+find why it sucks with my preloaded library [ ]
