@@ -238,6 +238,32 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
         return retval;
 }
 
+int Tracker::custom_malloc(Breaker& b, void* bp)
+{
+        struct user_regs_struct regs;
+        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+        long retval = b.handle_bp(bp, false);
+
+        if (retval < 0)
+                return retval;
+
+        unsigned i = 0;
+        for (i = 0; i < regs.rdi / PAGE_SIZE; ++i)
+        {
+                long addr = retval + i * PAGE_SIZE;
+                mapped_areas.push_back(Mapped(addr, PAGE_SIZE, PROT_READ | PROT_WRITE, id_inc++));
+        }
+
+        if (regs.rdi % PAGE_SIZE)
+        {
+                long addr = retval + i * PAGE_SIZE;
+                long len = regs.rsi % PAGE_SIZE;
+                mapped_areas.push_back(Mapped(addr, len, regs.rdx, id_inc++));
+        }
+        mapped_areas.sort();
+        return retval;
+}
+
 int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
 {
         switch (syscall)
@@ -253,8 +279,7 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
                 case BRK_SYSCALL:
                         return handle_brk(syscall, b, bp);
                 case CUSTOM_SYSCALL_MALLOC:
-                        fprintf(OUT, "%sMalloc custom%s\n", GREEN, NONE);
-                        break;
+                        return malloc_custom(b, bp);
                 case CUSTOM_SYSCALL_CALLOC:
                         fprintf(OUT, "%sCalloc custom%s\n", GREEN, NONE);
                         break;
