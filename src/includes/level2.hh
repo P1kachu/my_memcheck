@@ -13,6 +13,5 @@ void* print_string_from_mem(void* str, pid_t pid);
 void browse_link_map(void* link_m, pid_t pid, Breaker* b);
 int disass(const char* name, void* phdr, long len, Breaker& b, pid_t pid);
 std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b);
-std::pair<off_t, long>get_vdso(void* l_addr, Breaker& b);
 
 #endif /* !LEVEL2_HH */

@@ -167,35 +167,6 @@ void* print_string_from_mem(void* str, pid_t pid)
         return NULL;
 }
 
-std::pair<off_t, long>get_vdso(void* l_addr, Breaker& b)
-{
-        // TODO : Do this when not tired
-        fprintf(OUT, "%sERROR%s Couldn't open lib vdso\n", RED, NONE);
-        return std::pair<off_t, int>(0, 0);
-
-        struct iovec local;
-        struct iovec remote;
-        ElfW(Ehdr) elf_header;
-        local.iov_base  = &elf_header;
-        local.iov_len   = sizeof (ElfW(Ehdr));
-        remote.iov_base = l_addr;
-        remote.iov_len  = sizeof (ElfW(Ehdr));
-
-        ssize_t nread = process_vm_readv(b.pid, &local, 1, &remote, 1, 0);
-        UNUSED(nread);
-        ElfW(Shdr) section_header;
-        local.iov_base  = &section_header;
-        local.iov_len   = sizeof (ElfW(Shdr));
-        remote.iov_base = (char*)l_addr + elf_header.e_shoff;
-        remote.iov_len  = sizeof (ElfW(Shdr));
-
-        for (unsigned i = 0; i < elf_header.e_shnum; ++i)
-        {
-
-        }
-
-}
-
 std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
 {
         int fd = open(lib_name, O_RDONLY);
@@ -213,6 +184,7 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
         bool in_executable = false;
         off_t offset = 0;
         long len = 0;
+
         // Elf header
         unsigned nread = read(fd, &elf_header, sizeof (ElfW(Ehdr)));
         b.program_entry_point = (void*)elf_header.e_entry;
@@ -308,7 +280,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                         {
                                 memset(insn, 0, sizeof (cs_insn));
                                 auto id = insn[j].id;
-#if 0 // FIXME : Deadcode
+#if 1 // FIXME : Deadcode
                                 printf("%lx\t", insn[j].address);
                                 for (int k = 0; k < 8; k++)
                                         printf("%02x ", insn[j].bytes[k]);
@@ -383,14 +355,7 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                         char* dupp = (char*)print_string_from_mem(map.l_name,
 								  pid);
 
-                        std::pair<off_t, long> sections;
-
-                        // vdso special case
-                        if (std::string(dupp).find(std::string("vdso"))
-			    != std::string::npos)
-                                sections = get_vdso((void*)map.l_addr, * b);
-                        else
-                                sections = get_sections(dupp, * b);
+                        std::pair<off_t, long> sections = get_sections(dupp, * b);
                         if (sections.second)
                                 disass(dupp,
 				       (char*)map.l_addr + sections.first,

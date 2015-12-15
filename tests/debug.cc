@@ -46,7 +46,6 @@ int main()
 
   brk((char*)sbrk(0) + 64);
 
-
   void* t = malloc(0x400);
   t = realloc(t, 0x600);
   free(t);
@@ -54,14 +53,18 @@ int main()
   free(t);
   void* ttt = mmap(0, 27, 0, 34, -1, 0);
   fprintf(OUT, "\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", ttt);
-
+  mprotect(ttt, 20, PROT_EXEC);
   munmap(ttt, 27);
 
   void* uuu = mmap(0, 20396, 0, 34, -1, 0);
+asm
+	volatile
+	(
+		"syscall"
+		:
+		: "rax" (10), "rdi" (uuu), "rsi" (1), "rdx" (PROT_EXEC)
+        );
 
-  fprintf(OUT, "\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", uuu);
-
-  mprotect(uuu, 1, PROT_READ);
 
   uuu = mremap(uuu, 20396, 4096, 0, 0);
   mremap(uuu, 4096, 8192, 0, 0);
