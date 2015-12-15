@@ -247,22 +247,32 @@ int Tracker::custom_malloc(Breaker& b, void* bp)
         if (retval < 0)
                 return retval;
 
-        unsigned i = 0;
-        for (i = 0; i < regs.rdi / PAGE_SIZE; ++i)
-        {
-                long addr = retval + i * PAGE_SIZE;
-                mapped_areas.push_back(Mapped(addr, PAGE_SIZE, MALLOC_CHILD, id_inc++));
-        }
-
-        if (regs.rdi % PAGE_SIZE)
-        {
-                long addr = retval + i * PAGE_SIZE;
-                long len = regs.rsi % PAGE_SIZE;
-                mapped_areas.push_back(Mapped(addr, len, MALLOC_CHILD, id_inc++));
-        }
+        mapped_areas.push_back(Mapped(retval, regs.rdi, MALLOC_CHILD, id_inc++));
 
         fprintf(OUT, "malloc   { addr = 0x%lx, len = 0x%llx } \n",
                 retval, regs.rdi);
+
+        mapped_areas.sort(compare_address);
+        return retval;
+}
+
+int Tracker::custom_free(Breaker& b, void* bp)
+{
+        struct user_regs_struct regs;
+        ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+        auto retval = b.handle_bp(bp, false);
+
+
+        auto it = get_mapped(regs.rdi);
+        if (it == mapped_areas.end())
+        {
+                // TODO : Invalid free
+        }
+
+        fprintf(OUT, "free     { addr = 0x%llx, len = 0x%lx } \n",
+                regs.rdi, it->mapped_length);
+
+        mapped_areas.erase(it);
 
         mapped_areas.sort(compare_address);
         return retval;
