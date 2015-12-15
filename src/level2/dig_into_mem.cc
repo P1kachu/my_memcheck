@@ -201,7 +201,9 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
         int fd = open(lib_name, O_RDONLY);
         if (fd < 0)
         {
-                fprintf(OUT, "%sERROR%s Couldn't open lib %s\n", RED, NONE, lib_name);
+                fprintf(OUT,
+			"%sERROR%s Couldn't open lib %s\n",
+			RED, NONE, lib_name);
                 return std::pair<off_t, int>(0, 0);
         }
 
@@ -218,25 +220,30 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
         // String table offset
         lseek(fd, elf_header.e_shoff, SEEK_CUR);
         int string_table_offset =  elf_header.e_shstrndx;
-        lseek(fd, elf_header.e_shentsize * (string_table_offset - 1), SEEK_CUR);
+        lseek(fd, elf_header.e_shentsize
+	      * (string_table_offset - 1), SEEK_CUR);
 
         // String table
         nread = read(fd, &string_header, sizeof (ElfW(Shdr)));
         off_t strtab = string_header.sh_offset;
         lseek(fd, strtab, SEEK_SET);
         char* table = new char[MAX_STRING_SIZE * elf_header.e_shnum];
-        nread = read(fd, table, sizeof (char) * MAX_STRING_SIZE * elf_header.e_shnum);
+        nread = read(fd, table, sizeof (char)
+		     * MAX_STRING_SIZE * elf_header.e_shnum);
 
         // Section headers
         int i;
         for (i = 0; i < elf_header.e_shnum; ++i)
         {
                 char buff[255] = { 0 };
-                lseek(fd, elf_header.e_shoff + elf_header.e_shentsize * i, SEEK_SET);
+                lseek(fd,
+		      elf_header.e_shoff
+		      + elf_header.e_shentsize * i, SEEK_SET);
 
                 nread = read(fd, &section_header, sizeof (ElfW(Shdr)));
 
-                if (in_executable && !(section_header.sh_flags & SHF_EXECINSTR))
+                if (in_executable
+		    && !(section_header.sh_flags & SHF_EXECINSTR))
                         break;
 
                 if (!in_executable && section_header.sh_flags & SHF_EXECINSTR)
@@ -248,11 +255,10 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
                 if (in_executable)
                 {
                         len += section_header.sh_size;
-                        for (int j = section_header.sh_name; table[j] != '\0'; ++j)
+                        for (int j = section_header.sh_name;
+			     table[j] != '\0'; ++j)
                                 buff[j - section_header.sh_name] = table[j];
                         UNUSED(buff[0]);
-                        // FIXME : Deadcode
-                        // fprintf(OUT, "%s - Exec: %ld\n", buff, section_header.sh_flags & SHF_EXECINSTR);
                 }
 
                 lseek(fd, elf_header.e_shentsize, SEEK_CUR);
@@ -293,7 +299,8 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                         return -1;
 
                 cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
-                count = cs_disasm(handle, buffer, nread, (uintptr_t)offset + PAGE_SIZE * i, 0, &insn);
+                count = cs_disasm(handle, buffer, nread,
+				  (uintptr_t)offset + PAGE_SIZE * i, 0, &insn);
 
                 if (count > 0)
                 {
@@ -320,12 +327,15 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
 #endif
 
                                 // If syscall, add breakpoint
-                                if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
-                                    || (id == X86_INS_INT && insn[j].bytes[1] == 0x80)
-                                        || id == X86_INS_INT3)
+                                if (id == X86_INS_SYSENTER
+				    || id == X86_INS_SYSCALL
+                                    || (id == X86_INS_INT
+					&& insn[j].bytes[1] == 0x80)
+				    || id == X86_INS_INT3)
                                 {
                                         syscall_counter++;
-                                        b.add_breakpoint(std::string(name), (void*)insn[j].address);
+                                        b.add_breakpoint(std::string(name),
+							 (void*)insn[j].address);
                                 }
                                 counter += insn[j].size;
 
@@ -353,7 +363,6 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
 
         process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-        fprintf(OUT, "%s##################################################%s\n", RED, NONE);
         fprintf(OUT, "%sBrowsing link map%s:\n", YELLOW, NONE);
 
         // FIXME : Useless ? Check if we missed some
@@ -369,19 +378,23 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                 if (map.l_addr)
                 {
                         // Unlike what the elf.h file can say about it
-                        // l_addr is not a difference but the base address the
-                        // shared object is loaded at.
-                        char* dupp = (char*)print_string_from_mem(map.l_name, pid);
+                        // l_addr is not a difference but the base address
+                        // the shared object is loaded at.
+                        char* dupp = (char*)print_string_from_mem(map.l_name,
+								  pid);
 
                         std::pair<off_t, long> sections;
 
                         // vdso special case
-                        if (std::string(dupp).find(std::string("vdso")) != std::string::npos)
+                        if (std::string(dupp).find(std::string("vdso"))
+			    != std::string::npos)
                                 sections = get_vdso((void*)map.l_addr, * b);
                         else
                                 sections = get_sections(dupp, * b);
                         if (sections.second)
-                                disass(dupp, (char*)map.l_addr + sections.first, sections.second, * b, pid);
+                                disass(dupp,
+				       (char*)map.l_addr + sections.first,
+				       sections.second, * b, pid);
 
                         free(dupp);
                         fprintf(OUT, "\n");
@@ -392,7 +405,8 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
         // Add binary own syscalls
         std::pair<off_t, long> sections = get_sections(b->name.c_str(), * b);
         if (sections.second)
-                disass(MAIN_CHILD, (char*)b->program_entry_point + sections.first, sections.second, * b, pid);
-        fprintf(OUT, "%s##################################################%s\n", RED, NONE);
+                disass(MAIN_CHILD,
+		       (char*)b->program_entry_point + sections.first,
+		       sections.second, * b, pid);
         fprintf(OUT, "\n");
 }
