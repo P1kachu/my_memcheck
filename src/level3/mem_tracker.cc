@@ -52,7 +52,6 @@ static int mem_tracker(std::string name, pid_t pid)
                 catch (std::logic_error) { break; }
         }
 
-        t.print_mapped_areas();
         ptrace(PTRACE_CONT, pid, 0, 0);
         return 0;
 }

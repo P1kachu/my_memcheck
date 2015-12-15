@@ -148,7 +148,7 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
         struct user_regs_struct regs;
 
 
-        if (0 && it->second.find(addr)->second == X86_INS_INT3)
+        if (1 && it->second.find(addr)->second == X86_INS_INT3)
         {
                 ptrace(PTRACE_GETREGS, pid, 0, &regs);
                 regs.XIP += 1;

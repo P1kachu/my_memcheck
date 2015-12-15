@@ -31,6 +31,7 @@ public:
                 pid = child;
                 name = binary_name;
                 origin_program_break = 0;
+                actual_program_break = 0;
                 id_inc = 0;
         }
 

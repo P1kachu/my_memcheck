@@ -98,7 +98,6 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
 
         if ((unsigned long)retval != it->mapped_begin)
         {
-                printf("NOT MOVE\n");
                 it->mapped_begin = retval;
                 it->mapped_length = regs.rdx;
                 tail_remove(it, regs.rsi / regs.rdx);
@@ -111,7 +110,6 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         // Old size > New size <==> Shrinking
         else if (regs.rsi > regs.rdx)
         {
-                printf("Shrink\n");
                 it->mapped_length = regs.rdx;
                 auto tmp = regs.rsi /  regs.rdx;
                 tail_remove(std::next(it), tmp - 1);
@@ -119,7 +117,6 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         // Expand
         else
         {
-                printf("EXPAND\n");
                 unsigned i;
                 for (i = 0; i < regs.rdx / PAGE_SIZE; ++i)
                 {
@@ -178,12 +175,20 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
 {
         static int origin_set = 0;
-
-        print_syscall(pid, syscall);
+        UNUSED(syscall);
+//        print_syscall(pid, syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+
+        long len = origin_program_break ?
+                (char*)actual_program_break - (char*)origin_program_break
+                : 0;
+
+        fprintf(OUT, "brk { addr = %p, len = 0x%lx, prot = 3 }\n",
+                (void*)actual_program_break, len);
+
         long retval = b.handle_bp(bp, false);
-        print_retval(pid, syscall);
+//        print_retval(pid, syscall);
 
         if (retval < 0)
                 return 0;
@@ -192,9 +197,16 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
         {
                 origin_set = 1;
                 origin_program_break = (void*)retval;
+                actual_program_break = (void*)retval;
         }
         else
                 actual_program_break = (void*)retval;
+
+
+        len = (char*)actual_program_break - (char*)origin_program_break;
+
+        fprintf(OUT, " to { addr = %p, len = 0x%lx, prot = 3 }\n",
+                (void*)actual_program_break, len);
 
         return 0;
 
