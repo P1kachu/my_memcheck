@@ -59,7 +59,7 @@ multi:
 	$(MAKE) $(QUIET) -j all
 
 # Produce the final binary   #
-all: debug $(OBJS_1) $(OBJS_2) $(OBJS_3) #$(OBJS_4)
+all: libhooks debug $(OBJS_1) $(OBJS_2) $(OBJS_3) #$(OBJS_4)
 	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
 	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
 	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
@@ -74,9 +74,7 @@ debug:
 	$(CXX) ./tests/debug.cc -o ./debug
 
 libhooks:
-	gcc -Wall -Wextra -Werror -shared \
-            -I src/includes -fPIC \
-            src/level3/memory_hooks.c -o libhooks.so
+	gcc -Wall -Wextra -Werror -shared -I src/includes -fPIC -ldl src/level3/memory_hooks.c -o libhooks.so
 
 # Produce test binary, and launch #
 check: libhooks distclean multi

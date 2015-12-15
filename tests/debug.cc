@@ -2,6 +2,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
@@ -45,6 +46,12 @@ int main()
 
   brk((char*)sbrk(0) + 64);
 
+
+  void* t = malloc(0x400);
+  t = realloc(t, 0x600);
+  free(t);
+  t = calloc(sizeof(char), 0x800);
+  free(t);
   void* ttt = mmap(0, 27, 0, 34, -1, 0);
   fprintf(OUT, "\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", ttt);
 

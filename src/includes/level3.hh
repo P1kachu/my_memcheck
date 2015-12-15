@@ -6,7 +6,7 @@
 class Mapped
 {
 public:
-        Mapped(long b, int len, long prot, int id_inc)
+        Mapped(unsigned long b, unsigned long len, long prot, int id_inc)
         {
                 mapped_begin       = b;
                 mapped_length      = len;
@@ -45,7 +45,7 @@ public:
         int handle_syscall(int syscall, Breaker& b, void* bp);
         int handle_mprotect(int syscall, Breaker& b, void* bp);
         int handle_mremap(int syscall, Breaker& b, void* bp);
-        int custom_malloc(Breaker& b, void* bp);
+        int custom_alloc(int prefix, Breaker& b, void* bp);
         int custom_free(Breaker& b, void* bp);
 
         bool remove_mapped(void* addr, long len);

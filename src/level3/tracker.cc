@@ -238,19 +238,26 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
         return retval;
 }
 
-int Tracker::custom_malloc(Breaker& b, void* bp)
+int Tracker::custom_alloc(int prefix, Breaker& b, void* bp)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+	auto rbx = regs.rbx;
+	auto rcx = regs.rcx;
+
         auto retval = b.handle_bp(bp, false);
 
-        if (retval < 0)
+        if (retval != CUSTOM_BREAKPOINT)
                 return retval;
 
-        mapped_areas.push_back(Mapped(retval, regs.rdi, MALLOC_CHILD, id_inc++));
+        mapped_areas.push_back(Mapped(retval, rcx, MALLOC_CHILD, id_inc++));
 
-        fprintf(OUT, "malloc   { addr = 0x%lx, len = 0x%llx } \n",
-                retval, regs.rdi);
+	if (!prefix)
+		fprintf(OUT, "malloc   { addr = 0x%llx, len = 0x%llx } \n",
+			rbx, rcx);
+	else
+		fprintf(OUT, "calloc   { addr = 0x%llx, len = 0x%llx } \n",
+			rbx, rcx);
 
         mapped_areas.sort(compare_address);
         return retval;
@@ -260,23 +267,28 @@ int Tracker::custom_free(Breaker& b, void* bp)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-        auto retval = b.handle_bp(bp, false);
+        b.handle_bp(bp, false);
 
+	auto rbx = regs.rbx;
 
-        auto it = get_mapped(regs.rdi);
-        if (it == mapped_areas.end())
+        auto it = get_mapped(rbx);
+
+        if (it == mapped_areas.end() || it->mapped_protections != MALLOC_CHILD)
         {
                 // TODO : Invalid free
+		//return -1;
         }
 
         fprintf(OUT, "free     { addr = 0x%llx, len = 0x%lx } \n",
-                regs.rdi, it->mapped_length);
+                rbx, it->mapped_length);
 
+	return -1;
         mapped_areas.erase(it);
 
         mapped_areas.sort(compare_address);
-        return retval;
+        return 0;
 }
+
 
 int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
 {
@@ -293,16 +305,14 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
                 case BRK_SYSCALL:
                         return handle_brk(syscall, b, bp);
                 case CUSTOM_SYSCALL_MALLOC:
-                        return custom_malloc(b, bp);
+                        return custom_alloc(0, b, bp);
                 case CUSTOM_SYSCALL_CALLOC:
-                        fprintf(OUT, "%sCalloc custom%s\n", GREEN, NONE);
-                        break;
+                        return custom_alloc(1, b, bp);
                 case CUSTOM_SYSCALL_REALLOC:
                         fprintf(OUT, "%sRealloc custom%s\n", GREEN, NONE);
                         break;
                 case CUSTOM_SYSCALL_FREE:
-                        fprintf(OUT, "%sFree custom%s\n", GREEN, NONE);
-                        break;
+			return custom_free(b, bp);
         }
         return b.handle_bp(bp, false);
 

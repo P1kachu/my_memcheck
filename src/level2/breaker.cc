@@ -143,7 +143,6 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 
         if ((it->second.find(addr)->second & 0xFF) == TRAP_INST)
         {
-                printf("Custom handled\n");
                 ptrace(PTRACE_GETREGS, pid, 0, &regs);
                 regs.XIP += 1;
                 ptrace(PTRACE_SETREGS, pid, 0, &regs);
