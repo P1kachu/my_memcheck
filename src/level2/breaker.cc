@@ -147,6 +147,13 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 
         struct user_regs_struct regs;
 
+
+        if (it->second.find(addr)->second == X86_INS_INT3)
+        {
+                regs.XIP += 1;
+                return CUSTOM_BREAKPOINT;
+        }
+
         // Restore old instruction pointer
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
         regs.XIP -= 1;

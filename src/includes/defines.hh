@@ -41,29 +41,32 @@
 # include "colors.hh"
 # include "helpers.hh"
 # include "syscalls.hh"
+# include "shared.hh"
 
 /* Macros */
-# define OUT                stdout
-# define MAIN_CHILD         "origins"
-# define NULL_STRING        "NULL"
-# define SYSCALL_ERROR      -2
-# define NO_SYSCALL         -1
-# define BONUS              1
-# define MMAP_SYSCALL       9
-# define MPROTECT_SYSCALL   10
-# define MUNMAP_SYSCALL     11
-# define BRK_SYSCALL        12
-# define MREMAP_SYSCALL     25
-# define CLONE_SYSCALL      56
-# define FORK_SYSCALL       57
-# define VFORK_SYSCALL      58
-# define EXECVE_SYSCALL     59
-# define EXIT_SYSCALL       60
-# define EXIT_GROUP_SYSCALL 231
-# define MAX_STRING_SIZE    255
-# define NOT_FOUND          404
-# define TRAP_LEN           1
-# define TRAP_INST          0xCC
+# define OUT                      stdout
+# define MAIN_CHILD               "origins"
+# define NULL_STRING              "NULL"
+# define CUSTOM_BREAKPOINT         -3
+# define SYSCALL_ERROR             -2
+# define NO_SYSCALL                -1
+# define BONUS                     1
+# define MMAP_SYSCALL              9
+# define MPROTECT_SYSCALL          10
+# define MUNMAP_SYSCALL            11
+# define BRK_SYSCALL               12
+# define MREMAP_SYSCALL            25
+# define CLONE_SYSCALL             56
+# define FORK_SYSCALL              57
+# define VFORK_SYSCALL             58
+# define EXECVE_SYSCALL            59
+# define EXIT_SYSCALL              60
+# define EXIT_GROUP_SYSCALL        231
+# define MAX_STRING_SIZE           255
+# define NOT_FOUND                 404
+# define TRAP_LEN                  1
+# define TRAP_INST                 0xCC
+
 
 # if defined(__i386)
 

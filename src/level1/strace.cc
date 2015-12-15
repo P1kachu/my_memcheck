@@ -43,12 +43,11 @@ int run_child(int argc, char** argv, char* ld_preload)
                 std::stringstream ss;
                 ss << "LD_PRELOAD=" << ld_preload;
                 std::string s = ss.str();
+
                 char* tmp = strdup(s.c_str());
-                printf("### %s ###\n", tmp);
-                printf("%s\n", get_current_dir_name());
                 char* const envs[] = { tmp, NULL };
                 ret = execve(args[2], args + 2, envs);
-                print_errno();
+
                 free(tmp);
                 delete[] args;
         }

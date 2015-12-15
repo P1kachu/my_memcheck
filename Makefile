@@ -74,7 +74,9 @@ debug:
 	$(CXX) ./tests/debug.cc -o ./debug
 
 libhooks:
-	$(CC) -Wall -Wextra -Werror -shared -fPIC src/level3/memory_hooks.c -o libhooks.so
+	gcc -Wall -Wextra -Werror -shared \
+            -I src/includes -fPIC \
+            src/level3/memory_hooks.c -o libhooks.so
 
 # Produce test binary, and launch #
 check: libhooks distclean multi

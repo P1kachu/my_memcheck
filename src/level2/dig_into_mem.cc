@@ -275,7 +275,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
         struct iovec remote;
 
         int counter = 0;
-
+        int syscall_counter = 0;
         for (unsigned i = 0; i < len / PAGE_SIZE + 1; ++i)
         {
                 unsigned char buffer[PAGE_SIZE];
@@ -309,7 +309,8 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
 #endif
 #if 0 // FIXME : Deadcode
                                 if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
-                                    || (id == X86_INS_INT && insn[j].bytes[1] == 0x80))
+                                    || (id == X86_INS_INT && insn[j].bytes[1] == 0x80)
+                                        || id == X86_INS_INT3)
                                 {
                                         printf("%lx\t", insn[j].address);
                                         for (int k = 0; k < 8; k++)
@@ -320,8 +321,12 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
 
                                 // If syscall, add breakpoint
                                 if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
-                                    || (id == X86_INS_INT && insn[j].bytes[1] == 0x80))
+                                    || (id == X86_INS_INT && insn[j].bytes[1] == 0x80)
+                                    || id == X86_INS_INT3)
+                                {
+                                        syscall_counter++;
                                         b.add_breakpoint(std::string(name), (void*)insn[j].address);
+                                }
                                 counter += insn[j].size;
 
                         }
@@ -332,6 +337,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                         printf("ERROR: Failed to disassemble given code!\n");
                 cs_close(& handle);
         }
+        fprintf(OUT, "%d syscalls instructions\n", syscall_counter);
         return 0;
 }
 

@@ -19,9 +19,15 @@ bool Mapped::area_contains(unsigned long addr) const
 
 bool Tracker::of_interest(int syscall) const
 {
-        return syscall == MMAP_SYSCALL || syscall == MREMAP_SYSCALL
-                || syscall == MUNMAP_SYSCALL || syscall == MPROTECT_SYSCALL
-                || syscall == BRK_SYSCALL;
+        return syscall == MMAP_SYSCALL
+                || syscall == MREMAP_SYSCALL
+                || syscall == MUNMAP_SYSCALL
+                || syscall == MPROTECT_SYSCALL
+                || syscall == BRK_SYSCALL
+                || syscall == CUSTOM_SYSCALL_MALLOC
+                || syscall == CUSTOM_SYSCALL_CALLOC
+                || syscall == CUSTOM_SYSCALL_REALLOC
+                || syscall == CUSTOM_SYSCALL_FREE;
 }
 
 std::list<Mapped>::iterator Tracker::get_mapped(unsigned long addr)
@@ -239,6 +245,14 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
                         return handle_mremap(syscall, b, bp);
                 case BRK_SYSCALL:
                         return handle_brk(syscall, b, bp);
+                case CUSTOM_SYSCALL_MALLOC:
+                        printf("Malloc\n");
+                case CUSTOM_SYSCALL_CALLOC:
+                        printf("Calloc\n");
+                case CUSTOM_SYSCALL_REALLOC:
+                        printf("Realloc\n");
+                case CUSTOM_SYSCALL_FREE:
+                        printf("Free\n");
                 default:
                         return b.handle_bp(bp, false);
 
