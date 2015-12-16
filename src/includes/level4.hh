@@ -3,6 +3,10 @@
 
 # include "level3.hh"
 
-int remove_page_protection(void* addr, size_t len, pid_t pid);
+int remove_page_protection(pid_t pid, Tracker& t);
+int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_t pid);
+int reset_page_protection(pid_t pid, Tracker& t);
+int handle_injected_sigsegv(pid_t pid, Tracker& t);
+int handle_injected_syscall(int syscall, Breaker& b, void* bp, Tracker& t);
 
 #endif /* LEVEL4_HH */

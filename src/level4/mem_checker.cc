@@ -3,6 +3,8 @@
 #include "level3.hh"
 #include "level4.hh"
 
+static int tmpcount = 0;
+
 static int mem_checker(std::string name, pid_t pid)
 {
         setenv("LD_BIND_NOW", "1", 1); //FIXME : Potentialy bad
@@ -32,8 +34,22 @@ static int mem_checker(std::string name, pid_t pid)
                       break;
 
                 // Segfault
-                if (WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV)
-                        break;
+                if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
+		{
+			tmpcount++;
+			if (tmpcount > 30)
+				break;
+			struct user_regs_struct regs;
+			ptrace(PTRACE_GETREGS, pid, 0, &regs);
+			printf("%p - ", (void*)regs.XIP);
+
+			handle_injected_sigsegv(pid, t);
+
+			ptrace(PTRACE_GETREGS, pid, 0, &regs);
+			printf(" - %p\n", (void*)regs.XIP);
+
+			continue;
+		}
                 try
                 {
                         if (!addr)
@@ -47,7 +63,7 @@ static int mem_checker(std::string name, pid_t pid)
                         if (bp != b.rr_brk)
                                 syscall = get_xax(pid);
 
-                        t.handle_syscall(syscall, b, bp);
+			handle_injected_syscall(syscall, b, bp, t);
 
                 }
                 catch (std::logic_error) { break; }

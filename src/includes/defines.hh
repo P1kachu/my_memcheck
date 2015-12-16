@@ -67,7 +67,7 @@
 # define TRAP_LEN                  1
 # define TRAP_INST                 0xCC
 # define MALLOC_CHILD              0xdeadbeef
-
+# define SYSCALL                   0x050f
 # if defined(__i386)
 
 #  define INSTR_REG   EIP

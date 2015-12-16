@@ -61,9 +61,9 @@ multi:
 
 # Produce the final binary   #
 all: libhooks debug $(OBJS_1) $(OBJS_2) $(OBJS_3) $(OBJS_4)
-	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
-	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
-	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
+#	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
+#	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
+#	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
 	$(CXX) $(OBJS_4) $(LDFLAGS) -o $(EXEC_4)
 	clear
 
@@ -96,7 +96,7 @@ check: libhooks distclean multi
 	./$(EXEC_3) --preload ./libhooks.so ./debug 2> /dev/null
 	@echo -e "\033[33;1m##################################################################################\
 #######################\033[0m\n\n"
-#	./$(EXEC_4) ./debug
+	./$(EXEC_4) ./debug
 
 # Clean repository           #
 

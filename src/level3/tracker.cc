@@ -150,6 +150,7 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
 
 int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 {
+	printf("MMAP\n");
         UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
@@ -160,7 +161,6 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 
         if ((regs.r10 & MAP_SHARED) || !(regs.r10 & MAP_ANONYMOUS))
                 return retval;
-
         unsigned i = 0;
         for (i = 0; i < regs.rsi / PAGE_SIZE; ++i)
         {
@@ -178,11 +178,11 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
         }
 
         fprintf(OUT,
-		"mmap     { addr = 0x%llx, len = 0x%llx, prot = %lld } \n",
-                regs.rdi, regs.rsi, regs.rdx);
+		"mmap     { addr = 0x%lx, len = 0x%llx, prot = %lld } \n",
+                retval, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
-
+//	set_page_protection(retval, regs.rsi, PROT_EXEC, pid);
         return retval;
 }
 
@@ -359,6 +359,6 @@ void Tracker::print_mapped_areas() const
                 fprintf(OUT, "\tLength:\t%ld\n", it->mapped_length);
                 fprintf(OUT, "\tEnds  :\t%p\n", (char*)it->mapped_begin
                         + it->mapped_length);
-                fprintf(OUT, "\tProt  :\t%ld\n\n", it->mapped_protections);
+                fprintf(OUT, "\tProt  :\t%lx\n\n", it->mapped_protections);
         }
 }
