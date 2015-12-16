@@ -3,8 +3,6 @@
 #include "level3.hh"
 #include "level4.hh"
 
-static int c = 0;
-
 static int mem_checker(std::string name, pid_t pid)
 {
         setenv("LD_BIND_NOW", "1", 1); //FIXME : Potentialy bad
@@ -32,9 +30,6 @@ static int mem_checker(std::string name, pid_t pid)
 
                 if (WIFSIGNALED(status))
                       break;
-
-		if (c != 'c')
-			c = fgetc(stdin);
 
 //		fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
 //			+                        GREEN, pid, NONE, status, (void*)bp, RED,

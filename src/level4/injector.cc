@@ -53,6 +53,8 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t)
 
 	int status = 0;
 
+	memory_check(pid, t);
+
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 
 	waitpid(pid, &status, 0);

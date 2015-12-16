@@ -32,7 +32,7 @@ SRCS_3    += $(addsuffix .cc, $(addprefix src/level2/, breaker dig_into_mem))
 SRCS_3    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
 SRCS_3    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
-SRCS_4     = $(addsuffix .cc, $(addprefix src/level4/, mem_checker injector))
+SRCS_4     = $(addsuffix .cc, $(addprefix src/level4/, mem_checker injector sanity_check))
 SRCS_4    += $(addsuffix .cc, $(addprefix src/level3/, tracker))
 SRCS_4    += $(addsuffix .cc, $(addprefix src/level2/, breaker dig_into_mem))
 SRCS_4    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
