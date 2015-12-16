@@ -48,39 +48,29 @@ int main()
 
   char* t = (char*)malloc(0x400);
   t = (char*)realloc(t, 0x600);
-  printf("%c", t[0x100]);
-  printf("%c", t[0x200]);
-  printf("%c", t[0x300]);
-  printf("%c", t[0x400]);
-  printf("%c", t[0x500]);
-  printf("%c", t[0x600]);
-  printf("%c", t[0x700]);
-  printf("%c", t[0x800]);
-  printf("%c", t[0x800]);
+  fprintf(OUT,"%c", t[0x100]);
+  fprintf(OUT,"%c", t[0x200]);
+  fprintf(OUT,"%c", t[0x300]);
+  fprintf(OUT,"%c", t[0x400]);
+  fprintf(OUT,"%c", t[0x500]);
+  fprintf(stdout,"INVALID\n");
+  fprintf(OUT,"%c", t[0x600]);
+  fprintf(OUT,"%c", t[0x700]);
+  fprintf(OUT,"%c", t[0x800]);
+  fprintf(OUT,"%c", t[0x800]);
 
   free(t);
   t = (char*)calloc(sizeof(char), 0x800);
   free(t);
   void* ttt = mmap(0, 27, 0, 34, -1, 0);
   fprintf(OUT, "\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", ttt);
-  mprotect(ttt, 20, PROT_EXEC);
-  munmap(ttt, 27);
+  mprotect((void*)ttt, 20, PROT_EXEC);
+  munmap((void*)ttt, 27);
   int b = t[0];
   b = t[37];
-  printf("%p", t + 5);
-  printf("%p", ttt);
-  printf("%p", ttt);
-  void* uuu = mmap(0, 20396, 0, 34, -1, 0);
-asm
-	volatile
-	(
-		"syscall"
-		:
-		: "rax" (10), "rdi" (uuu), "rsi" (1), "rdx" (PROT_EXEC)
-        );
-
-
-  uuu = mremap(uuu, 20396, 4096, 0, 0);
-  mremap(uuu, 4096, 8192, 0, 0);
+  fprintf(OUT,"%p", t + 5);
+  fprintf(OUT,"%p", ttt);
+  fprintf(OUT,"%p", (char*)ttt + 20);
+  fprintf(OUT,"%p", (char*)ttt + 30);
   return 0;
 }

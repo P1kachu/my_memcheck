@@ -31,10 +31,10 @@ static int mem_checker(std::string name, pid_t pid)
                 if (WIFSIGNALED(status))
                       break;
 
-		fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
+/*		fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
 			+ GREEN, pid, NONE, status, (void*)bp, RED,
 			strsignal(WSTOPSIG(status)), NONE);
-
+*/
                 // Segfault
                 if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
 		{

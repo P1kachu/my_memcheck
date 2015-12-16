@@ -37,6 +37,7 @@
 # include <sys/types.h>
 # include <sys/ptrace.h>
 # include <capstone/capstone.h>
+# include <signal.h>
 
 # include "colors.hh"
 # include "shared.hh"

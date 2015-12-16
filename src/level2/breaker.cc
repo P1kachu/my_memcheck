@@ -172,7 +172,6 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");
-
         add_breakpoint(region, addr);
 
         return retval;

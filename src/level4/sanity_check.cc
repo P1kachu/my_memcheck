@@ -48,17 +48,19 @@ static bool is_valid(void* segv_addr, Tracker& t)
 int sanity_check(pid_t pid, Tracker& t, void* seg_addr)
 {
 	printf("\033[32;1mMemory access (%p)\033[0m - ", seg_addr);
-	print_instruction((unsigned long)seg_addr);
-	printf("\n\n");
 
-	UNUSED(pid);
+	siginfo_t infos;
 
-	if (is_valid(seg_addr, t))
-		printf("\t\033[32;1mVALID\033[0m\n");
+	ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
+
+
+	void* faulty = infos.si_addr;
+
+	if (!faulty || is_valid(infos.si_addr, t))
+		printf("-->\033[32;1mVALID\033[0m\n");
 	else
-		printf("\t\033[31;1mINVALID\033[0m\n");
+		printf("-->\033[31;1mINVALID\033[0m\n");
 
-	printf("\n\n");
-
+	print_instruction((unsigned long)infos.si_addr);
 	return 0;
 }
