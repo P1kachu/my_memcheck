@@ -3,7 +3,7 @@
 #include "level3.hh"
 #include "level4.hh"
 
-static int tmpcount = 0;
+static int c = 0;
 
 static int mem_checker(std::string name, pid_t pid)
 {
@@ -33,21 +33,17 @@ static int mem_checker(std::string name, pid_t pid)
                 if (WIFSIGNALED(status))
                       break;
 
+		if (c != 'c')
+			c = fgetc(stdin);
+
+//		fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
+//			+                        GREEN, pid, NONE, status, (void*)bp, RED,
+//			strsignal(WSTOPSIG(status)), NONE);
+
                 // Segfault
                 if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
 		{
-			tmpcount++;
-			if (tmpcount > 30)
-				break;
-			struct user_regs_struct regs;
-			ptrace(PTRACE_GETREGS, pid, 0, &regs);
-			printf("%p - ", (void*)regs.XIP);
-
 			handle_injected_sigsegv(pid, t);
-
-			ptrace(PTRACE_GETREGS, pid, 0, &regs);
-			printf(" - %p\n", (void*)regs.XIP);
-
 			continue;
 		}
                 try

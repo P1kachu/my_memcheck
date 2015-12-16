@@ -150,7 +150,6 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
 
 int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 {
-	printf("MMAP\n");
         UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
@@ -182,7 +181,7 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
                 retval, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
-//	set_page_protection(retval, regs.rsi, PROT_EXEC, pid);
+	set_page_protection(retval, regs.rsi, PROT_EXEC, pid);
         return retval;
 }
 
