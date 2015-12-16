@@ -2,6 +2,7 @@
 
 int remove_page_protection(void* addr, size_t len, pid_t pid)
 {
+	return 0;
 	struct user_regs_struct regs;
 	ptrace(PTRACE_GETREGS, pid, NULL, &regs);
 	unsigned long overwritten = ptrace(PTRACE_PEEKDATA, pid, regs.XIP);

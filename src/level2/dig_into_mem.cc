@@ -280,7 +280,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                         {
                                 memset(insn, 0, sizeof (cs_insn));
                                 auto id = insn[j].id;
-#if 1 // FIXME : Deadcode
+#if 0 // FIXME : Deadcode
                                 printf("%lx\t", insn[j].address);
                                 for (int k = 0; k < 8; k++)
                                         printf("%02x ", insn[j].bytes[k]);
