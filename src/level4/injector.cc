@@ -39,11 +39,10 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 	waitpid(pid, &status, 0);
 
 	ptrace(PTRACE_GETREGS, pid, 0, &regs);
-//	printf("addr: %p - prot %ld - ret: %lld\n", (void*)addr, prot, regs.XAX);
+	printf("\033[31;1maddr: %p - prot %ld - ret: %lld\033[0m\n", (void*)addr, prot, regs.XAX);
 
 	ptrace(PTRACE_SETREGS, pid, 0, &bckp);
 	ptrace(PTRACE_POKEDATA, pid, bckp.rip, overriden);
-	ptrace(PTRACE_GETREGS, pid, 0, &regs);
 	return 0;
 }
 
@@ -52,8 +51,6 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t)
 	reset_page_protection(pid, t);
 
 	int status = 0;
-
-	memory_check(pid, t);
 
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 

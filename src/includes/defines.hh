@@ -100,14 +100,6 @@
                         exit(-1);                                                           \
                 }                                                                           \
         }
-# define print_instruction(pid, xip)                             \
-        {                                                        \
-                printf("Instruction: %lx\n",                     \
-                                         ptrace(PTRACE_PEEKDATA, \
-                                                pid,             \
-                                                xip,             \
-                                                0));             \
-        }
 # define get_orig_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * O_XAX) }
 # define get_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * P_XAX) }
 # define get_xip(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * INSTR_REG) }

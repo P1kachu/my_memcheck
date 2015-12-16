@@ -9,4 +9,6 @@ int reset_page_protection(pid_t pid, Tracker& t);
 int handle_injected_sigsegv(pid_t pid, Tracker& t);
 int handle_injected_syscall(int syscall, Breaker& b, void* bp, Tracker& t);
 
+int sanity_check(pid_t pid, Tracker& t);
+
 #endif /* LEVEL4_HH */

@@ -160,6 +160,7 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
 
         if ((regs.r10 & MAP_SHARED) || !(regs.r10 & MAP_ANONYMOUS))
                 return retval;
+
         unsigned i = 0;
         for (i = 0; i < regs.rsi / PAGE_SIZE; ++i)
         {

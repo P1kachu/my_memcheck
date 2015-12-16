@@ -31,13 +31,14 @@ static int mem_checker(std::string name, pid_t pid)
                 if (WIFSIGNALED(status))
                       break;
 
-//		fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
-//			+                        GREEN, pid, NONE, status, (void*)bp, RED,
-//			strsignal(WSTOPSIG(status)), NONE);
+		fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
+			+ GREEN, pid, NONE, status, (void*)bp, RED,
+			strsignal(WSTOPSIG(status)), NONE);
 
                 // Segfault
                 if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
 		{
+			printf("\033[32;1mKKKKKK\033[0m\n");
 			handle_injected_sigsegv(pid, t);
 			continue;
 		}
@@ -71,7 +72,7 @@ int main(int argc, char** argv)
 
         if (argc < 2)
         {
-                fprintf(OUT, "Usage: %s[--preload lib] binary_to_trace[ARGS]\n", argv[0]);
+                fprintf(OUT, "Usage: %s [--preload lib] binary_to_trace [ARGS]\n", argv[0]);
                 return 0;
         }
 
