@@ -46,16 +46,30 @@ int main()
 
   brk((char*)sbrk(0) + 64);
 
-  void* t = malloc(0x400);
-  t = realloc(t, 0x600);
+  char* t = (char*)malloc(0x400);
+  t = (char*)realloc(t, 0x600);
+  printf("%c", t[0x100]);
+  printf("%c", t[0x200]);
+  printf("%c", t[0x300]);
+  printf("%c", t[0x400]);
+  printf("%c", t[0x500]);
+  printf("%c", t[0x600]);
+  printf("%c", t[0x700]);
+  printf("%c", t[0x800]);
+  printf("%c", t[0x800]);
+
   free(t);
-  t = calloc(sizeof(char), 0x800);
+  t = (char*)calloc(sizeof(char), 0x800);
   free(t);
   void* ttt = mmap(0, 27, 0, 34, -1, 0);
   fprintf(OUT, "\t%s[C %d]%s mmap = %p\n", "\033[31;1m", getpid(), "\033[0m", ttt);
   mprotect(ttt, 20, PROT_EXEC);
   munmap(ttt, 27);
-
+  int b = t[0];
+  b = t[37];
+  printf("%p", t + 5);
+  printf("%p", ttt);
+  printf("%p", ttt);
   void* uuu = mmap(0, 20396, 0, 34, -1, 0);
 asm
 	volatile

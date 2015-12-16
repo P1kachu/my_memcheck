@@ -161,6 +161,7 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
         if ((regs.r10 & MAP_SHARED) || !(regs.r10 & MAP_ANONYMOUS))
                 return retval;
 
+	print_mapped_areas();
         unsigned i = 0;
         for (i = 0; i < regs.rsi / PAGE_SIZE; ++i)
         {
@@ -182,6 +183,7 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
                 retval, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
+	print_mapped_areas();
 	set_page_protection(retval, regs.rsi, PROT_EXEC, pid);
         return retval;
 }

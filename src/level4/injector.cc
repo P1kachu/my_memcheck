@@ -38,19 +38,19 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 	waitpid(pid, &status, 0);
 
-	ptrace(PTRACE_GETREGS, pid, 0, &regs);
-	printf("\033[31;1maddr: %p - prot %ld - ret: %lld\033[0m\n", (void*)addr, prot, regs.XAX);
 
 	ptrace(PTRACE_SETREGS, pid, 0, &bckp);
 	ptrace(PTRACE_POKEDATA, pid, bckp.rip, overriden);
 	return 0;
 }
 
-int handle_injected_sigsegv(pid_t pid, Tracker& t)
+int handle_injected_sigsegv(pid_t pid, Tracker& t, void* bp)
 {
 	reset_page_protection(pid, t);
 
 	int status = 0;
+
+	sanity_check(pid, t, bp);
 
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 
@@ -63,5 +63,6 @@ int handle_injected_syscall(int syscall, Breaker& b, void*  bp, Tracker& t)
 {
 	reset_page_protection(b.pid, t);
 	t.handle_syscall(syscall, b, bp);
-	return remove_page_protection(b.pid, t);
+	remove_page_protection(b.pid, t);
+	return 0;
 }

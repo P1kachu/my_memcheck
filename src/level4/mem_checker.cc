@@ -38,8 +38,7 @@ static int mem_checker(std::string name, pid_t pid)
                 // Segfault
                 if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
 		{
-			printf("\033[32;1mKKKKKK\033[0m\n");
-			handle_injected_sigsegv(pid, t);
+			handle_injected_sigsegv(pid, t, bp);
 			continue;
 		}
                 try
