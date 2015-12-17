@@ -39,5 +39,7 @@ int main()
 	t[64] = 7;
 	t[89] = 7;
 
+	free(t);
+
 	return 0;
 }

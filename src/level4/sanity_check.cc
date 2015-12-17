@@ -5,10 +5,10 @@ static bool is_valid(void* fault, Tracker& t)
 	auto it = t.get_mapped(reinterpret_cast<unsigned long> (fault));
 	if (it == t.mapped_areas.end())
 	{
-		printf("\033[31;1mKO\033[0m\n");
+		printf("\033[31;1mKO\033[0m ");
 		return false;
 	}
-	printf("\033[32;1mOK\033[0m\n");
+//	printf("\033[32;1mOK\033[0m ");
 	return true;
 }
 
@@ -19,6 +19,11 @@ static int print_instruction(unsigned long xip)
 	size_t count = 0;
 	int ret = 0;
 	unsigned char buffer[8] = { 0 };
+
+
+	// Could have used get_mnemonic
+	// But no time for that
+
 
 	for (int i = 1; i < 8; ++i)
 	{
@@ -40,7 +45,7 @@ static int print_instruction(unsigned long xip)
 
 	if (count > 0)
 	{
-//		printf("%p: %s %s\033[0m\n", (void*)xip, insn[0].mnemonic, insn[0].op_str);
+		printf("%p: %s %s\033[0m\n", (void*)xip, insn[0].mnemonic, insn[0].op_str);
 		ret = insn[0].size;
 		cs_free(insn, count);
 	}
@@ -52,7 +57,9 @@ static int print_instruction(unsigned long xip)
 
 int sanity_customs(pid_t pid, Tracker& t)
 {
-	long instruction_p = ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * INSTR_REG);
+	struct user_regs_struct regs;
+	ptrace(PTRACE_GETREGS, pid, 0, &regs);
+	long instruction_p = ptrace(PTRACE_PEEKDATA, pid, regs.rip, 0);
 	siginfo_t infos;
 
 	ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
@@ -67,7 +74,7 @@ int sanity_customs(pid_t pid, Tracker& t)
 
 	if (!status)
 	{
-		fprintf(OUT, "\nInvalid memory access of size X at address: %p\n", fault);
+		fprintf(OUT, "Invalid memory access of size X at address: %p\n", fault);
 		print_instruction(instruction_p);
 	}
 
