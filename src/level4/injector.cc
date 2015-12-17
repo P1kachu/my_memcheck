@@ -55,9 +55,24 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t)
 
 int handle_injected_syscall(int syscall, Breaker& b, void*  bp, Tracker& t)
 {
+	struct user_regs_struct regs;
+	ptrace(PTRACE_GETREGS, b.pid, 0, &regs);
+	long overriden = ptrace(PTRACE_PEEKDATA, b.pid, regs.rip, sizeof(long));
+	overriden = ptrace(PTRACE_PEEKDATA, b.pid, regs.rip, sizeof(long));
+	printf("1 - Register: %lx\n", overriden);
+
 	reset_page_protection(b.pid, t);
+	overriden = ptrace(PTRACE_PEEKDATA, b.pid, regs.rip, sizeof(long));
+	printf("2 - Register: %lx\n", overriden);
+
 	sanity_customs(b.pid, t);
+	overriden = ptrace(PTRACE_PEEKDATA, b.pid, regs.rip, sizeof(long));
+	printf("3 - Register: %lx\n", overriden);
+
 	t.handle_syscall(syscall, b, bp, false);
+	overriden = ptrace(PTRACE_PEEKDATA, b.pid, regs.rip, sizeof(long));
+	printf("4 - Register: %lx\n", overriden);
 	remove_page_protection(b.pid, t);
+
 	return 0;
 }

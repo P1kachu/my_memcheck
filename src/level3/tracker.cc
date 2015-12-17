@@ -289,6 +289,9 @@ int Tracker::custom_free(Breaker& b, void* bp, bool print)
         auto rbx = regs.rbx;
         auto it = get_mapped(rbx);
 
+	if (it == mapped_areas.end())
+		return -1;
+
         if (it == mapped_areas.end() || it->mapped_protections != MALLOC_CHILD)
         {
                 // TODO : Invalid free
@@ -315,6 +318,10 @@ int Tracker::custom_realloc(Breaker& b, void* bp, bool print)
         auto rdx = regs.rdx;
 
         auto it = get_mapped(rdx);
+
+	if (it == mapped_areas.end())
+		return -1;
+
 	if (print)
 	{
 		lvl3_print_realloc(0, rdx, rbx, it->mapped_length);

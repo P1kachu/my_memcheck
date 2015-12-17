@@ -78,14 +78,20 @@ int sanity_customs(pid_t pid, Tracker& t)
 int display_memory_leaks(Tracker& t)
 {
 	unsigned long long sum = 0;
-
-//	t.print_mapped_areas();
+	int heap = 0;
+	int blocks = 0;
 
 	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
+	{
+		blocks++;
 		sum += it->mapped_length;
+		if (it->mapped_protections == MALLOC_CHILD)
+			++heap;
 
-	fprintf(OUT, "\nMemory leaks: %s0x%llx%s bytes not freed at exit\n", sum ? RED : GREEN, sum, NONE);
+	}
 
+	fprintf(OUT, "\nMemory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n", sum ? RED : GREEN, sum, NONE, sum);
+	fprintf(OUT, "  in %d blocks - %d on the heap (non freed mallocs probably)\n", blocks, heap);
 	if (!sum)
 	{
 		fprintf(OUT, "              Every allocated byte was freed, memory clean\n");

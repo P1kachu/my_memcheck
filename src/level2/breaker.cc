@@ -143,10 +143,9 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 
         if ((it->second.find(addr)->second & 0xFF) == TRAP_INST)
         {
-                ptrace(PTRACE_GETREGS, pid, 0, &regs);
-                regs.XIP += 1;
-                ptrace(PTRACE_SETREGS, pid, 0, &regs);
-
+                ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
+		waitpid(pid, 0, 0);
+		printf("BORDEL\n");
                 return CUSTOM_BREAKPOINT;
         }
 
