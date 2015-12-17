@@ -8,7 +8,7 @@ static bool is_valid(void* fault, Tracker& t)
 	auto it = t.get_mapped(reinterpret_cast<unsigned long> (fault));
 	if (it == t.mapped_areas.end())
 	{
-		printf("\033[31;1mKO\033[0m ");
+		printf("\033[31;1m%p: KO\033[0m ", fault);
 		return false;
 	}
 //	printf("\033[32;1mOK\033[0m ");
@@ -91,10 +91,10 @@ int display_memory_leaks(Tracker& t)
 	}
 
 	fprintf(OUT, "\nMemory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n", sum ? RED : GREEN, sum, NONE, sum);
-	fprintf(OUT, "  in %d blocks - %d on the heap (non freed mallocs probably)\n", blocks, heap);
+ 	fprintf(OUT, "             in %d blocks - %d on the heap\n", blocks, heap);
 	if (!sum)
 	{
-		fprintf(OUT, "              Every allocated byte was freed, memory clean\n");
+		fprintf(OUT, "              Each allocated byte was freed, memory clean\n");
 		return 0;
 	}
 	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)

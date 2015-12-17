@@ -55,6 +55,8 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t)
 
 int handle_injected_syscall(int syscall, Breaker& b, void*  bp, Tracker& t)
 {
+	t.print_mapped_areas();
+	fgetc(stdout);
 	reset_page_protection(b.pid, t);
 	sanity_customs(b.pid, t);
 	t.handle_syscall(syscall, b, bp, false);
