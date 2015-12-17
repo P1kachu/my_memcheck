@@ -6,6 +6,7 @@ int remove_page_protection(pid_t pid, Tracker& t)
 		if (it->mapped_protections != 0xdeadbeef)
 			set_page_protection(it->mapped_begin, it->mapped_length,
 					    PROT_EXEC, pid);
+
 	return 0;
 }
 
@@ -60,9 +61,9 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t, void* bp)
 
 int handle_injected_syscall(int syscall, Breaker& b, void*  bp, Tracker& t)
 {
-	sanity_check(b.pid, t, bp);
 	reset_page_protection(b.pid, t);
 	t.handle_syscall(syscall, b, bp);
+	sanity_check(b.pid, t, bp);
 	remove_page_protection(b.pid, t);
 	return 0;
 }

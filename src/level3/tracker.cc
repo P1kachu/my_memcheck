@@ -9,6 +9,7 @@ static bool compare_address(Mapped first, Mapped second)
 
 bool Mapped::area_contains(unsigned long addr) const
 {
+//	printf("%ld\n%ld\n%ld\n###\n", mapped_begin, addr, mapped_begin + mapped_length);
         int ret = (addr < mapped_begin + mapped_length)
 		&& addr >= mapped_begin;
         return ret;
@@ -54,7 +55,8 @@ int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
         if (it == mapped_areas.end())
                 return NOT_FOUND;
 
-        lvl3_print_mprotect(0, regs.rdi, regs.rsi, it->mapped_protections);
+	if (print)
+		lvl3_print_mprotect(0, regs.rdi, regs.rsi, it->mapped_protections);
 
         long tmp = reinterpret_cast<long>(bp) - it->mapped_begin;
         regs.rsi -= tmp;
@@ -69,7 +71,8 @@ int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
                 it->mapped_protections = regs.rdx;
         }
 
-        lvl3_print_mprotect(1, regs.rdi, regs.rsi, it->mapped_protections);
+	if (print)
+		lvl3_print_mprotect(1, regs.rdi, regs.rsi, it->mapped_protections);
 
         return retval;
 }
@@ -99,8 +102,8 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         if (it == mapped_areas.end())
                 return NOT_FOUND;
 
-
-        lvl3_print_mremap(0, regs.rdi, regs.rsi, it->mapped_protections);
+	if (print)
+		lvl3_print_mremap(0, regs.rdi, regs.rsi, it->mapped_protections);
 
         if ((unsigned long)retval != it->mapped_begin)
         {
@@ -143,7 +146,8 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
                 mapped_areas.erase(it);
 
         }
-        lvl3_print_mremap(1, retval, regs.rdx, it->mapped_protections);
+	if (print)
+		lvl3_print_mremap(1, retval, regs.rdx, it->mapped_protections);
         mapped_areas.sort(compare_address);
         return retval;
 }
@@ -154,6 +158,7 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         long retval = b.handle_bp(bp, false);
+
 
         if ((void*) retval == MAP_FAILED)
                 return retval;
@@ -176,10 +181,10 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
                 mapped_areas.push_back(Mapped(addr, len,
 					      regs.rdx, id_inc++));
         }
-
-        fprintf(OUT,
-		"mmap     { addr = 0x%lx, len = 0x%llx, prot = %lld } \n",
-                retval, regs.rsi, regs.rdx);
+	if (print)
+		fprintf(OUT,
+			"mmap     { addr = 0x%lx, len = 0x%llx, prot = %lld } \n",
+			retval, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
 
@@ -194,7 +199,8 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
 
-        lvl3_print_brk(0, origin_program_break, actual_program_break);
+	if (print)
+		lvl3_print_brk(0, origin_program_break, actual_program_break);
 
         long retval = b.handle_bp(bp, false);
 
@@ -210,7 +216,8 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
         else
                 actual_program_break = (void*)retval;
 
-        lvl3_print_brk(1, origin_program_break, actual_program_break);
+	if (print)
+		lvl3_print_brk(1, origin_program_break, actual_program_break);
 
         return 0;
 
@@ -238,9 +245,9 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
                 tmp2 = 0;
 
         tail_remove(it, tmp2 / PAGE_SIZE);
-        fprintf(OUT, "munmap   { addr = 0x%llx, len = 0x%llx } \n",
+	if (print)
+		fprintf(OUT, "munmap   { addr = 0x%llx, len = 0x%llx } \n",
                 regs.rdi, regs.rsi);
-	print_mapped_areas();
         mapped_areas.sort(compare_address);
         return retval;
 }
@@ -259,13 +266,15 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp)
 
         mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
 
-        if (!prefix)
-                fprintf(OUT, "malloc   { addr = 0x%llx, len = 0x%llx } \n",
-                        rbx, rcx);
-        else
-                fprintf(OUT, "calloc   { addr = 0x%llx, len = 0x%llx } \n",
-                        rbx, rcx);
-
+	if (print)
+	{
+		if (!prefix)
+			fprintf(OUT, "malloc   { addr = 0x%llx, len = 0x%llx } \n",
+				rbx, rcx);
+		else
+			fprintf(OUT, "calloc   { addr = 0x%llx, len = 0x%llx } \n",
+				rbx, rcx);
+	}
         mapped_areas.sort(compare_address);
         return retval;
 }
@@ -285,8 +294,9 @@ int Tracker::custom_free(Breaker& b, void* bp)
                 return -1;
         }
 
-        fprintf(OUT, "free     { addr = 0x%llx, len = 0x%lx } \n",
-                rbx, it->mapped_length);
+	if (print)
+		fprintf(OUT, "free     { addr = 0x%llx, len = 0x%lx } \n",
+			rbx, it->mapped_length);
 
         mapped_areas.erase(it);
 
@@ -294,7 +304,7 @@ int Tracker::custom_free(Breaker& b, void* bp)
 }
 
 
-int Tracker::custom_realloc(Breaker& b, void* bp)
+int Tracker::custom_realloc(Breaker& b, void* bp, bool print)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
@@ -304,10 +314,11 @@ int Tracker::custom_realloc(Breaker& b, void* bp)
         auto rdx = regs.rdx;
 
         auto it = get_mapped(rdx);
-
-        lvl3_print_realloc(0, rdx, rbx, it->mapped_length);
-        lvl3_print_realloc(1, rdx, rbx, rcx);
-
+	if (print)
+	{
+		lvl3_print_realloc(0, rdx, rbx, it->mapped_length);
+		lvl3_print_realloc(1, rdx, rbx, rcx);
+	}
         if (rbx != rcx)
         {
                 mapped_areas.erase(it);
@@ -321,28 +332,28 @@ int Tracker::custom_realloc(Breaker& b, void* bp)
 }
 
 
-int Tracker::handle_syscall(int syscall, Breaker& b, void* bp)
+int Tracker::handle_syscall(int syscall, Breaker& b, void* bp, bool print)
 {
         switch (syscall)
         {
                 case MMAP_SYSCALL:
-                        return handle_mmap(syscall, b, bp);
+                        return handle_mmap(syscall, b, bp, print);
                 case MUNMAP_SYSCALL:
-                        return handle_munmap(syscall, b, bp);
+                        return handle_munmap(syscall, b, bp, print);
                 case MPROTECT_SYSCALL:
-                        return handle_mprotect(syscall, b, bp);
+                        return handle_mprotect(syscall, b, bp, print);
                 case MREMAP_SYSCALL:
-                        return handle_mremap(syscall, b, bp);
+                        return handle_mremap(syscall, b, bp, print);
                 case BRK_SYSCALL:
-                        return handle_brk(syscall, b, bp);
+                        return handle_brk(syscall, b, bp, print);
                 case CUSTOM_SYSCALL_MALLOC:
-                        return custom_alloc(0, b, bp);
+                        return custom_alloc(0, b, bp, print);
                 case CUSTOM_SYSCALL_CALLOC:
-                        return custom_alloc(1, b, bp);
+                        return custom_alloc(1, b, bp, print);
                 case CUSTOM_SYSCALL_REALLOC:
-                        return custom_realloc(b, bp);
+                        return custom_realloc(b, bp, print);
                 case CUSTOM_SYSCALL_FREE:
-                        return custom_free(b, bp);
+                        return custom_free(b, bp, print);
         }
         return b.handle_bp(bp, false);
 

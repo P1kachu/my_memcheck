@@ -1,11 +1,11 @@
 #include "level4.hh"
 
-static void print_instruction(unsigned long xip)
+static int print_instruction(unsigned long xip, void* faulty)
 {
         csh handle;
         cs_insn* insn = NULL;
         size_t count = 0;
-
+	int ret = 0;
 	unsigned char buffer[8] = { 0 };
 
 	for (int i = 0; i < 8; ++i)
@@ -16,7 +16,7 @@ static void print_instruction(unsigned long xip)
 	if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
 	{
 		printf("CS_OPEN BUG\n");
-		return;
+		return -1;
 	}
 
 	cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
@@ -27,17 +27,20 @@ static void print_instruction(unsigned long xip)
 		printf("\033[33;1m%lx ", insn[0].address);
 		for (int k = 0; k < 8; k++)
 			printf("%02x ", insn[0].bytes[k]);
-		printf("\t %s %s\033[0m\n", insn[0].mnemonic, insn[0].op_str);
-
+		printf("%s %s\033[0m (faulty: %p)\n", insn[0].mnemonic, insn[0].op_str, faulty);
+		ret = insn[0].size;
 		cs_free(insn, count);
 	}
 	cs_close(& handle);
+
+	return ret;
 
 }
 
 static bool is_valid(void* segv_addr, Tracker& t)
 {
-//	t.print_mapped_areas();
+	if (segv_addr == (void*)0xff)
+	printf("----------------------\n");
 	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
                 if (it->area_contains((unsigned long)segv_addr))
                         return true;
@@ -47,20 +50,42 @@ static bool is_valid(void* segv_addr, Tracker& t)
 
 int sanity_check(pid_t pid, Tracker& t, void* seg_addr)
 {
-	printf("\033[32;1mMemory access (%p)\033[0m - ", seg_addr);
-
+	static long previous = get_xip(pid);
+	static long previous_sz = 0;
 	siginfo_t infos;
 
 	ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
 
+	long tmp = get_xip(pid);
+	if (0 && tmp == previous)
+	{
+		printf("\033[31;1mINVALID\033[0m ");
+		printf("\033[33;1mMemory access - Real segfault (%p)\033[0m\n", seg_addr);
+		struct user_regs_struct regs;
+		ptrace(PTRACE_GETREGS, pid, 0, &regs);
+		regs.XIP += previous_sz;
+		ptrace(PTRACE_SETREGS, pid, 0, &regs);
+		previous_sz = 0;
+		return 1;
+
+	}
 
 	void* faulty = infos.si_addr;
 
-	if (!faulty || is_valid(infos.si_addr, t))
-		printf("-->\033[32;1mVALID\033[0m\n");
+	if (!is_valid(faulty, t))
+	{
+		printf("\033[31;1mINVALID\033[0m ");
+		printf("\033[33;1mMemory access (%p)\033[0m - ", seg_addr);
+		previous_sz = print_instruction((unsigned long)infos.si_addr, faulty);
+	}
 	else
-		printf("-->\033[31;1mINVALID\033[0m\n");
+	{
+		printf("\033[32;1mVALID\033[0m ");
+		printf("\033[33;1mMemory access (%p)\033[0m\n", seg_addr);
 
-	print_instruction((unsigned long)infos.si_addr);
+	}
+	previous = get_xip(pid);
+
+
 	return 0;
 }

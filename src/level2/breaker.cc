@@ -169,7 +169,6 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
         long retval = regs.XAX;
-
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");
         add_breakpoint(region, addr);
