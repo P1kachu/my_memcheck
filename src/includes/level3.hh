@@ -39,15 +39,15 @@ public:
         bool of_interest(int syscall) const;
         void print_mapped_areas()     const;
 
-        int handle_brk(int syscall, Breaker& b, void* bp);
-        int handle_munmap(int syscall, Breaker& b, void* bp);
-        int handle_mmap(int syscall, Breaker& b, void* bp);
-        int handle_syscall(int syscall, Breaker& b, void* bp);
-        int handle_mprotect(int syscall, Breaker& b, void* bp);
-        int handle_mremap(int syscall, Breaker& b, void* bp);
-        int custom_alloc(int prefix, Breaker& b, void* bp);
-        int custom_free(Breaker& b, void* bp);
-        int custom_realloc(Breaker& b, void* bp);
+        int handle_brk(int syscall, Breaker& b, void* bp, bool print);
+        int handle_munmap(int syscall, Breaker& b, void* bp, bool print);
+        int handle_mmap(int syscall, Breaker& b, void* bp, bool print);
+        int handle_syscall(int syscall, Breaker& b, void* bp, bool print);
+        int handle_mprotect(int syscall, Breaker& b, void* bp, bool print);
+        int handle_mremap(int syscall, Breaker& b, void* bp, bool print);
+        int custom_alloc(int prefix, Breaker& b, void* bp, bool print);
+        int custom_free(Breaker& b, void* bp, bool print);
+        int custom_realloc(Breaker& b, void* bp, bool print);
         bool remove_mapped(void* addr, long len);
         std::list<Mapped>::iterator get_mapped(unsigned long addr);
         void tail_remove(std::list<Mapped>::iterator it, int iteration);

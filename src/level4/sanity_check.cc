@@ -51,32 +51,18 @@ static bool is_valid(void* segv_addr, Tracker& t)
 int sanity_check(pid_t pid, Tracker& t, void* seg_addr)
 {
 	static long previous = get_xip(pid);
-	static long previous_sz = 0;
 	siginfo_t infos;
 
 	ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
 
 	long tmp = get_xip(pid);
-	if (0 && tmp == previous)
-	{
-		printf("\033[31;1mINVALID\033[0m ");
-		printf("\033[33;1mMemory access - Real segfault (%p)\033[0m\n", seg_addr);
-		struct user_regs_struct regs;
-		ptrace(PTRACE_GETREGS, pid, 0, &regs);
-		regs.XIP += previous_sz;
-		ptrace(PTRACE_SETREGS, pid, 0, &regs);
-		previous_sz = 0;
-		return 1;
-
-	}
-
 	void* faulty = infos.si_addr;
 
 	if (!is_valid(faulty, t))
 	{
 		printf("\033[31;1mINVALID\033[0m ");
 		printf("\033[33;1mMemory access (%p)\033[0m - ", seg_addr);
-		previous_sz = print_instruction((unsigned long)infos.si_addr, faulty);
+	        print_instruction((unsigned long)infos.si_addr, faulty);
 	}
 	else
 	{
@@ -84,6 +70,13 @@ int sanity_check(pid_t pid, Tracker& t, void* seg_addr)
 		printf("\033[33;1mMemory access (%p)\033[0m\n", seg_addr);
 
 	}
+
+	if (1 && tmp == previous)
+	{
+		ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
+		waitpid(pid, 0, 0);
+	}
+
 	previous = get_xip(pid);
 
 

@@ -41,7 +41,7 @@ std::list<Mapped>::iterator Tracker::get_mapped(unsigned long addr)
 }
 
 
-int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp)
+int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp, bool print)
 {
         UNUSED(syscall);
         struct user_regs_struct regs;
@@ -88,7 +88,7 @@ void Tracker::tail_remove(std::list<Mapped>::iterator it, int iteration)
 }
 
 
-int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
+int Tracker::handle_mremap(int syscall, Breaker& b, void* bp, bool print)
 {
         UNUSED(syscall);
         struct user_regs_struct regs;
@@ -152,7 +152,7 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp)
         return retval;
 }
 
-int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
+int Tracker::handle_mmap(int syscall, Breaker& b, void* bp, bool print)
 {
         UNUSED(syscall);
         struct user_regs_struct regs;
@@ -192,7 +192,7 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp)
         return retval;
 }
 
-int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
+int Tracker::handle_brk(int syscall, Breaker& b, void* bp, bool print)
 {
         static int origin_set = 0;
         UNUSED(syscall);
@@ -223,13 +223,13 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp)
 
 }
 
-int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
+int Tracker::handle_munmap(int syscall, Breaker& b, void* bp, bool print)
 {
         UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
         long retval = b.handle_bp(bp, false);
-	print_mapped_areas();
+
         print_errno();
         if (retval < 0)
                 return retval;
@@ -252,7 +252,7 @@ int Tracker::handle_munmap(int syscall, Breaker& b, void* bp)
         return retval;
 }
 
-int Tracker::custom_alloc(int prefix, Breaker& b, void* bp)
+int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
@@ -279,7 +279,7 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp)
         return retval;
 }
 
-int Tracker::custom_free(Breaker& b, void* bp)
+int Tracker::custom_free(Breaker& b, void* bp, bool print)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);

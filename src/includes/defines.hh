@@ -69,6 +69,8 @@
 # define TRAP_INST                 0xCC
 # define MALLOC_CHILD              0xdeadbeef
 # define SYSCALL                   0x050f
+# define IS_DEBUG                  1
+
 # if defined(__i386)
 
 #  define INSTR_REG   EIP
