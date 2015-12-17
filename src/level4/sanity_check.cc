@@ -36,7 +36,7 @@ static int print_instruction(unsigned long xip)
 
 	if (count > 0)
 	{
-		printf("%p: %s %s\033[0m\n\n", (void*)xip, insn[0].mnemonic, insn[0].op_str);
+		printf("0x%lx: %s %s\033[0m\n", xip, insn[0].mnemonic, insn[0].op_str);
 		ret = insn[0].size;
 		cs_free(insn, count);
 	}
@@ -65,7 +65,7 @@ int sanity_customs(pid_t pid, Tracker& t)
 
 	if (!status)
 	{
-		fprintf(OUT, "Invalid memory access of size X at address: %p\n", fault);
+//		fprintf(OUT, "Invalid memory access of size X at address: %p\n", fault);
 		print_instruction(instruction_p);
 	}
 

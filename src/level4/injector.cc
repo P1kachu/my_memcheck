@@ -57,7 +57,7 @@ int handle_injected_syscall(int syscall, Breaker& b, void*  bp, Tracker& t)
 {
 	reset_page_protection(b.pid, t);
 	sanity_customs(b.pid, t);
-	t.handle_syscall(syscall, b, bp, true);
+	t.handle_syscall(syscall, b, bp, false);
 	remove_page_protection(b.pid, t);
 
 	return 0;
