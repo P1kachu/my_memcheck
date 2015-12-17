@@ -10,4 +10,5 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t, void* bp);
 int handle_injected_syscall(int syscall, Breaker& b, void* bp, Tracker& t);
 
 int sanity_customs(pid_t pid, Tracker& t);
+int display_memory_leaks(Tracker& t);
 #endif /* LEVEL4_HH */

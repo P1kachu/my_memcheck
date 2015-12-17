@@ -61,6 +61,7 @@ static int mem_checker(std::string name, pid_t pid)
         }
 
         ptrace(PTRACE_CONT, pid, 0, 0);
+	display_memory_leaks(t);
         return 0;
 }
 

@@ -31,20 +31,13 @@ int main()
 
 	FILE*  OUT = stdout;
 
-	char *t = (char*)malloc(0x500);
-//	print_errno(OUT);
-	printf("%sVALID%s\n", GREEN, NONE);
-	fprintf(OUT,"100 %d\n", t[0x100]);
-	fprintf(OUT,"200 %d\n", t[0x200]);
-	fprintf(OUT,"300 %d\n", t[0x300]);
-	fprintf(OUT,"400 %d\n", t[0x400]);
-	printf("%sINVALID%s\n", RED, NONE);
-	fprintf(OUT,"500 %d\n", t[0x500]);
-	fprintf(OUT,"900 %d\n", t[0x900]);
-	fprintf(OUT,"1000 %d\n", t[0x1000]);
-	fprintf(OUT,"1200 %d\n", t[0x1200]);
-	fprintf(OUT,"1300 %d\n", t[0x1300]);
-	fprintf(OUT,"1300 %d\n", t[0x13000]);
-	free(t);
+	char *t = (char*)malloc(64);
+
+	t[0] = 5;
+	t[5] = 5;
+	t[63] = 5;
+	t[64] = 7;
+	t[89] = 7;
+
 	return 0;
 }
