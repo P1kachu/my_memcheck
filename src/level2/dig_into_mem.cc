@@ -243,8 +243,6 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
 
 int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
 {
-        fprintf(OUT, "%sZone%s: %s\n",  GREEN, NONE, name);
-        printf("Disassembling %ld bytes\n", len);
         errno = 0;
         csh handle;
         cs_insn* insn = NULL;
@@ -319,8 +317,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                         printf("ERROR: Failed to disassemble given code!\n");
                 cs_close(& handle);
         }
-        fprintf(OUT, "%d syscalls instructions\n", syscall_counter);
-        return 0;
+        return syscall_counter;
 }
 
 void browse_link_map(void* link_m, pid_t pid, Breaker* b)
@@ -335,7 +332,7 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
 
         process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-        fprintf(OUT, "%sBrowsing link map%s:\n", YELLOW, NONE);
+//        fprintf(OUT, "%sBrowsing link map%s:\n", YELLOW, NONE);
 
         // FIXME : Useless ? Check if we missed some
         while (map.l_prev)
@@ -362,7 +359,7 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
 				       sections.second, * b, pid);
 
                         free(dupp);
-                        fprintf(OUT, "\n");
+//                        fprintf(OUT, "\n");
                 }
                 remote.iov_base = map.l_next;
         } while (map.l_next);
@@ -373,5 +370,5 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                 disass(MAIN_CHILD,
 		       (char*)b->program_entry_point + sections.first,
 		       sections.second, * b, pid);
-        fprintf(OUT, "\n");
+//        fprintf(OUT, "\n");
 }

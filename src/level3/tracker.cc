@@ -9,7 +9,7 @@ static bool compare_address(Mapped first, Mapped second)
 
 bool Mapped::area_contains(unsigned long addr) const
 {
-	if (0)
+	if (1)
 		printf("%20lx - %20lx - %20lx\n", mapped_begin, addr, mapped_begin + mapped_length);
         int ret = (addr < mapped_begin + mapped_length)
 		&& addr >= mapped_begin;

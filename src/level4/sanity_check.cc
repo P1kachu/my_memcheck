@@ -52,7 +52,7 @@ static int print_instruction(unsigned long xip)
 
 int sanity_customs(pid_t pid, Tracker& t)
 {
-	long instruction_p = get_xip(pid);
+	long instruction_p = ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * INSTR_REG);
 	siginfo_t infos;
 
 	ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
@@ -61,15 +61,13 @@ int sanity_customs(pid_t pid, Tracker& t)
 
 	int status = 0;
 
-	printf("Fault %p\n", fault);
-
 	if (fault == nullptr || is_valid(fault, t))
 		status =  1;
 
 
 	if (!status)
 	{
-//		fprintf(OUT, "\nInvalid memory access of size X at address: %p\n", fault);
+		fprintf(OUT, "\nInvalid memory access of size X at address: %p\n", fault);
 		print_instruction(instruction_p);
 	}
 
@@ -82,10 +80,13 @@ int sanity_customs(pid_t pid, Tracker& t)
 int display_memory_leaks(Tracker& t)
 {
 	unsigned long long sum = 0;
-        for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
+
+//	t.print_mapped_areas();
+
+	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
 		sum += it->mapped_length;
 
-	fprintf(OUT, "Memory leaks: 0x%llx bytes not freed at exit\n", sum);
+	fprintf(OUT, "\nMemory leaks: %s0x%llx%s bytes not freed at exit\n", sum ? RED : GREEN, sum, NONE);
 
 	if (!sum)
 	{
@@ -93,8 +94,14 @@ int display_memory_leaks(Tracker& t)
 		return 0;
 	}
 	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
-		fprintf(OUT, "              * address: 0x%lx\t - length: 0x%lx\n",
+	{
+		if (it->mapped_protections == MALLOC_CHILD)
+			fprintf(OUT, "              * address: 0x%lx\t - length: 0x%lx    \t - Heap\n",
 			it->mapped_begin, it->mapped_length);
+		else
+			fprintf(OUT, "              * address: 0x%lx\t - length: 0x%lx\n",
+				it->mapped_begin, it->mapped_length);
 
+	}
 	return sum;
 }

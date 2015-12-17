@@ -46,7 +46,7 @@ static int mem_tracker(std::string name, pid_t pid)
                         if (bp != b.rr_brk)
                                 syscall = get_xax(pid);
 
-                        t.handle_syscall(syscall, b, bp);
+                        t.handle_syscall(syscall, b, bp, true);
 
                 }
                 catch (std::logic_error) { break; }
