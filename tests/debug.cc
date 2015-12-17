@@ -6,24 +6,33 @@
 #include <string.h>
 #include <errno.h>
 
-# define print_errno()                                                                      \
-        {                                                                                   \
-                if (errno)                                                                  \
-                {                                                                           \
-                        fprintf(OUT, "%sERROR%s Something went wrong: %s (%s%s%s:%d)\n", \
-                                "\033[31;1m", "\033[0m", strerror(errno), "\033[31;1m", __FILE__, "\033[0m", __LINE__); \
-                }                                                                           \
-        }
+static void print_errno(FILE* OUT)
+{
+	if (errno)
+	{
+		fprintf(OUT,
+			"%sERROR%s Something went wrong: %s (%s%s%s:%d)\n",
+			"\033[31;1m",
+			"\033[0m",
+			strerror(errno),
+			"\033[31;1m",
+			__FILE__,
+			"\033[0m",
+			__LINE__);
+	}
+}
 
 
 
 int main()
 {
 
+	fprintf(stdout, "Entering main\n");
+
 	FILE*  OUT = stderr;
 
 	char *t = (char*)malloc(0x1000);
-	print_errno();
+	print_errno(OUT);
 	fprintf(OUT,"100 %d\n", t[0x100]);
 	fprintf(OUT,"200 %d\n", t[0x200]);
 	fprintf(OUT,"300 %d\n", t[0x300]);

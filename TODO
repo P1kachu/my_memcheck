@@ -1,14 +1,16 @@
 ===============================================
 #                   TODO                      #
 ===============================================
+Redo this project entirely when not busy    [ ]
 Print filenames from execve correctly       [ ]
 Print PROT with &                           [ ]
 Delete NOMO tags                            [ ]
 Follow_fork_mode (multi threading)          [ ]
 Get rid of reinterpret_casts                [ ]
-Find Ehdr                                   [ ]
+Find Ehdr                                   [X]
 Handle vdso                                 [X]
-Refactor child digging                      [ ]
+Refactor child digging                      [/]
 Handle ld.so                                [X]
 find why it sucks with my preloaded library [X]
 Fix free printing shitty length             [X]
+do PTHL                                     [ ]
