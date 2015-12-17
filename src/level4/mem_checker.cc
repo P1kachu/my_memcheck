@@ -20,8 +20,9 @@ static int mem_checker(std::string name, pid_t pid)
 
                 waitpid(pid, &status, 0);
 
-
-                long addr = get_xip(pid);
+		struct user_regs_struct regs;
+		ptrace(PTRACE_GETREGS, pid, 0, &regs);
+                long long addr = regs.XIP;
 
                 auto bp = (void*)(addr - 1);
 
@@ -31,9 +32,10 @@ static int mem_checker(std::string name, pid_t pid)
                 if (WIFSIGNALED(status))
                       break;
 
-		fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
-			+ GREEN, pid, NONE, status, (void*)bp, RED,
-			strsignal(WSTOPSIG(status)), NONE);
+		if(0)
+			fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
+				+ GREEN, pid, NONE, status, (void*)bp, RED,
+				strsignal(WSTOPSIG(status)), NONE);
 
                 // Segfault
                 if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)

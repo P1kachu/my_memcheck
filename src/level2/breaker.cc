@@ -145,7 +145,6 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
         {
                 ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 		waitpid(pid, 0, 0);
-		printf("BORDEL\n");
                 return CUSTOM_BREAKPOINT;
         }
 
