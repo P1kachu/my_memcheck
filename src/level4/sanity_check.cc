@@ -8,8 +8,12 @@ static bool is_valid(void* fault, Tracker& t)
 	auto it = t.get_mapped(reinterpret_cast<unsigned long> (fault));
 	if (it == t.mapped_areas.end())
 	{
-		printf("\033[31;1m%p: KO\033[0m ", fault);
-		return false;
+		int ret = fault < t.actual_program_break && fault >= t.origin_program_break;
+		if (!ret)
+		{
+			printf("\033[31;1m%p: KO\033[0m ", fault);
+			return false;
+		}
 	}
 //	printf("\033[32;1mOK\033[0m ");
 	return true;

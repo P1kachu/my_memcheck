@@ -13,6 +13,7 @@ bool Mapped::area_contains(unsigned long addr) const
 		printf("%20lx - %20lx - %20lx\n", mapped_begin, addr, mapped_begin + mapped_length);
         int ret = (addr < mapped_begin + mapped_length)
 		&& addr >= mapped_begin;
+
         return ret;
 }
 
