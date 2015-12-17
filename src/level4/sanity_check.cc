@@ -15,7 +15,7 @@ static bool is_valid(void* fault, Tracker& t)
 	return true;
 }
 
-static int print_instruction(unsigned long xip, unsigned long xip_addr)
+static int print_instruction(unsigned long xip)
 {
 	csh handle;
 	cs_insn* insn = NULL;
@@ -36,7 +36,7 @@ static int print_instruction(unsigned long xip, unsigned long xip_addr)
 
 	if (count > 0)
 	{
-		printf("0x%lx: %s %s\033[0m\n", xip_addr, insn[0].mnemonic, insn[0].op_str);
+		printf(" %s %s\033[0m\n", insn[0].mnemonic, insn[0].op_str);
 		ret = insn[0].size;
 		cs_free(insn, count);
 	}
@@ -50,12 +50,12 @@ int sanity_customs(pid_t pid, Tracker& t)
 {
 	struct user_regs_struct regs;
 	ptrace(PTRACE_GETREGS, pid, 0, &regs);
-	long instruction_p = ptrace(PTRACE_PEEKDATA, pid, regs.XIP, 0);
+	long instruction_p = ptrace(PTRACE_PEEKDATA, pid, regs.XIP + 2, 0);
 	siginfo_t infos;
 
 	ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
 
-	void* fault = infos.si_addr;
+	void* fault = (char*)infos.si_addr - 2;
 
 	int status = 0;
 
@@ -66,7 +66,7 @@ int sanity_customs(pid_t pid, Tracker& t)
 	if (!status)
 	{
 //		fprintf(OUT, "Invalid memory access of size X at address: %p\n", fault);
-		print_instruction(instruction_p, regs.XIP);
+		print_instruction(instruction_p);
 	}
 
 	printf("XIP  : %p\nFAULT: %p\n", (void*)regs.XIP, fault);

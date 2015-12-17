@@ -368,7 +368,7 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp, bool print)
 
 void Tracker::print_mapped_areas() const
 {
-        printf("Old process break %p\n", origin_program_break);
+        printf("Origin process break %p\n", origin_program_break);
         printf("Actual process break %p\n", actual_program_break);
         for (auto it = mapped_areas.begin(); it != mapped_areas.end(); it++)
         {
