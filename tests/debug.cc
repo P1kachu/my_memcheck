@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "../src/includes/colors.hh"
+#include "colors.hh"
 static void print_errno(FILE* OUT)
 {
 	if (errno)
@@ -30,6 +30,8 @@ int main()
 	fprintf(stdout, "%sEntering main%s\n", CYAN, NONE);
 
 	FILE*  OUT = stdout;
+
+	print_errno(OUT);
 
 	char *t = (char*)malloc(64);
 

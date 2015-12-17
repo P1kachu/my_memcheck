@@ -50,12 +50,12 @@ int sanity_customs(pid_t pid, Tracker& t)
 {
 	struct user_regs_struct regs;
 	ptrace(PTRACE_GETREGS, pid, 0, &regs);
-	long instruction_p = ptrace(PTRACE_PEEKDATA, pid, regs.XIP + 2, 0);
+	long instruction_p = ptrace(PTRACE_PEEKDATA, pid, 0);
 	siginfo_t infos;
 
 	ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
 
-	void* fault = (char*)infos.si_addr - 2;
+	void* fault = (char*)infos.si_addr;
 
 	int status = 0;
 

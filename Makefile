@@ -72,7 +72,7 @@ debug:
 #	gcc ./tests/debug.cc -o c.o
 #	nasm -f elf64 casm.asm -o casm.o
 #	ld -dynamic-linker /lib64/ld-linux-x86-64.so.2 -lc casm.o c.o -o debug
-	$(CXX) ./tests/debug.cc -o ./debug
+	gcc -Wall -Wextra -Werror -I src/includes ./tests/debug.cc -o ./debug
 
 libhooks:
 	gcc -Wall -Wextra -Werror -shared -I src/includes -fPIC -ldl src/level3/memory_hooks.c -o libhooks.so
