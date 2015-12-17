@@ -9,7 +9,7 @@ static bool compare_address(Mapped first, Mapped second)
 
 bool Mapped::area_contains(unsigned long addr) const
 {
-//	printf("%ld\n%ld\n%ld\n###\n", mapped_begin, addr, mapped_begin + mapped_length);
+	printf("%20lx - %20lx - %20lx\n", mapped_begin, addr, mapped_begin + mapped_length);
         int ret = (addr < mapped_begin + mapped_length)
 		&& addr >= mapped_begin;
         return ret;
@@ -356,8 +356,6 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp, bool print)
                         return custom_free(b, bp, print);
         }
         return b.handle_bp(bp, false);
-
-
 }
 
 void Tracker::print_mapped_areas() const

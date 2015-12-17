@@ -48,19 +48,19 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 int handle_injected_sigsegv(pid_t pid, Tracker& t, void* bp)
 {
 	UNUSED(bp);
+	sanity_customs(pid, t);
 	reset_page_protection(pid, t);
 	int status = 0;
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 	waitpid(pid, &status, 0);
-	fprintf(OUT, "SIGSEGV HANDLED\n");
 	return remove_page_protection(pid, t);
 }
 
 int handle_injected_syscall(int syscall, Breaker& b, void*  bp, Tracker& t)
 {
 	reset_page_protection(b.pid, t);
+	sanity_customs(b.pid, t);
 	t.handle_syscall(syscall, b, bp, IS_DEBUG);
-	fprintf(OUT, "SYSCALL HANDLED\n");
 	remove_page_protection(b.pid, t);
 	return 0;
 }

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
+#include "../src/includes/colors.hh"
 static void print_errno(FILE* OUT)
 {
 	if (errno)
@@ -29,14 +29,16 @@ int main()
 
 	fprintf(stdout, "Entering main\n");
 
-	FILE*  OUT = stderr;
+	FILE*  OUT = stdout;
 
-	char *t = (char*)malloc(0x1000);
-	print_errno(OUT);
+	char *t = (char*)malloc(0x500);
+//	print_errno(OUT);
+	printf("%sVALID%s\n", GREEN, NONE);
 	fprintf(OUT,"100 %d\n", t[0x100]);
 	fprintf(OUT,"200 %d\n", t[0x200]);
 	fprintf(OUT,"300 %d\n", t[0x300]);
 	fprintf(OUT,"400 %d\n", t[0x400]);
+	printf("%sINVALID%s\n", RED, NONE);
 	fprintf(OUT,"500 %d\n", t[0x500]);
 	fprintf(OUT,"900 %d\n", t[0x900]);
 	fprintf(OUT,"1000 %d\n", t[0x1000]);
