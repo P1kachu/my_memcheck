@@ -172,9 +172,9 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
         int fd = open(lib_name, O_RDONLY);
         if (fd < 0)
         {
-                fprintf(OUT,
-			"%sERROR%s Couldn't open lib %s\n",
-			RED, NONE, lib_name);
+//                fprintf(OUT,
+//			"%sERROR%s Couldn't open lib %s\n",
+//			RED, NONE, lib_name);
                 return std::pair<off_t, int>(0, 0);
         }
 

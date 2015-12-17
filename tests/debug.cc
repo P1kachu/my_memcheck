@@ -27,7 +27,7 @@ static void print_errno(FILE* OUT)
 int main()
 {
 
-	fprintf(stdout, "Entering main\n");
+	fprintf(stdout, "%sEntering main%s\n", CYAN, NONE);
 
 	FILE*  OUT = stdout;
 
@@ -36,6 +36,7 @@ int main()
 	t[0] = 5;
 	t[5] = 5;
 	t[63] = 5;
+	fprintf(OUT, "%sINVALID%s\n", CYAN, NONE);
 	t[64] = 7;
 	t[89] = 7;
 

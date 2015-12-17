@@ -2,6 +2,9 @@
 
 static bool is_valid(void* fault, Tracker& t)
 {
+	if (fault == nullptr)
+		return true;
+
 	auto it = t.get_mapped(reinterpret_cast<unsigned long> (fault));
 	if (it == t.mapped_areas.end())
 	{
@@ -18,34 +21,22 @@ static int print_instruction(unsigned long xip)
 	cs_insn* insn = NULL;
 	size_t count = 0;
 	int ret = 0;
-	unsigned char buffer[8] = { 0 };
+	unsigned char buffer[16] = { 0 };
 
 
-	// Could have used get_mnemonic
-	// But no time for that
-
-
-	for (int i = 1; i < 8; ++i)
-	{
+	for (int i = 1; i < 9; ++i)
 		buffer[i] = (xip >> (8 * (8 - i))) & 0xFF;
-		printf("%x", buffer[i]);
-	}
 
-
-	printf(" == %lx\n", xip);
 
 	if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
-	{
-		printf("CS_OPEN BUG\n");
-		return -1;
-	}
+		return -(printf("CS_OPEN BUG\n"));
 
 	cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
 	count = cs_disasm(handle, buffer, 8, 0, 0, &insn);
 
 	if (count > 0)
 	{
-		printf("%p: %s %s\033[0m\n", (void*)xip, insn[0].mnemonic, insn[0].op_str);
+		printf("%p: %s %s\033[0m\n\n", (void*)xip, insn[0].mnemonic, insn[0].op_str);
 		ret = insn[0].size;
 		cs_free(insn, count);
 	}
@@ -68,7 +59,7 @@ int sanity_customs(pid_t pid, Tracker& t)
 
 	int status = 0;
 
-	if (fault == nullptr || is_valid(fault, t))
+	if (is_valid(fault, t))
 		status =  1;
 
 

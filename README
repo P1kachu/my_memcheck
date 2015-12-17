@@ -1,3 +1,6 @@
+=================================================================================
+                   LSE RECRUITEMENT 2016 - MY MEMCHECK
+=================================================================================
 Level1 - Strace:
        src/level1
        Use of ptrace to track system calls from a traced program
@@ -25,3 +28,15 @@ Level3 - Memory tracer:
 Level4 - Memory checker:
        src/level4
        #include Level{1...3}
+       Remove memory access
+       Handle segfaults from that
+       display memory leaks and invalid accesses
+
+
+I may retry this project when I have time so that I can do it proprely,
+with good functions factorisations, cleaner code, and more special
+cases handling.
+Also, I don't like having some code that I don't totally handle myself
+and that is not maintainable.
+
+See TODO

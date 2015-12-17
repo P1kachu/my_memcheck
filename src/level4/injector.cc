@@ -42,9 +42,8 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 	return 0;
 }
 
-int handle_injected_sigsegv(pid_t pid, Tracker& t, void* bp)
+int handle_injected_sigsegv(pid_t pid, Tracker& t)
 {
-	UNUSED(bp);
 	sanity_customs(pid, t);
 	reset_page_protection(pid, t);
 	int status = 0;
@@ -58,7 +57,7 @@ int handle_injected_syscall(int syscall, Breaker& b, void*  bp, Tracker& t)
 {
 	reset_page_protection(b.pid, t);
 	sanity_customs(b.pid, t);
-	t.handle_syscall(syscall, b, bp, IS_DEBUG);
+	t.handle_syscall(syscall, b, bp, false);
 	remove_page_protection(b.pid, t);
 	return 0;
 }
