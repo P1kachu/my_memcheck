@@ -93,7 +93,7 @@ libhooks:
 	gcc -Wall -Wextra -Werror -shared -I src/includes -fPIC -ldl src/level3/memory_hooks.c -o libhooks.so
 
 # Produce test binary, and launch #
-check: libhooks distclean multi
+check:  distclean libhooks debug multi
 	clear
 	@echo -e "\033[33;1m##################################################################################\
 #######################\033[0m\n\n"
@@ -111,7 +111,7 @@ check: libhooks distclean multi
 	./$(EXEC_3) --preload ./libhooks.so ./debug 2> /dev/null
 	@echo -e "\033[33;1m##################################################################################\
 #######################\033[0m\n\n"
-	./$(EXEC_4) ./debug
+	./$(EXEC_4) --preload ./libhooks.so ./debug
 
 # Clean repository           #
 
