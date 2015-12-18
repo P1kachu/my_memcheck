@@ -6,7 +6,12 @@
 #include <string.h>
 #include <errno.h>
 #include "colors.hh"
-static void print_errno(FILE* OUT)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+void print_errno(FILE* OUT);
+void print_errno(FILE* OUT)
 {
 	if (errno)
 	{
@@ -27,22 +32,41 @@ static void print_errno(FILE* OUT)
 int main()
 {
 
-	fprintf(stdout, "%sEntering main%s\n", CYAN, NONE);
+//	fprintf(stdout, "%sEntering main%s\n", CYAN, NONE);
 
-	FILE*  OUT = stdout;
+//	FILE*  OUT = stdout;
 
-	print_errno(OUT);
+//	print_errno(OUT);
 
-	char *t = (char*)malloc(64);
+	errno = 0;
+	int fd = open("debug.cc", O_RDONLY);
+	print_errno(stdout);
+	char *mapped = (char*)mmap(NULL, 0x100, PROT_READ, MAP_SHARED, fd, 0);
+	print_errno(stdout);
+	char *t = (char*)malloc(0x1000);
 
-	t[0] = 5;
-	t[5] = 5;
-	t[63] = 5;
-	fprintf(OUT, "%sINVALID%s\n", CYAN, NONE);
-	t[64] = 7;
+	mapped[0x10] = 0;
+	mapped[0x50] = 0;
+
+	mapped[0x99] = 0;
+
+	mapped[0x100] = 0;
+
+	mapped[0x101] = 0;
+
+//	*(t + 1) = 5;
+//	*(t + 2) = 5;
+//	*(t + 63) = 5;
+//	fprintf(OUT, "%sINVALID%s\n", CYAN, NONE);
+//	*(t + 64) = 7;
+//	*(t + 89) = 7;
+
+//	free(t);
+//	fprintf(OUT, "%sFREED%s\n", CYAN, NONE);
+//	*(t + 64) = 7;
 	t[89] = 7;
 
-	free(t);
+//	t = (char*)malloc(64);
 
 	return 0;
 }

@@ -1,7 +1,8 @@
 #ifndef LEVEL4_HH
 # define LEVEL4_HH
 
-# include "level3.hh"
+# include "level2.hh"
+# include "defines.hh"
 
 int remove_page_protection(pid_t pid, Tracker& t);
 int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_t pid);

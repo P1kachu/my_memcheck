@@ -22,7 +22,9 @@ LDFLAGS = -lcapstone
 SRCS_1     = $(addsuffix .cc, $(addprefix src/level1/, strace syscalls mem_strace))
 SRCS_1    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
-SRCS_2     = $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook breaker dig_into_mem))
+SRCS_2     = $(addsuffix .cc, $(addprefix src/level4/, injector sanity_check))
+SRCS_2    += $(addsuffix .cc, $(addprefix src/level3/, tracker))
+SRCS_2    += $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook breaker dig_into_mem))
 SRCS_2    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
 SRCS_2    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
@@ -37,12 +39,6 @@ SRCS_4    += $(addsuffix .cc, $(addprefix src/level3/, tracker))
 SRCS_4    += $(addsuffix .cc, $(addprefix src/level2/, breaker dig_into_mem))
 SRCS_4    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
 SRCS_4    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
-
-## OBJ CREATION ##
-OBJS_1      = $(SRCS_1:.cc=.o)
-OBJS_2      = $(SRCS_2:.cc=.o)
-OBJS_3      = $(SRCS_3:.cc=.o)
-OBJS_4      = $(SRCS_4:.cc=.o)
 
 ## EXEC NAME ##
 EXEC_1      = mem_strace
@@ -60,12 +56,31 @@ multi:
 	$(MAKE) $(QUIET) -j all
 
 # Produce the final binary   #
-all: libhooks debug $(OBJS_1) $(OBJS_2) $(OBJS_3) $(OBJS_4)
-	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
-	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
-	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
-	$(CXX) $(OBJS_4) $(LDFLAGS) -o $(EXEC_4)
+all: libhooks debug
+	$(MAKE) level1
+	$(MAKE) level2
+	$(MAKE) level3
+	$(MAKE) level4
 	clear
+
+# Produce Level4 binary
+level1:
+	@echo -en "\033[31;1mCompiling level 1... "
+	@$(CXX) $(CXXFLAGS) -D LEVEL=1 $(SRCS_1) $(LDFLAGS) -o $(EXEC_1)
+	@echo -e "\033[32;1mDone.\033[0m"
+level2:
+	@echo -en "\033[31;1mCompiling level 2... "
+	@$(CXX) $(CXXFLAGS) -D LEVEL=2 $(SRCS_2) $(LDFLAGS) -o $(EXEC_2)
+	@echo -e "\033[32;1mDone.\033[0m"
+level3:
+	@echo -en "\033[31;1mCompiling level 3... "
+	@$(CXX) $(CXXFLAGS) -D LEVEL=3 $(SRCS_3) $(LDFLAGS) -o $(EXEC_3)
+	@echo -e "\033[32;1mDone.\033[0m"
+level4:
+	@echo -en "\033[31;1mCompiling level 4... "
+	@$(CXX) $(CXXFLAGS) -D LEVEL=4 $(SRCS_4) $(LDFLAGS) -o $(EXEC_4)
+	@echo -e "\033[32;1mDone.\033[0m"
+
 
 # Produce debug binary #
 debug:

@@ -1,8 +1,8 @@
 #include "level4.hh"
 
-static bool is_valid(void* fault, Tracker& t)
+static bool is_valid(void* fault, Tracker& t, int si_code)
 {
-	if (fault == nullptr)// || infos.si_code != SEGV_ACCERR)
+	if (fault == nullptr || si_code != SEGV_ACCERR)
 		return true;
 
 	auto it = t.get_mapped(reinterpret_cast<unsigned long> (fault));
@@ -27,7 +27,6 @@ static int print_instruction(unsigned long xip)
 	int ret = 0;
 	unsigned char buffer[16] = { 0 };
 
-
 	for (int i = 1; i < 9; ++i)
 		buffer[i] = (xip >> (8 * (8 - i))) & 0xFF;
 
@@ -40,7 +39,7 @@ static int print_instruction(unsigned long xip)
 
 	if (count > 0)
 	{
-		printf(" %s %s\033[0m\n", insn[0].mnemonic, insn[0].op_str);
+		printf("%s %s\033[0m\n", insn[0].mnemonic, insn[0].op_str);
 		ret = insn[0].size;
 		cs_free(insn, count);
 	}
@@ -54,22 +53,21 @@ int sanity_customs(pid_t pid, Tracker& t)
 {
 	struct user_regs_struct regs;
 	ptrace(PTRACE_GETREGS, pid, 0, &regs);
-	long instruction_p = ptrace(PTRACE_PEEKDATA, pid, 0);
+	long instruction_p = regs.XIP;
 	siginfo_t infos;
-
 	ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
 
-	void* fault = (char*)infos.si_addr;
+	void* fault = infos.si_addr;
 
 	int status = 0;
 
-	if (is_valid(fault, t))
+	if (is_valid(fault, t, infos.si_code))
 		status =  1;
 
 
 	if (!status)
 	{
-//		fprintf(OUT, "Invalid memory access of size X at address: %p\n", fault);
+		fprintf(OUT, "Invalid memory access of size X at address: %p\n", fault);
 		print_instruction(instruction_p);
 	}
 

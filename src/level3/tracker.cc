@@ -9,16 +9,15 @@ static bool compare_address(Mapped first, Mapped second)
 
 bool Mapped::area_contains(unsigned long addr) const
 {
-	if (0)
-		printf("%20lx - %20lx - %20lx\n", mapped_begin, addr, mapped_begin + mapped_length);
         int ret = (addr < mapped_begin + mapped_length)
 		&& addr >= mapped_begin;
+	if (0) // TODO : REMOVE
+		printf("%s%12lx - %12lx - %12lx%s\n",
+		       ret ? GREEN : RED, mapped_begin, addr,
+		       mapped_begin + mapped_length, NONE);
 
         return ret;
 }
-
-
-// ###############################################
 
 
 bool Tracker::of_interest(int syscall) const
@@ -43,12 +42,17 @@ std::list<Mapped>::iterator Tracker::get_mapped(unsigned long addr)
 }
 
 
-int Tracker::handle_mprotect(int syscall, Breaker& b, void* bp, bool print)
+int Tracker::handle_mprotect(Breaker& b, void* bp, bool print)
 {
-        UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-        long retval = b.handle_bp(bp, false);
+
+#if LEVEL == 4
+        auto retval = b.handle_bp(bp, false, *this);
+#else
+	auto retval = b.handle_bp(bp, false);
+#endif
+
 
         if (retval < 0)
                 return retval;
@@ -90,12 +94,16 @@ void Tracker::tail_remove(std::list<Mapped>::iterator it, int iteration)
 }
 
 
-int Tracker::handle_mremap(int syscall, Breaker& b, void* bp, bool print)
+int Tracker::handle_mremap(Breaker& b, void* bp, bool print)
 {
-        UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-        long retval = b.handle_bp(bp, false);
+
+#if LEVEL == 4
+        auto retval = b.handle_bp(bp, false, *this);
+#else
+	auto retval = b.handle_bp(bp, false);
+#endif
 
         if ((void*) retval == MAP_FAILED)
                 return retval;
@@ -154,14 +162,16 @@ int Tracker::handle_mremap(int syscall, Breaker& b, void* bp, bool print)
         return retval;
 }
 
-int Tracker::handle_mmap(int syscall, Breaker& b, void* bp, bool print)
+int Tracker::handle_mmap(Breaker& b, void* bp, bool print)
 {
-        UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-        long retval = b.handle_bp(bp, false);
 
-
+#if LEVEL == 4
+        auto retval = b.handle_bp(bp, false, *this);
+#else
+	auto retval = b.handle_bp(bp, false);
+#endif
         if ((void*) retval == MAP_FAILED)
                 return retval;
 
@@ -189,23 +199,29 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp, bool print)
 			retval, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
-#ifdef LEVEL3
+
+#if LEVEL == 3 || LEVEL == 4
 	set_page_protection(retval, regs.rsi, PROT_EXEC, pid);
 #endif
         return retval;
 }
 
-int Tracker::handle_brk(int syscall, Breaker& b, void* bp, bool print)
+int Tracker::handle_brk(Breaker& b, void* bp, bool print)
 {
         static int origin_set = 0;
-        UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
 
 	if (print)
 		lvl3_print_brk(0, origin_program_break, actual_program_break);
 
-        long retval = b.handle_bp(bp, false);
+
+
+#if LEVEL == 4
+        long retval = b.handle_bp(bp, false, *this);
+#else
+	long retval = b.handle_bp(bp, false);
+#endif
 
         if (retval < 0)
                 return 0;
@@ -226,12 +242,16 @@ int Tracker::handle_brk(int syscall, Breaker& b, void* bp, bool print)
 
 }
 
-int Tracker::handle_munmap(int syscall, Breaker& b, void* bp, bool print)
+int Tracker::handle_munmap(Breaker& b, void* bp, bool print)
 {
-        UNUSED(syscall);
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-        long retval = b.handle_bp(bp, false);
+
+#if LEVEL == 4
+        long retval = b.handle_bp(bp, false, *this);
+#else
+	long retval = b.handle_bp(bp, false);
+#endif
 
         print_errno();
         if (retval < 0)
@@ -259,7 +279,12 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-        auto retval = b.handle_bp(bp, false);
+
+#if LEVEL == 4
+        auto retval = b.handle_bp(bp, false, *this);
+#else
+	auto retval = b.handle_bp(bp, false);
+#endif
 
         auto rbx = regs.rbx;
         auto rcx = regs.rcx;
@@ -278,7 +303,15 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
 			fprintf(OUT, "calloc   { addr = 0x%llx, len = 0x%llx } \n",
 				rbx, rcx);
 	}
-        mapped_areas.sort(compare_address);
+
+#if LEVEL == 3 || LEVEL == 4
+	ANCHOR(1);
+	print_mapped_areas();
+	set_page_protection(rbx, regs.rcx, PROT_EXEC, pid);
+#endif
+
+
+	mapped_areas.sort(compare_address);
         return retval;
 }
 
@@ -286,7 +319,12 @@ int Tracker::custom_free(Breaker& b, void* bp, bool print)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-        b.handle_bp(bp, false);
+
+#if LEVEL == 4
+        b.handle_bp(bp, false, *this);
+#else
+	b.handle_bp(bp, false);
+#endif
 
         auto rbx = regs.rbx;
         auto it = get_mapped(rbx);
@@ -314,8 +352,15 @@ int Tracker::custom_realloc(Breaker& b, void* bp, bool print)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-        b.handle_bp(bp, false);
-        auto rbx = regs.rbx;
+
+
+#if LEVEL == 4
+        b.handle_bp(bp, false, *this);
+#else
+	b.handle_bp(bp, false);
+#endif
+
+	auto rbx = regs.rbx;
         auto rcx = regs.rcx;
         auto rdx = regs.rdx;
 
@@ -347,15 +392,15 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp, bool print)
         switch (syscall)
         {
                 case MMAP_SYSCALL:
-                        return handle_mmap(syscall, b, bp, print);
+                        return handle_mmap(b, bp, print);
                 case MUNMAP_SYSCALL:
-                        return handle_munmap(syscall, b, bp, print);
+                        return handle_munmap(b, bp, print);
                 case MPROTECT_SYSCALL:
-                        return handle_mprotect(syscall, b, bp, print);
+                        return handle_mprotect(b, bp, print);
                 case MREMAP_SYSCALL:
-                        return handle_mremap(syscall, b, bp, print);
+                        return handle_mremap(b, bp, print);
                 case BRK_SYSCALL:
-                        return handle_brk(syscall, b, bp, print);
+                        return handle_brk(b, bp, print);
                 case CUSTOM_SYSCALL_MALLOC:
                         return custom_alloc(0, b, bp, print);
                 case CUSTOM_SYSCALL_CALLOC:

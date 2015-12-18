@@ -107,10 +107,10 @@
 # define get_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * P_XAX) }
 # define get_xip(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * INSTR_REG) }
 # define void_of(number) { reinterpret_cast<void*>(number) }
-
-
+# define ANCHOR(x) fprintf(OUT, "\033[3%d;1mANCHOR #%d\033[0m\n", x % 7, x)
 
 /* Thank you circular dependencies... */
+class Tracker;
 class Breaker
 {
 public:
@@ -120,8 +120,10 @@ public:
         void add_breakpoint(std::string, void* addr);
         ssize_t find_syscalls(void* addr);
         char is_from_us(void* addr) const;
+        long handle_bp(void* addr, bool print, Tracker& t);
         long handle_bp(void* addr, bool print);
-        long exec_breakpoint(std::string region, void* addr, bool print);
+	long exec_breakpoint(std::string region, void* addr, bool print);
+        long exec_breakpoint(std::string region, void* addr, bool print, Tracker& t);
         void print_bps() const;
         void reset_libs(void* link_map);
 
@@ -132,6 +134,63 @@ public:
         struct r_debug* r_deb;
         std::string name;
         void* program_entry_point;
+};
+
+class Mapped
+{
+public:
+        Mapped(unsigned long b, unsigned long len, unsigned long prot, int id_inc)
+        {
+                mapped_begin       = b;
+                mapped_length      = len;
+                mapped_protections = prot;
+                id = id_inc;
+        }
+
+        bool area_contains(unsigned long addr) const;
+
+        unsigned long mapped_begin;
+        unsigned long  mapped_length;
+        unsigned long  mapped_protections;
+        int id; // For debug purposes
+};
+
+
+class Tracker
+{
+public:
+        Tracker(std::string binary_name, pid_t child)
+        {
+                pid = child;
+                name = binary_name;
+                origin_program_break = 0;
+                actual_program_break = 0;
+                id_inc = 0;
+        }
+
+
+        bool of_interest(int syscall) const;
+        void print_mapped_areas()     const;
+
+        int handle_brk(Breaker& b, void* bp, bool print);
+        int handle_munmap(Breaker& b, void* bp, bool print);
+        int handle_mmap(Breaker& b, void* bp, bool print);
+        int handle_syscall(int syscall, Breaker& b, void* bp, bool print);
+        int handle_mprotect(Breaker& b, void* bp, bool print);
+        int handle_mremap(Breaker& b, void* bp, bool print);
+        int custom_alloc(int prefix, Breaker& b, void* bp, bool print);
+        int custom_free(Breaker& b, void* bp, bool print);
+        int custom_realloc(Breaker& b, void* bp, bool print);
+        bool remove_mapped(void* addr, long len);
+        std::list<Mapped>::iterator get_mapped(unsigned long addr);
+        void tail_remove(std::list<Mapped>::iterator it, int iteration);
+
+        std::list<Mapped> mapped_areas;
+        std::string       name;
+        pid_t             pid;
+        void*           actual_program_break;
+        void*           origin_program_break;
+        int               id_inc;
 };
 
 #endif /* !DEFINES_HH */

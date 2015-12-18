@@ -1,4 +1,4 @@
-#include "level2.hh"
+#include "level4.hh"
 
 struct r_debug* Breaker::get_r_debug(pid_t pid_child)
 {
@@ -110,6 +110,26 @@ char Breaker::is_from_us(void* addr) const
         return 0;
 }
 
+long Breaker::handle_bp(void* addr, bool print, Tracker& t)
+{
+        if (addr == rr_brk)
+        {
+                int state = 0;
+                void* link_map = get_link_map(r_deb, pid, &state);
+
+                if (state == r_debug::RT_CONSISTENT)
+                        browse_link_map(link_map, pid, this);
+
+                return NO_SYSCALL;
+        }
+        else
+                for (auto it : handled_syscalls)
+                        if (it.second.find(addr) != it.second.end())
+                                return exec_breakpoint(it.first, addr, print, t);
+
+        return SYSCALL_ERROR;
+}
+
 long Breaker::handle_bp(void* addr, bool print)
 {
         if (addr == rr_brk)
@@ -128,8 +148,60 @@ long Breaker::handle_bp(void* addr, bool print)
                                 return exec_breakpoint(it.first, addr, print);
 
         return SYSCALL_ERROR;
+
 }
 
+long Breaker::exec_breakpoint(std::string region, void* addr, bool print, Tracker& t)
+{
+	int wait_status = 0;
+
+        // Not found
+        auto it = handled_syscalls.find(region);
+        if (it->second.find(addr) == it->second.end())
+                return NO_SYSCALL;
+
+        struct user_regs_struct regs;
+
+        if ((it->second.find(addr)->second & 0xFF) == TRAP_INST)
+        {
+
+                ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
+		waitpid(pid, 0, 0);
+		sanity_customs(pid, t);
+
+                return CUSTOM_BREAKPOINT;
+        }
+
+        // Restore old instruction pointer
+        ptrace(PTRACE_GETREGS, pid, 0, &regs);
+        regs.XIP -= 1;
+        ptrace(PTRACE_SETREGS, pid, 0, &regs);
+
+        if (print)
+                print_syscall(pid, regs.XAX);
+
+        // Run instruction
+        remove_breakpoint(region, addr);
+
+        ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
+
+        waitpid(pid, &wait_status, 0);
+	sanity_customs(pid, t);
+
+
+
+        if (print)
+                print_retval(pid, regs.XAX);
+
+        ptrace(PTRACE_GETREGS, pid, 0, &regs);
+        long retval = regs.XAX;
+        if (WIFEXITED(wait_status))
+                throw std::logic_error("EXITED");
+        add_breakpoint(region, addr);
+
+        return retval;
+
+}
 long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 {
         int wait_status = 0;

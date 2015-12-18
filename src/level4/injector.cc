@@ -34,8 +34,18 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 	ptrace(PTRACE_POKEDATA, pid, regs.rip, SYSCALL);
 	ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
+
+	ptrace(PTRACE_GETREGS, pid, 0, &regs);
+	printf("1 XIP  : %p\n", (void*)regs.XIP);
+
+
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 	waitpid(pid, &status, 0);
+
+	ptrace(PTRACE_GETREGS, pid, 0, &regs);
+	printf("2 XIP  : %p\n\n", (void*)regs.XIP);
+
+
 
 	ptrace(PTRACE_SETREGS, pid, 0, &bckp);
 	ptrace(PTRACE_POKEDATA, pid, bckp.rip, overriden);
@@ -44,22 +54,20 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 
 int handle_injected_sigsegv(pid_t pid, Tracker& t)
 {
-	sanity_customs(pid, t);
 	reset_page_protection(pid, t);
 	int status = 0;
+	sanity_customs(pid, t);
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 	waitpid(pid, &status, 0);
-
-	return remove_page_protection(pid, t);
+	remove_page_protection(pid, t);
+	return 0;
 }
 
 int handle_injected_syscall(int syscall, Breaker& b, void*  bp, Tracker& t)
 {
-	t.print_mapped_areas();
+	bool print = true;
 	reset_page_protection(b.pid, t);
-	sanity_customs(b.pid, t);
-	t.handle_syscall(syscall, b, bp, false);
+	t.handle_syscall(syscall, b, bp, print);
 	remove_page_protection(b.pid, t);
-
 	return 0;
 }
