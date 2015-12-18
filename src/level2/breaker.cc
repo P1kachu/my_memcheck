@@ -164,7 +164,6 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print, Tracke
 
         if ((it->second.find(addr)->second & 0xFF) == TRAP_INST)
         {
-
                 ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 		waitpid(pid, 0, 0);
 		sanity_customs(pid, t, 0);

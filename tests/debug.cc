@@ -60,18 +60,16 @@ int main()
 	mapped[0x80] = 5;
 
 
-	printf("TEST %d\n", mapped[0]);
-	printf("TEST %d\n", mapped[0x80]);
-	printf("TEST %d\n", mapped[0x100]);
+	int i = mapped[0];
+        i = mapped[80];
+        i = mapped[100];
 
 	munmap(mapped, 0x80);
 
 
-//	int *t = (int*)calloc(1, 0x1000);
-//	int l = mapped[0x102];
-//	printf("%d\n", l);
+	int *t = (int*)calloc(1, 0x1000);
 
-//	*(t + 1) = 5;
+	*(t + i) = 5;
 //	*(t + 2) = 5;
 //	*(t + 63) = 5;
 //	fprintf(OUT, "%sINVALID%s\n", CYAN, NONE);

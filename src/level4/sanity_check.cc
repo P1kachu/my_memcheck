@@ -111,19 +111,19 @@ int display_memory_leaks(Tracker& t)
 //	t.print_mapped_areas();
 
 	fprintf(OUT, "\n[%d] Memory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n", t.pid, sum ? RED : GREEN, sum, NONE, sum);
- 	fprintf(OUT, "[%d]              in %d blocks - %d on the heap\n", t.pid, blocks, heap);
+ 	fprintf(OUT, "[%d]       in %d blocks - %d on the heap\n", t.pid, blocks, heap);
 	if (!sum)
 	{
-		fprintf(OUT, "[%d]               Each allocated byte was freed, memory clean\n", t.pid);
+		fprintf(OUT, "[%d]         Each allocated byte was freed, memory clean\n", t.pid);
 		return 0;
 	}
 	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
 	{
 		if (it->mapped_protections == MALLOC_CHILD)
-			fprintf(OUT, "[%d]               * address: 0x%lx\t - length: 0x%lx    \t - Heap\n",
+			fprintf(OUT, "[%d]       * 0x%lx\t - length: 0x%lx    \t - Heap\n",
 				t.pid, it->mapped_begin, it->mapped_length);
 		else
-			fprintf(OUT, "[%d]               * address: 0x%lx\t - length: 0x%lx\n",
+			fprintf(OUT, "[%d]       * 0x%lx\t - length: 0x%lx\n",
 				t.pid, it->mapped_begin, it->mapped_length);
 
 	}

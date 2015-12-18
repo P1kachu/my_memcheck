@@ -177,7 +177,11 @@ static void print_execve(pid_t child, user_regs_struct& regs)
 #if BONUS
         char b[128];
         char* str = reinterpret_cast<char*>(regs.rdi);
+
         // FIXME : Correct output name in execve
+	// After doing the other levels, I saw that I would
+	// have to do too much stuff for quite nothing
+	// So junk is good
         sprintf(b, "filename = %s, argv = %p, ",
                 str ? str : "NULL", reinterpret_cast<void*>(regs.rsi));
         sprintf(b + strlen(b), "envp = %p", reinterpret_cast<void*>(regs.rdx));
