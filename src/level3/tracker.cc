@@ -305,7 +305,6 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
 	}
 
 #if LEVEL == 3 || LEVEL == 4
-	ANCHOR(1);
 	print_mapped_areas();
 	set_page_protection(rbx, regs.rcx, PROT_EXEC, pid);
 #endif

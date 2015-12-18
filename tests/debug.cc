@@ -39,11 +39,21 @@ int main()
 //	print_errno(OUT);
 
 	errno = 0;
-	int fd = open("debug.cc", O_RDONLY);
+
+
+	int fd = open("WHATEVER", O_RDWR|O_CREAT, 0666);
+
 	print_errno(stdout);
-	char *mapped = (char*)mmap(NULL, 0x100, PROT_READ, MAP_SHARED, fd, 0);
+
+	char *mapped = (char*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
+
 	print_errno(stdout);
-	char *t = (char*)malloc(0x1000);
+
+	printf("Value of mmap: %p\n", mapped);
+
+
+	print_errno(stdout);
+//	char *t = (char*)malloc(0x1000);
 
 	mapped[0x10] = 0;
 	mapped[0x50] = 0;
@@ -53,6 +63,7 @@ int main()
 	mapped[0x100] = 0;
 
 	mapped[0x101] = 0;
+	mapped[0x102] = 0;
 
 //	*(t + 1) = 5;
 //	*(t + 2) = 5;
@@ -64,7 +75,6 @@ int main()
 //	free(t);
 //	fprintf(OUT, "%sFREED%s\n", CYAN, NONE);
 //	*(t + 64) = 7;
-	t[89] = 7;
 
 //	t = (char*)malloc(64);
 

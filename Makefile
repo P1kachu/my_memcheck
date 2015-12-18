@@ -64,19 +64,19 @@ all: libhooks debug
 	clear
 
 # Produce Level4 binary
-level1:
+level1: libhooks debug
 	@echo -en "\033[31;1mCompiling level 1... "
 	@$(CXX) $(CXXFLAGS) -D LEVEL=1 $(SRCS_1) $(LDFLAGS) -o $(EXEC_1)
 	@echo -e "\033[32;1mDone.\033[0m"
-level2:
+level2: libhooks debug
 	@echo -en "\033[31;1mCompiling level 2... "
 	@$(CXX) $(CXXFLAGS) -D LEVEL=2 $(SRCS_2) $(LDFLAGS) -o $(EXEC_2)
 	@echo -e "\033[32;1mDone.\033[0m"
-level3:
+level3: libhooks debug
 	@echo -en "\033[31;1mCompiling level 3... "
 	@$(CXX) $(CXXFLAGS) -D LEVEL=3 $(SRCS_3) $(LDFLAGS) -o $(EXEC_3)
 	@echo -e "\033[32;1mDone.\033[0m"
-level4:
+level4: libhooks debug
 	@echo -en "\033[31;1mCompiling level 4... "
 	@$(CXX) $(CXXFLAGS) -D LEVEL=4 $(SRCS_4) $(LDFLAGS) -o $(EXEC_4)
 	@echo -e "\033[32;1mDone.\033[0m"

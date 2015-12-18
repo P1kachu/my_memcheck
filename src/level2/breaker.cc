@@ -167,7 +167,7 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print, Tracke
 
                 ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 		waitpid(pid, 0, 0);
-		sanity_customs(pid, t);
+		sanity_customs(pid, t, 0);
 
                 return CUSTOM_BREAKPOINT;
         }
@@ -186,7 +186,7 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print, Tracke
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 
         waitpid(pid, &wait_status, 0);
-	sanity_customs(pid, t);
+	sanity_customs(pid, t, 0);
 
 
 

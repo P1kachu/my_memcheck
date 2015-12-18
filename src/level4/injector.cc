@@ -35,16 +35,8 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 	ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
 
-	ptrace(PTRACE_GETREGS, pid, 0, &regs);
-	printf("1 XIP  : %p\n", (void*)regs.XIP);
-
-
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 	waitpid(pid, &status, 0);
-
-	ptrace(PTRACE_GETREGS, pid, 0, &regs);
-	printf("2 XIP  : %p\n\n", (void*)regs.XIP);
-
 
 
 	ptrace(PTRACE_SETREGS, pid, 0, &bckp);
@@ -56,9 +48,13 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t)
 {
 	reset_page_protection(pid, t);
 	int status = 0;
-	sanity_customs(pid, t);
+	sanity_customs(pid, t, 0);
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 	waitpid(pid, &status, 0);
+
+	if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
+		sanity_customs(pid, t, SEGFAULT);
+
 	remove_page_protection(pid, t);
 	return 0;
 }

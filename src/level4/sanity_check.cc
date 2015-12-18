@@ -2,6 +2,7 @@
 
 static bool is_valid(void* fault, Tracker& t, int si_code)
 {
+	UNUSED(si_code);
 	if (fault == nullptr || si_code != SEGV_ACCERR)
 		return true;
 
@@ -49,7 +50,20 @@ static int print_instruction(unsigned long xip)
 
 }
 
-int sanity_customs(pid_t pid, Tracker& t)
+
+static int exit_with_segfault(pid_t pid, Tracker& t, void* fault)
+{
+	fprintf(OUT, "[%d] Invalid memory access of size X at address: %p\n", pid, fault);
+	fprintf(OUT, "[%d] Process terminating with default action of signal 11 (SIGSEGV)\n", pid);
+
+	display_memory_leaks(t);
+	fprintf(OUT, "\n[%d] Segmentation fault\n", pid);
+	fflush(0);
+	exit(-1);
+}
+
+
+int sanity_customs(pid_t pid, Tracker& t, int handler)
 {
 	struct user_regs_struct regs;
 	ptrace(PTRACE_GETREGS, pid, 0, &regs);
@@ -61,6 +75,9 @@ int sanity_customs(pid_t pid, Tracker& t)
 
 	int status = 0;
 
+	if (handler == SEGFAULT)
+		return exit_with_segfault(pid, t, fault);
+
 	if (is_valid(fault, t, infos.si_code))
 		status =  1;
 
@@ -71,7 +88,7 @@ int sanity_customs(pid_t pid, Tracker& t)
 		print_instruction(instruction_p);
 	}
 
-	printf("XIP  : %p\nFAULT: %p\n", (void*)regs.XIP, fault);
+//	printf("Status : %d\n\tXIP  : %p\n\tFAULT: %p\n", status, (void*)regs.XIP, fault);
 
 	infos.si_addr = NULL;
 
@@ -94,21 +111,21 @@ int display_memory_leaks(Tracker& t)
 
 	}
 
-	fprintf(OUT, "\nMemory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n", sum ? RED : GREEN, sum, NONE, sum);
- 	fprintf(OUT, "             in %d blocks - %d on the heap\n", blocks, heap);
+	fprintf(OUT, "\n[%d] Memory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n", t.pid, sum ? RED : GREEN, sum, NONE, sum);
+ 	fprintf(OUT, "[%d]              in %d blocks - %d on the heap\n", t.pid, blocks, heap);
 	if (!sum)
 	{
-		fprintf(OUT, "              Each allocated byte was freed, memory clean\n");
+		fprintf(OUT, "[%d]               Each allocated byte was freed, memory clean\n", t.pid);
 		return 0;
 	}
 	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
 	{
 		if (it->mapped_protections == MALLOC_CHILD)
-			fprintf(OUT, "              * address: 0x%lx\t - length: 0x%lx    \t - Heap\n",
-			it->mapped_begin, it->mapped_length);
+			fprintf(OUT, "[%d]               * address: 0x%lx\t - length: 0x%lx    \t - Heap\n",
+				t.pid, it->mapped_begin, it->mapped_length);
 		else
-			fprintf(OUT, "              * address: 0x%lx\t - length: 0x%lx\n",
-				it->mapped_begin, it->mapped_length);
+			fprintf(OUT, "[%d]               * address: 0x%lx\t - length: 0x%lx\n",
+				t.pid, it->mapped_begin, it->mapped_length);
 
 	}
 	return sum;
