@@ -22,7 +22,7 @@ static bool is_valid(void* fault, Tracker& t, int si_code)
 	return true;
 }
 
-static int get_instruction(pid_t pid, unsigned long xip, bool print)
+static int get_instruction(pid_t pid, unsigned long xip, unsigned long opcodes, bool print)
 {
 	csh handle;
 	cs_insn* insn = NULL;
@@ -31,7 +31,7 @@ static int get_instruction(pid_t pid, unsigned long xip, bool print)
 	unsigned char buffer[16] = { 0 };
 
 	for (int i = 1; i < 9; ++i)
-		buffer[i] = (xip >> (8 * (8 - i))) & 0xFF;
+		buffer[i] = (opcodes >> (8 * i)) & 0xFF;
 
 
 	if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
@@ -43,7 +43,13 @@ static int get_instruction(pid_t pid, unsigned long xip, bool print)
 	if (count > 0)
 	{
 		if (print)
+		{
+			printf("%lx - ", opcodes);
+			for (int k = 0; k < 8; k++)
+				printf("%02x ", insn[0].bytes[k]);
+			printf("\n");
 			printf("[%d] 0x%lx: %s %s\033[0m\n", pid, xip, insn[0].mnemonic, insn[0].op_str);
+		}
 		ret = insn[0].size;
 		cs_free(insn, count);
 	}
@@ -57,7 +63,7 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 {
 	struct user_regs_struct regs;
 	ptrace(PTRACE_GETREGS, pid, 0, &regs);
-	long instruction_p = regs.XIP;
+	long instruction_p = ptrace(PTRACE_PEEKDATA, pid, regs.XIP, sizeof(long));
 	siginfo_t infos;
 	ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
 
@@ -68,7 +74,7 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 	if (handler == SEGFAULT)
 	{
 		invalid_memory_access(fault, pid);
-		int size = get_instruction(pid, instruction_p, true);
+		int size = get_instruction(pid, regs.XIP, instruction_p, true);
 		fprintf(OUT, "[%d] Signal 11 caught (SIGSEGV)", pid);
 		regs.XIP += size + 1;
 		ptrace(PTRACE_SETREGS, pid, 0, &regs);
@@ -82,7 +88,7 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 	if (!status)
 	{
 		invalid_memory_access(fault, pid);
-		get_instruction(pid, instruction_p, true);
+		get_instruction(pid, regs.XIP, instruction_p, true);
 	}
 
 //	printf("Status : %d\n\tXIP  : %p\n\tFAULT: %p\n", status, (void*)regs.XIP, fault);

@@ -62,7 +62,7 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t)
 
 int handle_injected_syscall(int syscall, Breaker& b, void*  bp, Tracker& t)
 {
-	bool print = true;
+	bool print = false;
 	reset_page_protection(b.pid, t);
 	t.handle_syscall(syscall, b, bp, print);
 	remove_page_protection(b.pid, t);

@@ -79,8 +79,19 @@ int main(int argc, char** argv)
         std::string name = argv[1];
 
         char* preload = get_cmd_opt(argv, argv + argc, "--preload");
+
         if (preload)
-                name = argv[3];
+	{
+		if (argc > 3)
+			name = argv[3];
+		else
+                {
+                        fprintf(OUT, "%sERROR:%s No file specified\n",
+                                RED, NONE);
+                        exit(-1);
+                }
+
+	}
         else
         {
                 if (!binary_exists(name) && name.find("--") != std::string::npos)
@@ -90,7 +101,7 @@ int main(int argc, char** argv)
                         exit(-1);
                 }
         }
-
+	ANCHOR(3);
         if (!binary_exists(name) && name.find("./") != std::string::npos)
         {
                 fprintf(OUT, "%sERROR:%s Binary %s not found.\n",
