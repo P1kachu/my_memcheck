@@ -103,10 +103,10 @@
                         exit(-1);                                                           \
                 }                                                                           \
         }
-# define get_orig_xax(pid) ptrace(PTRACE_PEEKUSER, pid, 0, sizeof (long) * O_XAX)
-# define get_xax(pid) ptrace(PTRACE_PEEKUSER, pid, 0, sizeof (long) * P_XAX)
-# define void_of(number)  reinterpret_cast<void*>(number)
-# define ANCHOR(x) fprintf(OUT, "\033[3%d;1mANCHOR #%d\033[0m\n", x % 7 + 1, x)
+# define get_orig_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * O_XAX) }
+# define get_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * P_XAX) }
+# define void_of(number) { reinterpret_cast<void*>(number) }
+# define ANCHOR(x) fprintf(OUT, "\033[3%d;1mANCHOR #%d\033[0m\n", x % 7, x)
 
 /* Thank you circular dependencies... */
 class Tracker;
