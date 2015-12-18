@@ -20,7 +20,7 @@ static bool is_valid(void* fault, Tracker& t, int si_code)
 	return true;
 }
 
-static int print_instruction(unsigned long xip)
+static int get_instruction(unsigned long xip, bool print)
 {
 	csh handle;
 	cs_insn* insn = NULL;
@@ -40,7 +40,8 @@ static int print_instruction(unsigned long xip)
 
 	if (count > 0)
 	{
-		printf("0x%lx: %s %s\033[0m\n", xip, insn[0].mnemonic, insn[0].op_str);
+		if (print)
+			printf("0x%lx: %s %s\033[0m\n", xip, insn[0].mnemonic, insn[0].op_str);
 		ret = insn[0].size;
 		cs_free(insn, count);
 	}
@@ -76,7 +77,16 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 	int status = 0;
 
 	if (handler == SEGFAULT)
-		return exit_with_segfault(pid, t, fault);
+	{
+		int size = get_instruction(instruction_p, false);
+		printf("###%llx### ", regs.XIP);
+		regs.XIP += size + 1;
+		ptrace(PTRACE_SETREGS, pid, 0, &regs);
+
+		fprintf(OUT, "[%llx] Process terminating with default action of signal 11 (SIGSEGV)\n", regs.XIP);
+		return 0;
+		exit_with_segfault(pid, t, fault);
+	}
 
 	if (is_valid(fault, t, infos.si_code))
 		status =  1;
@@ -85,7 +95,7 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 	if (!status)
 	{
 		fprintf(OUT, "Invalid memory access of size X at address: %p\n", fault);
-		print_instruction(instruction_p);
+		get_instruction(instruction_p, true);
 	}
 
 //	printf("Status : %d\n\tXIP  : %p\n\tFAULT: %p\n", status, (void*)regs.XIP, fault);
@@ -110,6 +120,8 @@ int display_memory_leaks(Tracker& t)
 			++heap;
 
 	}
+
+	t.print_mapped_areas();
 
 	fprintf(OUT, "\n[%d] Memory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n", t.pid, sum ? RED : GREEN, sum, NONE, sum);
  	fprintf(OUT, "[%d]              in %d blocks - %d on the heap\n", t.pid, blocks, heap);

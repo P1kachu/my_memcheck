@@ -253,24 +253,27 @@ int Tracker::handle_munmap(Breaker& b, void* bp, bool print)
 	long retval = b.handle_bp(bp, false);
 #endif
 
-        print_errno();
         if (retval < 0)
                 return retval;
+
         auto it = get_mapped(regs.rdi);
         if (it == mapped_areas.end())
                 return NOT_FOUND;
 
-        long tmp = regs.rdi - it->mapped_begin;
-        long tmp2 = regs.rsi;
-        tmp2 -= tmp;
+        unsigned long long addr = regs.rdi;
+        unsigned long long len = regs.rsi;
 
-        if (tmp2 < 0)
-                tmp2 = 0;
+	if (len < it->mapped_length)
+	{
+		mapped_areas.push_back(Mapped(addr + len,
+					      it->mapped_length - len,
+					      it->mapped_protections, id_inc++));
+	}
 
-        tail_remove(it, tmp2 / PAGE_SIZE);
+	tail_remove(it, len / PAGE_SIZE);
 	if (print)
 		fprintf(OUT, "munmap   { addr = 0x%llx, len = 0x%llx } \n",
-                regs.rdi, regs.rsi);
+                addr, len);
         mapped_areas.sort(compare_address);
         return retval;
 }

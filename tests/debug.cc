@@ -64,10 +64,14 @@ int main()
 
 	mapped[0x101] = 0;
 	mapped[0x102] = 0;
-	int l = mapped[0x102];
-	printf("%d\n", l);
 
-	munmap(mapped, 0x10);
+//	int l = mapped[0x102];
+//	printf("%d\n", l);
+
+	munmap(mapped, 0x80);
+	mapped[0x20] = 0;
+	mapped[0x102] = 0;
+
 
 //	*(t + 1) = 5;
 //	*(t + 2) = 5;

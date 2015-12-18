@@ -39,4 +39,9 @@ cases handling.
 Also, I don't like having some code that I don't totally handle myself
 and that is not maintainable.
 
+Details:
+XIP, XAX, and other variables like this were an attempt at preparing for a
+*possible* multi-arch compliant program. They translate to rip or eip (in the case
+of XIP for example) regarding the machine.
+
 See TODO
