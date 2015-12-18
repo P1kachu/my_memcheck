@@ -12,7 +12,7 @@ static bool is_valid(void* fault, Tracker& t, int si_code)
 		int ret = fault < t.actual_program_break && fault >= t.origin_program_break;
 		if (!ret)
 		{
-			printf("\033[31;1m%p: KO\033[0m ", fault);
+			printf("\033[31m%p: \033[0m ", fault);
 			return false;
 		}
 	}
@@ -40,7 +40,7 @@ static int print_instruction(unsigned long xip)
 
 	if (count > 0)
 	{
-		printf("%s %s\033[0m\n", insn[0].mnemonic, insn[0].op_str);
+		printf("0x%lx: %s %s\033[0m\n", xip, insn[0].mnemonic, insn[0].op_str);
 		ret = insn[0].size;
 		cs_free(insn, count);
 	}

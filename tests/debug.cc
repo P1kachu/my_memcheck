@@ -53,7 +53,7 @@ int main()
 
 
 	print_errno(stdout);
-//	char *t = (char*)malloc(0x1000);
+	char *t = (char*)malloc(0x1000);
 
 	mapped[0x10] = 0;
 	mapped[0x50] = 0;
@@ -64,15 +64,20 @@ int main()
 
 	mapped[0x101] = 0;
 	mapped[0x102] = 0;
+	int l = mapped[0x102];
+	printf("%d\n", l);
+
+	munmap(mapped, 0x10);
 
 //	*(t + 1) = 5;
 //	*(t + 2) = 5;
 //	*(t + 63) = 5;
 //	fprintf(OUT, "%sINVALID%s\n", CYAN, NONE);
 //	*(t + 64) = 7;
-//	*(t + 89) = 7;
+	*(t + 89) = 7;
+	*(t + 4100) = 7;
 
-//	free(t);
+	free(t);
 //	fprintf(OUT, "%sFREED%s\n", CYAN, NONE);
 //	*(t + 64) = 7;
 

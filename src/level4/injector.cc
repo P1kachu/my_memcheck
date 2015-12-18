@@ -46,9 +46,9 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 
 int handle_injected_sigsegv(pid_t pid, Tracker& t)
 {
+	sanity_customs(pid, t, 0);
 	reset_page_protection(pid, t);
 	int status = 0;
-	sanity_customs(pid, t, 0);
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 	waitpid(pid, &status, 0);
 
