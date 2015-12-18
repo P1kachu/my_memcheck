@@ -69,7 +69,7 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 	{
 		invalid_memory_access(fault, pid);
 		int size = get_instruction(pid, instruction_p, true);
-		fprintf(OUT, "[%d] Signal 11 caught (SIGSEGV)\n", pid);
+		fprintf(OUT, "[%d] Signal 11 caught (SIGSEGV)", pid);
 		regs.XIP += size + 1;
 		ptrace(PTRACE_SETREGS, pid, 0, &regs);
 		return 0;

@@ -4,7 +4,7 @@ int remove_page_protection(pid_t pid, Tracker& t)
 {
 	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
 		set_page_protection(it->mapped_begin, it->mapped_length,
-				    PROT_EXEC, pid);
+				    PROT_EXEC * it->executable_bit, pid);
 
 	return 0;
 }

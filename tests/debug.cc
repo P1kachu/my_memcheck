@@ -43,29 +43,31 @@ int main()
 
 	int fd = open("WHATEVER", O_RDWR|O_CREAT, 0666);
 
-	int *mapped = (int*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
+	char *mapped = (char*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
 
 
 	print_errno(stdout);
-
-//	int *t = (int*)calloc(1, 0x1000);
-
 
 	mapped = mapped;
 
 	mapped[1] = 5;
 	mapped[0x9f] = 5;
-	printf("INVALID\n");
+	printf("Hello %p\n", (void*)mapped);
 	mapped[0x100] = 5;
 	mapped[0x101] = 5;
 	mapped[0x102] = 5;
 
 	mapped[0x80] = 5;
 
+
+	printf("TEST %d\n", mapped[0]);
+	printf("TEST %d\n", mapped[0x80]);
+	printf("TEST %d\n", mapped[0x100]);
+
 	munmap(mapped, 0x80);
 
-	mapped[0x80] = 5;
 
+//	int *t = (int*)calloc(1, 0x1000);
 //	int l = mapped[0x102];
 //	printf("%d\n", l);
 

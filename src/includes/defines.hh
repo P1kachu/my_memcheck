@@ -143,6 +143,7 @@ public:
                 mapped_begin       = b;
                 mapped_length      = len;
                 mapped_protections = prot;
+		executable_bit = prot & PROT_EXEC;
                 id = id_inc;
         }
 
@@ -151,6 +152,7 @@ public:
         unsigned long mapped_begin;
         unsigned long  mapped_length;
         unsigned long  mapped_protections;
+	int executable_bit;
         int id; // For debug purposes
 };
 
