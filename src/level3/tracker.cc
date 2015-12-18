@@ -258,10 +258,10 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+        auto retval = b.handle_bp(bp, false);
+
         auto rbx = regs.rbx;
         auto rcx = regs.rcx;
-
-        auto retval = b.handle_bp(bp, false);
 
         if (retval != CUSTOM_BREAKPOINT)
                 return retval;

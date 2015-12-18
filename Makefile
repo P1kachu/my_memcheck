@@ -26,7 +26,7 @@ SRCS_2     = $(addsuffix .cc, $(addprefix src/level2/, mem_strace_hook breaker d
 SRCS_2    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
 SRCS_2    += $(addsuffix .cc, $(addprefix src/helpers/, helpers))
 
-SRCS_3     = $(addsuffix .cc, $(addprefix src/level4/, injector))
+SRCS_3     = $(addsuffix .cc, $(addprefix src/level4/, injector sanity_check))
 SRCS_3    += $(addsuffix .cc, $(addprefix src/level3/, mem_tracker tracker))
 SRCS_3    += $(addsuffix .cc, $(addprefix src/level2/, breaker dig_into_mem))
 SRCS_3    += $(addsuffix .cc, $(addprefix src/level1/, strace syscalls))
@@ -61,9 +61,9 @@ multi:
 
 # Produce the final binary   #
 all: libhooks debug $(OBJS_1) $(OBJS_2) $(OBJS_3) $(OBJS_4)
-#	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
-#	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
-#	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
+	$(CXX) $(OBJS_1) $(LDFLAGS) -o $(EXEC_1)
+	$(CXX) $(OBJS_2) $(LDFLAGS) -o $(EXEC_2)
+	$(CXX) $(OBJS_3) $(LDFLAGS) -o $(EXEC_3)
 	$(CXX) $(OBJS_4) $(LDFLAGS) -o $(EXEC_4)
 	clear
 
@@ -84,16 +84,16 @@ check: libhooks distclean multi
 #######################\033[0m\n\n"
 	@echo -e "\033[33;1m##################################################################################\
 #######################\033[0m\n\n"
-#	./$(EXEC_1) ./debug 2> /dev/null
+	./$(EXEC_1) ./debug 2> /dev/null
 	@echo -e "\033[33;1m##################################################################################\
 #######################\033[0m\n\n"
-#	./$(EXEC_2) ./debug 2> /dev/null
+	./$(EXEC_2) ./debug 2> /dev/null
 	@echo -e "\033[33;1m##################################################################################\
 #######################\033[0m\n\n"
-#	./$(EXEC_3) ./debug 2> /dev/null
+	./$(EXEC_3) ./debug 2> /dev/null
 	@echo -e "\033[33;1m##################################################################################\
 #######################\033[0m\n\n"
-#	./$(EXEC_3) --preload ./libhooks.so ./debug 2> /dev/null
+	./$(EXEC_3) --preload ./libhooks.so ./debug 2> /dev/null
 	@echo -e "\033[33;1m##################################################################################\
 #######################\033[0m\n\n"
 	./$(EXEC_4) ./debug

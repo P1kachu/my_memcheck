@@ -2,6 +2,7 @@
 #include "level2.hh"
 #include "level3.hh"
 
+
 static int mem_tracker(std::string name, pid_t pid)
 {
         setenv("LD_BIND_NOW", "1", 1); //FIXME : Potentialy bad
@@ -19,8 +20,9 @@ static int mem_tracker(std::string name, pid_t pid)
 
                 waitpid(pid, &status, 0);
 
-
-                long addr = get_xip(pid);
+		struct user_regs_struct regs;
+		ptrace(PTRACE_GETREGS, pid, 0, &regs);
+                long long addr = regs.XIP;
 
                 auto bp = (void*)(addr - 1);
 
@@ -31,8 +33,13 @@ static int mem_tracker(std::string name, pid_t pid)
                       break;
 
                 // Segfault
-                if (WIFSIGNALED(status) && WTERMSIG(status) == SIGSEGV)
-                        break;
+                if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
+		{
+			ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
+			waitpid(pid, &status, 0);
+//			continue;
+			break;
+		}
                 try
                 {
                         if (!addr)
