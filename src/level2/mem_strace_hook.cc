@@ -16,12 +16,13 @@ static int mem_hook(std::string name, pid_t pid)
 
                 waitpid(pid, &status, 0);
 
-                long addr = get_xip(pid);
+                long addr = ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * INSTR_REG);
                 auto bp = (void*)(addr - 1);
 
 
                 if (WIFEXITED(status))
                       break;
+
                 if (WIFSIGNALED(status))
                       break;
 
