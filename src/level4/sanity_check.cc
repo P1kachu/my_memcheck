@@ -117,10 +117,12 @@ int display_memory_leaks(Tracker& t)
 //	t.print_mapped_areas();
 
 	fprintf(OUT, "\n[%d] Memory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n", t.pid, sum ? RED : GREEN, sum, NONE, sum);
- 	fprintf(OUT, "[%d]       in %d blocks - %d on the heap\n", t.pid, blocks, heap);
-	if (!sum)
+
+	if (sum)
+                fprintf(OUT, "[%d]       in %d blocks - %d on the heap\n", t.pid, blocks, heap);
+        else
 	{
-		fprintf(OUT, "[%d]         Each allocated byte was freed, memory clean\n", t.pid);
+                fprintf(OUT, "[%d]         Each allocated byte was freed, memory clean\n", t.pid);
 		return 0;
 	}
 	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
