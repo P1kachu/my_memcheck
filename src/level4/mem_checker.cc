@@ -101,7 +101,7 @@ int main(int argc, char** argv)
                         exit(-1);
                 }
         }
-	ANCHOR(3);
+
         if (!binary_exists(name) && name.find("./") != std::string::npos)
         {
                 fprintf(OUT, "%sERROR:%s Binary %s not found.\n",

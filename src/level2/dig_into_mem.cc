@@ -270,7 +270,9 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
 
                 cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
                 count = cs_disasm(handle, buffer, nread,
-				  (uintptr_t)offset + PAGE_SIZE * i, 0, &insn);
+				  (uintptr_t)offset +
+				  PAGE_SIZE *
+				  i, 0, &insn);
 
                 if (count > 0)
                 {

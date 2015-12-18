@@ -38,10 +38,7 @@ int main()
 
 //	print_errno(OUT);
 
-	errno = 0;
-
-
-	int fd = open("WHATEVER", O_RDWR|O_CREAT, 0666);
+/*	int fd = open("WHATEVER", O_RDWR|O_CREAT, 0666);
 
 	char *mapped = (char*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
 
@@ -65,11 +62,11 @@ int main()
         i = mapped[100];
 
 	munmap(mapped, 0x80);
-
+*/
 
 	int *t = (int*)calloc(1, 0x1000);
 
-	*(t + i) = 5;
+	*(t + 3) = 5;
 //	*(t + 2) = 5;
 //	*(t + 63) = 5;
 //	fprintf(OUT, "%sINVALID%s\n", CYAN, NONE);
