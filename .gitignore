@@ -17,3 +17,4 @@ mem_checker
 *.out
 debug
 libhooks.so
+WHATEVER
