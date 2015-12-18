@@ -57,10 +57,10 @@ multi:
 
 # Produce the final binary   #
 all: libhooks debug
-	$(MAKE) level1
-	$(MAKE) level2
-	$(MAKE) level3
-	$(MAKE) level4
+	$(MAKE) -B level1
+	$(MAKE) -B level2
+	$(MAKE) -B level3
+	$(MAKE) -B level4
 	clear
 
 # Produce Level4 binary
@@ -122,7 +122,7 @@ clean:
 	$(RM) $(OBJS_3)
 	$(RM) $(OBJS_4)
 
-distclean:
+distclean: clean
 	$(RM) debug
 	$(RM) $(EXEC_1)
 	$(RM) $(EXEC_2)
