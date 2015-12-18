@@ -189,8 +189,9 @@ int Tracker::handle_mmap(int syscall, Breaker& b, void* bp, bool print)
 			retval, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
-
+#ifdef LEVEL3
 	set_page_protection(retval, regs.rsi, PROT_EXEC, pid);
+#endif
         return retval;
 }
 

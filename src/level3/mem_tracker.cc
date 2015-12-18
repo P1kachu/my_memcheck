@@ -1,7 +1,7 @@
 #include "level1.hh"
 #include "level2.hh"
 #include "level3.hh"
-
+#define LEVEL3
 
 static int mem_tracker(std::string name, pid_t pid)
 {
