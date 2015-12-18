@@ -1,5 +1,10 @@
 #include "level4.hh"
 
+static inline void invalid_memory_access(void* fault, pid_t pid)
+{
+	fprintf(OUT, "[%d] %sInvalid memory access%s of size X at address: %p\n", pid, PRED, NONE, fault);
+}
+
 static bool is_valid(void* fault, Tracker& t, int si_code)
 {
 	UNUSED(si_code);
@@ -11,16 +16,13 @@ static bool is_valid(void* fault, Tracker& t, int si_code)
 	{
 		int ret = fault < t.actual_program_break && fault >= t.origin_program_break;
 		if (!ret)
-		{
-			printf("\033[31m%p: \033[0m ", fault);
 			return false;
-		}
 	}
 //	printf("\033[32;1mOK\033[0m ");
 	return true;
 }
 
-static int get_instruction(unsigned long xip, bool print)
+static int get_instruction(pid_t pid, unsigned long xip, bool print)
 {
 	csh handle;
 	cs_insn* insn = NULL;
@@ -41,7 +43,7 @@ static int get_instruction(unsigned long xip, bool print)
 	if (count > 0)
 	{
 		if (print)
-			printf("0x%lx: %s %s\033[0m\n", xip, insn[0].mnemonic, insn[0].op_str);
+			printf("[%d] 0x%lx: %s %s\033[0m\n", pid, xip, insn[0].mnemonic, insn[0].op_str);
 		ret = insn[0].size;
 		cs_free(insn, count);
 	}
@@ -50,19 +52,6 @@ static int get_instruction(unsigned long xip, bool print)
 	return ret;
 
 }
-
-
-static int exit_with_segfault(pid_t pid, Tracker& t, void* fault)
-{
-	fprintf(OUT, "[%d] Invalid memory access of size X at address: %p\n", pid, fault);
-	fprintf(OUT, "[%d] Process terminating with default action of signal 11 (SIGSEGV)\n", pid);
-
-	display_memory_leaks(t);
-	fprintf(OUT, "\n[%d] Segmentation fault\n", pid);
-	fflush(0);
-	exit(-1);
-}
-
 
 int sanity_customs(pid_t pid, Tracker& t, int handler)
 {
@@ -78,14 +67,12 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 
 	if (handler == SEGFAULT)
 	{
-		int size = get_instruction(instruction_p, false);
-		printf("###%llx### ", regs.XIP);
+		invalid_memory_access(fault, pid);
+		int size = get_instruction(pid, instruction_p, true);
+		fprintf(OUT, "[%d] Signal 11 caught (SIGSEGV)\n", pid);
 		regs.XIP += size + 1;
 		ptrace(PTRACE_SETREGS, pid, 0, &regs);
-
-		fprintf(OUT, "[%llx] Process terminating with default action of signal 11 (SIGSEGV)\n", regs.XIP);
 		return 0;
-		exit_with_segfault(pid, t, fault);
 	}
 
 	if (is_valid(fault, t, infos.si_code))
@@ -94,8 +81,8 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 
 	if (!status)
 	{
-		fprintf(OUT, "Invalid memory access of size X at address: %p\n", fault);
-		get_instruction(instruction_p, true);
+		invalid_memory_access(fault, pid);
+		get_instruction(pid, instruction_p, true);
 	}
 
 //	printf("Status : %d\n\tXIP  : %p\n\tFAULT: %p\n", status, (void*)regs.XIP, fault);
@@ -121,7 +108,7 @@ int display_memory_leaks(Tracker& t)
 
 	}
 
-	t.print_mapped_areas();
+//	t.print_mapped_areas();
 
 	fprintf(OUT, "\n[%d] Memory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n", t.pid, sum ? RED : GREEN, sum, NONE, sum);
  	fprintf(OUT, "[%d]              in %d blocks - %d on the heap\n", t.pid, blocks, heap);

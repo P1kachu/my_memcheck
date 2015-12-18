@@ -11,6 +11,7 @@
 // Colors
 #define BLACK       "\033[30;1m"
 #define RED         "\033[31;1m"
+#define PRED        "\033[31m"
 #define GREEN       "\033[32;1m"
 #define YELLOW      "\033[33;1m"
 #define BLUE        "\033[34;1m"

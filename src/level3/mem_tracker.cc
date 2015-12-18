@@ -34,9 +34,7 @@ static int mem_tracker(std::string name, pid_t pid)
                 // Segfault
                 if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
 		{
-			ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
-			waitpid(pid, &status, 0);
-//			continue;
+			fprintf(OUT, "[%d] Signal 11 caught (SIGSEGV)\n", pid);
 			break;
 		}
                 try

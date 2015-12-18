@@ -200,7 +200,7 @@ int Tracker::handle_mmap(Breaker& b, void* bp, bool print)
 
         mapped_areas.sort(compare_address);
 
-#if LEVEL == 3 || LEVEL == 4
+#if LEVEL == 4
 	set_page_protection(retval, regs.rsi, PROT_EXEC, pid);
 #endif
         return retval;
@@ -307,8 +307,7 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
 				rbx, rcx);
 	}
 
-#if LEVEL == 3 || LEVEL == 4
-	print_mapped_areas();
+#if LEVEL == 4
 	set_page_protection(rbx, regs.rcx, PROT_EXEC, pid);
 #endif
 

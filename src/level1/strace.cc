@@ -15,6 +15,11 @@ static int wait_for_syscall(pid_t child)
                 //       pid, status, options
                 waitpid(child, &status, __WALL);
 
+                if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
+			return fprintf(OUT, "[%d] Signal 11 caught (SIGSEGV)\n", child);
+
+
+
                 // Program was stopped by a syscall
                 if (WIFSTOPPED(status) && WSTOPSIG(status) & 0x80)
                         return 0;

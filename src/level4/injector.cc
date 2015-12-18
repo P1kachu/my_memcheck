@@ -48,13 +48,10 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t)
 {
 	sanity_customs(pid, t, 0);
 	reset_page_protection(pid, t);
+
 	int status = 0;
 	ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 	waitpid(pid, &status, 0);
-
-	struct user_regs_struct regs;
-	ptrace(PTRACE_GETREGS, pid, 0, &regs); long instruction_p = regs.XIP;
-	printf("eip: 0x%lx\n", instruction_p);
 
 	if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
 		sanity_customs(pid, t, SEGFAULT);
@@ -66,7 +63,6 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t)
 int handle_injected_syscall(int syscall, Breaker& b, void*  bp, Tracker& t)
 {
 	bool print = true;
-	ANCHOR(7);
 	reset_page_protection(b.pid, t);
 	t.handle_syscall(syscall, b, bp, print);
 	remove_page_protection(b.pid, t);
