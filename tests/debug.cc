@@ -51,7 +51,7 @@ int main()
 	mapped[0x100] = mapped[0x80];
 
 
-	munmap(mapped, 0x100);
+	munmap(mapped, 0x20);
 
 //	free(t);
 
