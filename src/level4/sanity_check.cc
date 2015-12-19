@@ -250,7 +250,7 @@ int display_memory_leaks(Tracker& t)
                 return 0;
         }
         for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
-                        fprintf(OUT, "[%d] \t* 0x%012lx\t- length: 0x%lx\n",
-                                t.pid, it->mapped_begin, it->mapped_length);
+                        fprintf(OUT, "[%d] \t* 0x%lx\t bytes at 0x%lx\n",
+                                t.pid, it->mapped_length, it->mapped_begin);
         return leak_sum;
 }
