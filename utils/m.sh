@@ -16,16 +16,20 @@ func()
         for file in *.cc; do
             /home/Stan/Dropbox/OTHERS/useful-stuff/moulinette.py $file ||
                 ~/Downloads/useful_stuff/moulinette.py $file vv
+
+#	    emacs -nw $file
         done
 
         for file in *.hh; do
             /home/Stan/Dropbox/OTHERS/useful-stuff/moulinette.py $file ||
                 ~/Downloads/useful_stuff/moulinette.py $file vv
+#	    emacs -nw $file
         done
 
         for file in *.hxx; do
             /home/Stan/Dropbox/OTHERS/useful-stuff/moulinette.py $file ||
                 ~/Downloads/useful_stuff/moulinette.py $file vv
+#	    emacs -nw $file
         done
 
         cd ..

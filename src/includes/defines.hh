@@ -121,7 +121,7 @@ public:
         char is_from_us(void* addr) const;
         long handle_bp(void* addr, bool print, Tracker& t);
         long handle_bp(void* addr, bool print);
-	long exec_breakpoint(std::string region, void* addr, bool print);
+        long exec_breakpoint(std::string region, void* addr, bool print);
         long exec_breakpoint(std::string region, void* addr, bool print, Tracker& t);
         void print_bps() const;
         void reset_libs(void* link_map);
@@ -143,7 +143,7 @@ public:
                 mapped_begin       = b;
                 mapped_length      = len;
                 mapped_protections = prot;
-		executable_bit = prot & PROT_EXEC;
+                executable_bit = prot & PROT_EXEC;
                 id = id_inc;
         }
 
@@ -152,7 +152,7 @@ public:
         unsigned long mapped_begin;
         unsigned long  mapped_length;
         unsigned long  mapped_protections;
-	int executable_bit;
+        int executable_bit;
         int id; // For debug purposes
 };
 
@@ -189,8 +189,8 @@ public:
         std::list<Mapped> mapped_areas;
         std::string       name;
         pid_t             pid;
-        void*           actual_program_break;
-        void*           origin_program_break;
+        void*          actual_program_break;
+        void*          origin_program_break;
         int               id_inc;
 };
 

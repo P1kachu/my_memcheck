@@ -78,25 +78,18 @@ void Breaker::remove_breakpoint(std::string region, void* addr)
         // fprintf(OUT, "%sDELETED%s\n", RED, NONE);
 }
 
-void Breaker::add_breakpoint(std::string region, void* addr)
+void Breaker::add_breakpoint(std::string r, void* addr)
 {
         // Get origin instruction and save it
         unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, addr, 0);
         print_errno();
 
         // Address already patched
-        if (handled_syscalls[region].find(addr) != handled_syscalls[region].end())
-        {
-                handled_syscalls[region].find(addr)->second = instr;
-                // FIXME : Deadcode
-                // fprintf(OUT, "%sUPDATED%s\n", RED, NONE);
-        }
+	// r stands for region
+        if (handled_syscalls[r].find(addr) != handled_syscalls[r].end())
+                handled_syscalls[r].find(addr)->second = instr;
         else
-        {
-                handled_syscalls[region][addr] = instr;
-                // FIXME : Deadcode
-                // fprintf(OUT, "%sADDED%s\n", RED, NONE);
-        }
+                handled_syscalls[r][addr] = instr;
 
         // Replace it with an int3 (CC) opcode sequence
         ptrace(PTRACE_POKEDATA, pid, addr, (instr & TRAP_MASK) | TRAP_INST);
@@ -110,7 +103,7 @@ char Breaker::is_from_us(void* addr) const
         return 0;
 }
 
-long Breaker::handle_bp(void* addr, bool print, Tracker& t)
+long Breaker::handle_bp(void* addr, bool p, Tracker& t)
 {
         if (addr == rr_brk)
         {
@@ -125,7 +118,8 @@ long Breaker::handle_bp(void* addr, bool print, Tracker& t)
         else
                 for (auto it : handled_syscalls)
                         if (it.second.find(addr) != it.second.end())
-                                return exec_breakpoint(it.first, addr, print, t);
+				// p stands for 'print'
+                                return exec_breakpoint(it.first, addr, p, t);
 
         return SYSCALL_ERROR;
 }
@@ -151,52 +145,50 @@ long Breaker::handle_bp(void* addr, bool print)
 
 }
 
-long Breaker::exec_breakpoint(std::string region, void* addr, bool print, Tracker& t)
+long Breaker::exec_breakpoint(std::string r, void* addr, bool p, Tracker& t)
 {
-	int wait_status = 0;
+        int wait_status = 0;
 
         // Not found
-        auto it = handled_syscalls.find(region);
+        auto it = handled_syscalls.find(r);
         if (it->second.find(addr) == it->second.end())
                 return NO_SYSCALL;
 
         struct user_regs_struct regs;
-
         if ((it->second.find(addr)->second & 0xFF) == TRAP_INST)
         {
                 ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
-		waitpid(pid, 0, 0);
-		sanity_customs(pid, t, 0);
+                waitpid(pid, 0, 0);
+                sanity_customs(pid, t, 0);
 
                 return CUSTOM_BREAKPOINT;
         }
-
         // Restore old instruction pointer
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
         regs.XIP -= 1;
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
-        if (print)
+        if (p)
                 print_syscall(pid, regs.XAX);
 
         // Run instruction
-        remove_breakpoint(region, addr);
+        remove_breakpoint(r, addr);
 
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
 
         waitpid(pid, &wait_status, 0);
-	sanity_customs(pid, t, 0);
+        sanity_customs(pid, t, 0);
 
 
 
-        if (print)
+        if (p)
                 print_retval(pid, regs.XAX);
 
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
         long retval = regs.XAX;
         if (WIFEXITED(wait_status))
                 throw std::logic_error("EXITED");
-        add_breakpoint(region, addr);
+        add_breakpoint(r, addr);
 
         return retval;
 
@@ -215,7 +207,7 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
         if ((it->second.find(addr)->second & 0xFF) == TRAP_INST)
         {
                 ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
-		waitpid(pid, 0, 0);
+                waitpid(pid, 0, 0);
                 return CUSTOM_BREAKPOINT;
         }
 
@@ -247,6 +239,9 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 
 void Breaker::print_bps() const
 {
+	/*
+	** For debugging purposes
+	*/
         printf("Number of zones: %ld\n{\n", handled_syscalls.size());
         for (auto& region : handled_syscalls)
         {
@@ -258,7 +253,8 @@ void Breaker::print_bps() const
                         unsigned long instr =
                                 ptrace(PTRACE_PEEKDATA, pid, iter.first, 0);
                         if (iter.first == rr_brk)
-                                fprintf(OUT, "\t\t%3d: %p (r_brk):\n", i, iter.first);
+                                fprintf(OUT, "\t\t%3d: %p (r_brk):\n", i,
+					iter.first);
                         else
                                 fprintf(OUT, "\t\t%3d: %p :\n", i, iter.first);
 
@@ -275,10 +271,14 @@ void Breaker::print_bps() const
 
 void Breaker::reset_libs(void* link_map)
 {
-        // Crappy version
-        // Correct version would be to iterate through the libs
-        // list and check the one that is NOT into the map
-        // But fuck it, already short on time
+	/*
+	** Crappy version
+	**
+        ** Correct version would be to iterate through the libs
+        ** list and check the one that is NOT into the map
+        ** But fuck it, already short on time
+	**/
+
         for (auto& region : handled_syscalls)
         {
                 if (!strcmp(region.first.c_str(), MAIN_CHILD))

@@ -16,7 +16,8 @@ static int mem_hook(std::string name, pid_t pid)
 
                 waitpid(pid, &status, 0);
 
-                long addr = ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * INSTR_REG);
+                long addr = ptrace(PTRACE_PEEKUSER, pid,
+				   sizeof (long) * INSTR_REG);
                 auto bp = (void*)(addr - 1);
 
 
