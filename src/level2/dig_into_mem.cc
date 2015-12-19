@@ -6,6 +6,9 @@
 ** access interesting stuff
 **
 ** Needs some serious optimisations and refactoring
+**
+** TODO : Create a function to refactor at least the
+** process_vm_*
 */
 
 void* get_r_brk(void* rr_debug, pid_t pid_child)
@@ -76,6 +79,7 @@ void* get_pt_dynamic(unsigned long phent, unsigned long phnum,
                 process_vm_readv(pid_child, &local, 1, &remote, 1, 0);
 
                 phdr = reinterpret_cast<Elf64_Phdr*>(buffer);
+
                 if (phdr->p_type == PT_DYNAMIC)
                 {
                         // First DT_XXXX entry
@@ -88,8 +92,6 @@ void* get_pt_dynamic(unsigned long phent, unsigned long phnum,
         if (!dt_struct)
                 throw std::logic_error("PT_DYNAMIC not found");
 
-        // FIXME : Deadcode
-        // printf("Found _DYNAMIC:\t\t%p\n", (void*)dt_struct);
         return (void*) dt_struct;
 }
 
@@ -97,11 +99,13 @@ void* get_pt_dynamic(unsigned long phent, unsigned long phnum,
 void* get_phdr(unsigned long& phent, unsigned long& phnum, pid_t pid_child)
 {
         // Open proc/[pid]/auxv
+
         std::ostringstream ss;
         ss << "/proc/" << pid_child << "/auxv";
         auto file = ss.str();
         int fd = open(file.c_str(), std::ios::binary);
-        ElfW(auxv_t) auxv_;
+
+	ElfW(auxv_t) auxv_;
 
         void* at_phdr = NULL;
 
@@ -141,10 +145,8 @@ void* get_link_map(void* rr_debug, pid_t pid, int* status)
 
         struct link_map* link_map = tmp->r_map;
 
-        // FIXME : Deadcode
-        // fprintf(OUT, "Found r_debug->r_map:\t\t%p\n", (void*)link_map);
         tmp = (struct r_debug*)buffer;
-       * status = tmp->r_state;
+        *status = tmp->r_state;
         return link_map;
 }
 
@@ -162,7 +164,8 @@ void* print_string_from_mem(void* str, pid_t pid)
 
         if (read)
         {
-                // FIXME : Deadcode
+                // Used to print the string
+		// Now returns it
                 //fprintf(OUT, "%s\n", s);
                 return strdup(s);
         }
@@ -173,12 +176,7 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
 {
         int fd = open(lib_name, O_RDONLY);
         if (fd < 0)
-        {
-//                fprintf(OUT,
-//			"%sERROR%s Couldn't open lib %s\n",
-//			RED, NONE, lib_name);
                 return std::pair<off_t, int>(0, 0);
-        }
 
         ElfW(Ehdr) elf_header;
         ElfW(Shdr) section_header;
@@ -265,7 +263,6 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
 
                 if (nread < 0)
                         return -1;
-                print_errno();
 
                 if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
                         return -1;
@@ -282,23 +279,7 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                         {
                                 memset(insn, 0, sizeof (cs_insn));
                                 auto id = insn[j].id;
-#if 0 // FIXME : Deadcode
-                                printf("%lx\t", insn[j].address);
-                                for (int k = 0; k < 8; k++)
-                                        printf("%02x ", insn[j].bytes[k]);
-                                printf("\t\t%s\t%s\n", insn[j].mnemonic, insn[j].op_str);
-#endif
-#if 0 // FIXME : Deadcode
-                                if (id == X86_INS_SYSENTER || id == X86_INS_SYSCALL
-                                    || (id == X86_INS_INT && insn[j].bytes[1] == 0x80)
-                                        || id == X86_INS_INT3)
-                                {
-                                        printf("%lx\t", insn[j].address);
-                                        for (int k = 0; k < 8; k++)
-                                                printf("%02x ", insn[j].bytes[k]);
-                                        printf("\t\t%s\t%s\n", insn[j].mnemonic, insn[j].op_str);
-                                }
-#endif
+
                                 // If syscall, add breakpoint
                                 if (id == X86_INS_SYSENTER
                                     || id == X86_INS_SYSCALL
@@ -335,9 +316,6 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
 
         process_vm_readv(pid, &local, 1, &remote, 1, 0);
 
-//        fprintf(OUT, "%sBrowsing link map%s:\n", YELLOW, NONE);
-
-        // FIXME : Useless ? Check if we missed some
         while (map.l_prev)
         {
                 remote.iov_base = map.l_prev;
@@ -349,9 +327,11 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                 process_vm_readv(pid, &local, 1, &remote, 1, 0);
                 if (map.l_addr)
                 {
-                        // Unlike what the elf.h file can say about it
-                        // l_addr is not a difference but the base address
-                        // the shared object is loaded at.
+                        /*
+			** Unlike what the elf.h file can say about it
+                        ** l_addr is not a difference but the base address
+                        ** the shared object is loaded at.
+			**/
                         char* dupp = (char*)print_string_from_mem(map.l_name,
                                                                   pid);
 
@@ -362,7 +342,6 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                                        sections.second, * b, pid);
 
                         free(dupp);
-//                        fprintf(OUT, "\n");
                 }
                 remote.iov_base = map.l_next;
         } while (map.l_next);
@@ -373,5 +352,4 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                 disass(MAIN_CHILD,
                        (char*)b->program_entry_point + sections.first,
                        sections.second, * b, pid);
-//        fprintf(OUT, "\n");
 }
