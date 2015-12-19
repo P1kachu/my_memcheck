@@ -65,8 +65,10 @@ static int get_instruction(pid_t pid,
         if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
                 return -(printf("CS_OPEN BUG\n"));
 
-        cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
-        count = cs_disasm(handle, buffer, 16, xip, 0, &insn);
+	cs_option(handle, CS_OPT_SYNTAX, CS_OPT_SYNTAX_ATT);
+	cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
+
+	count = cs_disasm(handle, buffer, 16, xip, 0, &insn);
 
         if (count > 0)
         {
@@ -75,13 +77,20 @@ static int get_instruction(pid_t pid,
 
 			if (!segfault)
 			{
-				std::string tmp(insn[0].mnemonic);
-				if(tmp.find("movzx") != std::string::npos)
-					invalid_memory_read(fault, pid);
-				else if (tmp.find("mov") != std::string::npos)
-					invalid_memory_write(fault, pid);
-				else
+				int write = insn[0].detail->regs_write_count;
+				int read = insn[0].detail->regs_read_count;
+
+				// Read and write
+				if ((write && read) || !(write || read))
 					invalid_memory_access(fault, pid);
+
+				// Invalid read
+				else if (read)
+					invalid_memory_read(fault, pid);
+
+				// Invalid write
+				else
+					invalid_memory_write(fault, pid);
 			}
 			else
 				invalid_memory_access(fault, pid);
@@ -91,8 +100,9 @@ static int get_instruction(pid_t pid,
 			for (int i = 0; i < insn[0].size; ++i)
 				printf("%02x ", buffer[i]);
 
-			printf("\t%s %s\033[0m\n\n",
+			printf("\t%s %s\033[0m\n",
 			       insn[0].mnemonic, insn[0].op_str);
+			PID(pid);
                 }
 		ret = insn[0].size;
                 cs_free(insn, count);
@@ -178,18 +188,27 @@ int display_memory_leaks(Tracker& t)
 
         }
 
-	fprintf(OUT, "HEAP LEAKS\n");
-	fprintf(OUT,"\tUsed at exit: %lld bytes in %d block(s)\n",
-		heap_sum, heap);
-	fprintf(OUT,"\tTotal heap usage: %d allocs, %d free(s).\n",
-		t.nb_of_allocs, t.nb_of_frees);
+	fprintf(OUT, "[%d] HEAP LEAKS\n", t.pid);
+	fprintf(OUT,"[%d]         Used at exit: %lld byte(s) in %d block(s)\n",
+		t.pid, heap_sum, heap);
 
-        fprintf(OUT,
-		"\n[%d] Memory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n",
-		t.pid, leak_sum ? RED : GREEN, leak_sum, NONE, leak_sum);
+	if (heap_sum)
+	{
+		fprintf(OUT,"[%d]         Total heap usage: %d allocs, %d free(s).\n",
+			t.pid, t.nb_of_allocs, t.nb_of_frees);
+
+		PID(t.pid);
+
+		fprintf(OUT,
+			"[%d] Memory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n",
+			t.pid, leak_sum ? RED : GREEN, leak_sum, NONE, leak_sum);
+	}
+	else
+                fprintf(OUT, "[%d]         Each allocated byte on heap was freed, memory clean\n",
+			t.pid);
 
         if (leak_sum)
-                fprintf(OUT, "[%d]       in %d blocks - %d on the heap\n", t.pid, blocks, heap);
+                fprintf(OUT, "[%d]       in %d block(s)\n", t.pid, blocks);
         else
         {
                 fprintf(OUT, "[%d]         Each allocated byte was freed, memory clean\n", t.pid);
