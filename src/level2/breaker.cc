@@ -31,12 +31,7 @@ struct r_debug* Breaker::get_r_debug(pid_t pid_child)
         // Get r_debug content
         rr_brk = get_r_brk(rr_debug, pid_child);
 
-
-        // FIXME : Deadcode
-        //fprintf(OUT, "Found r_debug\t\t%p\n", rr_debug);
-        //fprintf(OUT, "Found r_debug->r_brk\t%p\n", rr_brk);
-
-        // Return r_debug struct address
+	// Return r_debug struct address
         return reinterpret_cast<struct r_debug*>(rr_debug);
 }
 
@@ -74,15 +69,12 @@ void Breaker::remove_breakpoint(std::string region, void* addr)
         // Get saved instruction and rewrite it in memory
         ptrace(PTRACE_POKEDATA, pid, addr, breaks.find(addr)->second);
         handled_syscalls[region].erase(addr);
-        // FIXME : Deadcode
-        // fprintf(OUT, "%sDELETED%s\n", RED, NONE);
 }
 
 void Breaker::add_breakpoint(std::string r, void* addr)
 {
         // Get origin instruction and save it
         unsigned long instr = ptrace(PTRACE_PEEKDATA, pid, addr, 0);
-        print_errno();
 
         // Address already patched
 	// r stands for region
@@ -163,13 +155,13 @@ long Breaker::exec_breakpoint(std::string r, void* addr, bool p, Tracker& t)
 
                 return CUSTOM_BREAKPOINT;
         }
+
         // Restore old instruction pointer
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
         regs.XIP -= 1;
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
-        if (p)
-                print_syscall(pid, regs.XAX);
+        p ? print_retval(pid, regs.XAX) : p = p;
 
         // Run instruction
         remove_breakpoint(r, addr);
@@ -179,10 +171,7 @@ long Breaker::exec_breakpoint(std::string r, void* addr, bool p, Tracker& t)
         waitpid(pid, &wait_status, 0);
         sanity_customs(pid, t, 0);
 
-
-
-        if (p)
-                print_retval(pid, regs.XAX);
+        p ? print_retval(pid, regs.XAX) : p = p;
 
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
         long retval = regs.XAX;
@@ -216,8 +205,7 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
         regs.XIP -= 1;
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
-        if (print)
-                print_syscall(pid, regs.XAX);
+        print ? print_retval(pid, regs.XAX) : print = print;
 
         // Run instruction
         remove_breakpoint(region, addr);
@@ -225,8 +213,7 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 
         waitpid(pid, &wait_status, 0);
 
-        if (print)
-                print_retval(pid, regs.XAX);
+        print ? print_retval(pid, regs.XAX) : print = print;
 
         ptrace(PTRACE_GETREGS, pid, 0, &regs);
         long retval = regs.XAX;

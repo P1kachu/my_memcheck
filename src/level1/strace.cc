@@ -37,7 +37,7 @@ int run_child(int argc, char** argv, char* ld_preload)
 {
         char** args = new char* [argc + 1];
         memcpy(args, argv, argc * sizeof (char*));
-        args[argc] = nullptr; // TODO : Ask ACU if this is clean
+        args[argc] = nullptr;
 
         if (ptrace(PTRACE_TRACEME) == -1)
                 fprintf(OUT,
