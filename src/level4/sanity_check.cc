@@ -1,24 +1,42 @@
 #include "level4.hh"
 
+
+// Because fuck C++ iostreams
 static inline void invalid_memory_access(void* fault, pid_t pid, int size)
 {
-        fprintf(OUT,
-                "[%d] %sInvalid memory access%s of size %d at address: %p\n",
-                pid, PRED, NONE, size, fault);
+	if (size)
+		fprintf(OUT,
+			"[%d] %sInvalid memory access%s of size %d at address: %p\n",
+			pid, PRED, NONE, size, fault);
+	else
+		fprintf(OUT,
+			"[%d] %sInvalid memory access%s of unknown size at address: %p\n",
+                pid, PRED, NONE, fault);
 }
 
 static inline void invalid_memory_write(void* fault, pid_t pid, int size)
 {
-        fprintf(OUT,
-                "[%d] %sInvalid memory write%s of size %d at address: %p\n",
-                pid, PRED, NONE, size, fault);
+	if (size)
+		fprintf(OUT,
+			"[%d] %sInvalid memory write%s of size %d at address: %p\n",
+			pid, PRED, NONE, size, fault);
+	else
+		fprintf(OUT,
+			"[%d] %sInvalid memory write%s of unkown size at address: %p\n",
+			pid, PRED, NONE, fault);
+
 }
 
 static inline void invalid_memory_read(void* fault, pid_t pid, int size)
 {
-        fprintf(OUT,
-                "[%d] %sInvalid memory read%s of size %d at address: %p\n",
-                pid, PRED, NONE, size, fault);
+	if (size)
+		fprintf(OUT,
+			"[%d] %sInvalid memory read%s of size %d at address: %p\n",
+			pid, PRED, NONE, size, fault);
+	else
+		fprintf(OUT,
+			"[%d] %sInvalid memory read%s of unkown size at address: %p\n",
+			pid, PRED, NONE, fault);
 }
 
 static inline void invalid_free_aux(void* fault, pid_t pid, void* pointer)

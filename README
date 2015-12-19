@@ -24,6 +24,8 @@ Level3 - Memory tracer:
        malloc, realloc, free, calloc
        Save each allocated area, to check if we are not out of bound
        Pretty neat
+       memory_hook.c generates libhooks.so. Preloaded, it allows memcheck
+       to trace malloc style functions
 
 Level4 - Memory checker:
        src/level4
@@ -56,7 +58,36 @@ What doesn't:
 
 Details:
 XIP, XAX, and other variables like this were an attempt at preparing for a
-*possible* multi-arch compliant program. They translate to rip or eip (in the case
-of XIP for example) regarding the machine.
+*possible* multi-arch compliant program. They translate to rip or eip (in the
+case of XIP for example) regarding the machine.
 
-See TODO
+├── src
+│   ├── helpers
+│   │   └── helpers.cc         // Some helper functions used in the project
+│   ├── includes
+│   │   ├── colors.hh          // Pretty printing helper
+│   │   ├── defines.hh         // Every included header, macro, and some class
+│   │   ├── helpers.hh
+│   │   ├── level1.hh
+│   │   ├── level2.hh
+│   │   ├── level4.hh
+│   │   ├── shared.hh          // Shared data between memcheck and libhooks.so
+│   │   └── syscalls.hh
+│   ├── level1                 // Basic strace implementation
+│   │   ├── mem_strace.cc
+│   │   ├── strace.cc
+│   │   └── syscalls.cc
+│   ├── level2                 // Strace without PTRACE_SYSCALLS
+│   │   ├── breaker.cc
+│   │   ├── dig_into_mem.cc
+│   │   └── mem_strace_hook.cc
+│   ├── level3                 // Memory tracker
+│   │   ├── memory_hooks.c     // Generates libhooks.so
+│   │   ├── mem_tracker.cc
+│   │   └── tracker.cc
+│   └── level4                 // Inject code, and check memory access
+│       ├── injector.cc
+│       ├── mem_checker.cc
+│       └── sanity_check.cc
+├── tests                      // Quick tests
+│   └── debug.cc
