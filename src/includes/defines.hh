@@ -167,6 +167,8 @@ public:
                 origin_program_break = 0;
                 actual_program_break = 0;
                 id_inc = 0;
+		nb_of_frees = 0;
+		nb_of_allocs = 0;
         }
 
 
@@ -189,9 +191,11 @@ public:
         std::list<Mapped> mapped_areas;
         std::string       name;
         pid_t             pid;
-        void*          actual_program_break;
-        void*          origin_program_break;
+        void*             actual_program_break;
+        void*             origin_program_break;
         int               id_inc;
+	int               nb_of_frees;
+	int               nb_of_allocs;
 };
 
 #endif /* !DEFINES_HH */

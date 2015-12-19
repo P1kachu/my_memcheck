@@ -91,7 +91,7 @@ static int get_instruction(pid_t pid,
 			for (int i = 0; i < insn[0].size; ++i)
 				printf("%02x ", buffer[i]);
 
-			printf("\t%s %s\033[0m\n",
+			printf("\t%s %s\033[0m\n\n",
 			       insn[0].mnemonic, insn[0].op_str);
                 }
 		ret = insn[0].size;
@@ -161,24 +161,34 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 
 int display_memory_leaks(Tracker& t)
 {
-        unsigned long long sum = 0;
+        unsigned long long heap_sum = 0;
+        unsigned long long leak_sum = 0;
         int heap = 0;
         int blocks = 0;
 
         for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
         {
                 blocks++;
-                sum += it->mapped_length;
                 if (it->mapped_protections == MALLOC_CHILD)
-                       ++heap;
+		{
+			heap_sum += it->mapped_length;
+			++heap;
+		}
+		leak_sum += it->mapped_length;
 
         }
 
-//	t.print_mapped_areas();
+	fprintf(OUT, "HEAP LEAKS\n");
+	fprintf(OUT,"\tUsed at exit: %lld bytes in %d block(s)\n",
+		heap_sum, heap);
+	fprintf(OUT,"\tTotal heap usage: %d allocs, %d free(s).\n",
+		t.nb_of_allocs, t.nb_of_frees);
 
-        fprintf(OUT, "\n[%d] Memory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n", t.pid, sum ? RED : GREEN, sum, NONE, sum);
+        fprintf(OUT,
+		"\n[%d] Memory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n",
+		t.pid, leak_sum ? RED : GREEN, leak_sum, NONE, leak_sum);
 
-        if (sum)
+        if (leak_sum)
                 fprintf(OUT, "[%d]       in %d blocks - %d on the heap\n", t.pid, blocks, heap);
         else
         {
@@ -186,14 +196,7 @@ int display_memory_leaks(Tracker& t)
                 return 0;
         }
         for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
-        {
-                if (it->mapped_protections == MALLOC_CHILD)
-                        fprintf(OUT, "[%d]       * 0x%lx\t - length: 0x%lx    \t - Heap\n",
-                                t.pid, it->mapped_begin, it->mapped_length);
-                else
                         fprintf(OUT, "[%d]       * 0x%lx\t - length: 0x%lx\n",
                                 t.pid, it->mapped_begin, it->mapped_length);
-
-        }
-        return sum;
+        return leak_sum;
 }
