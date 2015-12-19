@@ -298,7 +298,9 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
         if (retval != CUSTOM_BREAKPOINT)
                 return retval;
 
-        mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
+        mapped_areas.push_back(Mapped(rbx - rbx % 4096,
+				      rcx + rbx % 4096,
+				      MALLOC_CHILD, id_inc++));
 
         if (print)
         {
@@ -381,13 +383,15 @@ int Tracker::custom_realloc(Breaker& b, void* bp, bool print)
                 lvl3_print_realloc(0, rdx, rbx, it->mapped_length);
                 lvl3_print_realloc(1, rdx, rbx, rcx);
         }
-        if (rbx != rcx)
+        if (rbx - rbx % 4096 != rcx)
         {
                 mapped_areas.erase(it);
-                mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
+        mapped_areas.push_back(Mapped(rbx - rbx % 4096,
+				      rcx + rbx % 4096,
+				      MALLOC_CHILD, id_inc++));
         }
         else
-                it->mapped_length = rcx;
+                it->mapped_length = rcx + rbx % 4096;
 
         nb_of_allocs++;
 

@@ -6,11 +6,11 @@ static inline void invalid_memory_access(void* fault, pid_t pid, int size)
 {
 	if (size)
 		fprintf(OUT,
-			"[%d] %sInvalid memory access%s of size %d at address: %p\n",
+			"[%d] %sInvalid memory access%s of size %d at address %p\n",
 			pid, PRED, NONE, size, fault);
 	else
 		fprintf(OUT,
-			"[%d] %sInvalid memory access%s of unknown size at address: %p\n",
+			"[%d] %sInvalid memory access%s of unknown size at address %p\n",
                 pid, PRED, NONE, fault);
 }
 
@@ -18,11 +18,11 @@ static inline void invalid_memory_write(void* fault, pid_t pid, int size)
 {
 	if (size)
 		fprintf(OUT,
-			"[%d] %sInvalid memory write%s of size %d at address: %p\n",
+			"[%d] %sInvalid memory write%s of size %d at address %p\n",
 			pid, PRED, NONE, size, fault);
 	else
 		fprintf(OUT,
-			"[%d] %sInvalid memory write%s of unkown size at address: %p\n",
+			"[%d] %sInvalid memory write%s of unkown size at address %p\n",
 			pid, PRED, NONE, fault);
 
 }
@@ -31,18 +31,18 @@ static inline void invalid_memory_read(void* fault, pid_t pid, int size)
 {
 	if (size)
 		fprintf(OUT,
-			"[%d] %sInvalid memory read%s of size %d at address: %p\n",
+			"[%d] %sInvalid memory read%s of size %d at address %p\n",
 			pid, PRED, NONE, size, fault);
 	else
 		fprintf(OUT,
-			"[%d] %sInvalid memory read%s of unkown size at address: %p\n",
+			"[%d] %sInvalid memory read%s of unkown size at address %p\n",
 			pid, PRED, NONE, fault);
 }
 
 static inline void invalid_free_aux(void* fault, pid_t pid, void* pointer)
 {
         fprintf(OUT,
-                "[%d] %sInvalid free%s of pointer %p at address: %p\n",
+                "[%d] %sInvalid free%s of pointer %p at address %p\n",
                 pid, PRED, NONE, pointer, fault);
 }
 
@@ -98,7 +98,6 @@ static int get_instruction(pid_t pid,
         if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
                 return -(printf("CS_OPEN BUG\n"));
 
-	// Intel syntax because it's easier
         cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
         count = cs_disasm(handle, buffer, 16, xip, 0, &insn);
@@ -111,9 +110,15 @@ static int get_instruction(pid_t pid,
                         int size = get_size(insn[0].op_str);
                         if (!segfault)
                         {
+				 /*
+				 ** Will be Intel syntax because it's easier
+				 ** to catch access sizes
+				 **/
+
                                 int write = insn[0].detail->regs_write_count;
                                 int read = insn[0].detail->regs_read_count;
-				// Read and write
+
+                                // Read and write, or none (stewpid)
                                 if ((write && read) || (!write && !read))
                                         invalid_memory_access(fault, pid, size);
 
@@ -128,12 +133,12 @@ static int get_instruction(pid_t pid,
                         else
                                 invalid_memory_access(fault, pid, size);
 
-                        printf("[%d] 0x%lx:\t", pid, xip);
+                        printf("[%d] \t0x%012lx:  ", pid, xip);
 
                         for (int i = 0; i < 8; ++i)
                                 printf("%02x ", buffer[i]);
 
-                        printf("\t%s %s\033[0m\n",
+                        printf("  %s %s\033[0m\n",
                                insn[0].mnemonic, insn[0].op_str);
                         PID(pid);
                 }
@@ -221,34 +226,31 @@ int display_memory_leaks(Tracker& t)
 
         }
         PID(t.pid);
-        fprintf(OUT, "[%d] HEAP LEAKS\n", t.pid);
-        fprintf(OUT, "[%d]         Used at exit: %lld byte(s) in %d block(s)\n",
+        fprintf(OUT, "[%d] Heap leaks: %lld byte(s) in %d block(s)\n",
                 t.pid, heap_sum, heap);
 
         if (heap_sum)
         {
-                fprintf(OUT, "[%d]         Total heap usage: %d allocs, %d free(s).\n",
+                fprintf(OUT, "[%d] \tTotal heap usage: %d alloc(s), %d free(s).\n",
                         t.pid, t.nb_of_allocs, t.nb_of_frees);
 
                 PID(t.pid);
 
                 fprintf(OUT,
-                        "[%d] Memory leaks: %s0x%llx%s (%lld) bytes not freed at exit\n",
-                        t.pid, leak_sum ? RED : GREEN, leak_sum, NONE, leak_sum);
+                        "[%d] Memory leaks: %s0x%llx%s (%lld) byte(s) not freed at exit (%d block(s))\n",
+                        t.pid, leak_sum ? RED : GREEN, leak_sum, NONE, leak_sum, blocks);
         }
         else
-                fprintf(OUT, "[%d]         Each allocated byte on heap was freed, memory clean\n",
+                fprintf(OUT, "[%d] \tEach allocated byte on heap was freed, memory clean\n",
                         t.pid);
 
-        if (leak_sum)
-                fprintf(OUT, "[%d]       in %d block(s)\n", t.pid, blocks);
-        else
-        {
-                fprintf(OUT, "[%d]         Each allocated byte was freed, memory clean\n", t.pid);
+        if (!leak_sum)
+	{
+                fprintf(OUT, "[%d] \tEach allocated byte was freed, memory clean\n", t.pid);
                 return 0;
         }
         for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
-                        fprintf(OUT, "[%d]       * 0x%lx\t - length: 0x%lx\n",
+                        fprintf(OUT, "[%d] \t* 0x%012lx\t- length: 0x%lx\n",
                                 t.pid, it->mapped_begin, it->mapped_length);
         return leak_sum;
 }
