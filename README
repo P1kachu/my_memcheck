@@ -48,6 +48,8 @@ What doesn't:
      Catch access to memory allocated on heap. Addresses are completely
      different from the ones expected. So they are all marked as invalid
      when accessed
+     Differentiates reads from writes 100% of the time
+     Handle invalid free
 
 
 Details:
