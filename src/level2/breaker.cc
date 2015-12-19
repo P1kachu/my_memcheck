@@ -254,7 +254,7 @@ void Breaker::print_bps() const
                                 ptrace(PTRACE_PEEKDATA, pid, iter.first, 0);
                         if (iter.first == rr_brk)
                                 fprintf(OUT, "\t\t%3d: %p (r_brk):\n", i,
-					iter.first);
+                                        iter.first);
                         else
                                 fprintf(OUT, "\t\t%3d: %p :\n", i, iter.first);
 

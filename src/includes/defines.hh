@@ -46,13 +46,13 @@
 
 /* Macros */
 # define OUT                      stdout
+# define VERSION                  "v1.0"
 # define MAIN_CHILD               "origins"
 # define NULL_STRING              "NULL"
 # define CUSTOM_BREAKPOINT         -3
 # define SYSCALL_ERROR             -2
 # define NO_SYSCALL                -1
 # define BONUS                     1
-# define VERSION                   "v1.0"
 # define MMAP_SYSCALL              9
 # define MPROTECT_SYSCALL          10
 # define MUNMAP_SYSCALL            11
@@ -68,9 +68,9 @@
 # define NOT_FOUND                 404
 # define TRAP_LEN                  1
 # define TRAP_INST                 0xCC
-# define MALLOC_CHILD              0xdeadbeef
 # define SYSCALL                   0x050f
 # define SEGFAULT                  0xc0ca
+# define MALLOC_CHILD              0xdeadbeef
 
 # if defined(__i386)
 
@@ -104,28 +104,47 @@
                         exit(-1);                                                           \
                 }                                                                           \
         }
+
 # define get_orig_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * O_XAX) }
 # define get_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * P_XAX) }
 # define void_of(number) { reinterpret_cast<void*>(number) }
 # define ANCHOR(x) fprintf(OUT, "\033[3%d;1mANCHOR #%d\033[0m\n", x % 7, x)
 # define PID(pid) fprintf(OUT, "[%d]\n", pid)
+
 /* Thank you circular dependencies... */
 class Tracker;
+
 class Breaker
 {
 public:
         Breaker(std::string binary_name, pid_t pid);
+
+	// Get the child r_debug struct address
         struct r_debug* get_r_debug(pid_t pid);
-        void remove_breakpoint(std::string, void* addr);
-        void add_breakpoint(std::string, void* addr);
-        ssize_t find_syscalls(void* addr);
-        char is_from_us(void* addr) const;
-        long handle_bp(void* addr, bool print, Tracker& t);
-        long handle_bp(void* addr, bool print);
-        long exec_breakpoint(std::string region, void* addr, bool print);
-        long exec_breakpoint(std::string region, void* addr, bool print, Tracker& t);
-        void print_bps() const;
-        void reset_libs(void* link_map);
+
+	// Remove a breakpoint from the child in the r region
+        void            remove_breakpoint(std::string r, void* addr);
+
+	// Add a breakpoint at addr in the r region
+	void            add_breakpoint(std::string r, void* addr);
+
+	// Find and patch every syscall from the child
+        ssize_t         find_syscalls(void* addr);
+
+	// Is the breakpoint in the Breaker map (I hope it is)
+        char            is_from_us(void* addr) const;
+
+	// Remove a breakpoint, handle the syscall, singlestep, re add the breakpoint
+        long            handle_bp(void* addr, bool p, Tracker& t);
+        long            handle_bp(void* addr, bool p);
+        long            exec_breakpoint(std::string r, void* addr, bool p);
+        long            exec_breakpoint(std::string r, void* addr, bool p, Tracker& t);
+
+	// For debugging purposes
+        void            print_bps() const;
+
+	// When new library are loaded, may not correctly work
+        void            reset_libs(void* link_map);
 
         // Vars
         std::map<std::string, std::map<void*, unsigned long>> handled_syscalls;
@@ -148,13 +167,14 @@ public:
                 id = id_inc;
         }
 
-        bool area_contains(unsigned long addr) const;
+	// Does the mapped page contains this address ?
+        bool           area_contains(unsigned long addr) const;
 
-        unsigned long mapped_begin;
-        unsigned long  mapped_length;
-        unsigned long  mapped_protections;
-        int executable_bit;
-        int id; // For debug purposes
+        unsigned long  mapped_begin;       // Page bagin address
+        unsigned long  mapped_length;      // Page original length
+        unsigned long  mapped_protections; // Page original protections
+        int            executable_bit;     // Was the page executable
+        int            id;                 // For debug purposes
 };
 
 
@@ -168,25 +188,38 @@ public:
                 origin_program_break = 0;
                 actual_program_break = 0;
                 id_inc = 0;
-		nb_of_frees = 0;
-		nb_of_allocs = 0;
+                nb_of_frees = 0;
+                nb_of_allocs = 0;
         }
 
 
+	// Is the syscall one of those we patched
         bool of_interest(int syscall) const;
+
+	// For debugging purposes
         void print_mapped_areas()     const;
 
+	// Different handler regarding the raised syscall
         int handle_brk(Breaker& b, void* bp, bool print);
         int handle_munmap(Breaker& b, void* bp, bool print);
         int handle_mmap(Breaker& b, void* bp, bool print);
         int handle_syscall(int syscall, Breaker& b, void* bp, bool print);
         int handle_mprotect(Breaker& b, void* bp, bool print);
         int handle_mremap(Breaker& b, void* bp, bool print);
+
+	// Handles for the hooked functions
         int custom_alloc(int prefix, Breaker& b, void* bp, bool print);
         int custom_free(Breaker& b, void* bp, bool print);
         int custom_realloc(Breaker& b, void* bp, bool print);
+
+	// Remove a page from the Tracker
         bool remove_mapped(void* addr, long len);
+
+	// Get an iterator on the mapped page that contains the addr
+	// Else returns mapped_areas.end()
         std::list<Mapped>::iterator get_mapped(unsigned long addr);
+
+	// Used to remove splitted pages
         void tail_remove(std::list<Mapped>::iterator it, int iteration);
 
         std::list<Mapped> mapped_areas;
@@ -194,9 +227,9 @@ public:
         pid_t             pid;
         void*             actual_program_break;
         void*             origin_program_break;
-        int               id_inc;
-	int               nb_of_frees;
-	int               nb_of_allocs;
+        int               id_inc; // For debugging purposes
+        int               nb_of_frees;
+        int               nb_of_allocs;
 };
 
 #endif /* !DEFINES_HH */
