@@ -19,8 +19,8 @@ static int mem_checker(std::string name, pid_t pid)
 
                 waitpid(pid, &status, 0);
 
-		struct user_regs_struct regs;
-		ptrace(PTRACE_GETREGS, pid, 0, &regs);
+                struct user_regs_struct regs;
+                ptrace(PTRACE_GETREGS, pid, 0, &regs);
                 long long addr = regs.XIP;
 
                 auto bp = (void*)(addr - 1);
@@ -31,20 +31,20 @@ static int mem_checker(std::string name, pid_t pid)
                 if (WIFSIGNALED(status))
                       break;
 
-		if(0)
-			fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
-				+ GREEN, pid, NONE, status, (void*)bp, RED,
-				strsignal(WSTOPSIG(status)), NONE);
+                if (0)
+                        fprintf(OUT, "%s[%d]%s Signal received (%d): %p - %s%s%s\n",
+                                + GREEN, pid, NONE, status, (void*)bp, RED,
+                                strsignal(WSTOPSIG(status)), NONE);
 
                 // Segfault
                 if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
-		{
-			handle_injected_sigsegv(pid, t);
-			continue;
-		}
+                {
+                        handle_injected_sigsegv(pid, t);
+                        continue;
+                }
                 try
                 {
-                        if (!addr)
+			if (!addr)
                                 break;
 
                         if (!b.is_from_us(bp))
@@ -55,14 +55,14 @@ static int mem_checker(std::string name, pid_t pid)
                         if (bp != b.rr_brk)
                                 syscall = get_xax(pid);
 
-			handle_injected_syscall(syscall, b, bp, t);
+                        handle_injected_syscall(syscall, b, bp, t);
 
                 }
                 catch (std::logic_error) { break; }
         }
 
         ptrace(PTRACE_CONT, pid, 0, 0);
-	display_memory_leaks(t);
+        display_memory_leaks(t);
         return 0;
 }
 
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 
         if (argc < 2)
         {
-                fprintf(OUT, "Usage: %s [--preload lib] binary_to_trace [ARGS]\n", argv[0]);
+                fprintf(OUT, "Usage: %s[--preload lib] binary_to_trace[ARGS]\n", argv[0]);
                 return 0;
         }
 
@@ -81,17 +81,17 @@ int main(int argc, char** argv)
         char* preload = get_cmd_opt(argv, argv + argc, "--preload");
 
         if (preload)
-	{
-		if (argc > 3)
-			name = argv[3];
-		else
+        {
+                if (argc > 3)
+                        name = argv[3];
+                else
                 {
                         fprintf(OUT, "%sERROR:%s No file specified\n",
                                 RED, NONE);
                         exit(-1);
                 }
 
-	}
+        }
         else
         {
                 if (!binary_exists(name) && name.find("--") != std::string::npos)

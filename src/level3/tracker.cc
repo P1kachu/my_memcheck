@@ -10,12 +10,11 @@ static bool compare_address(Mapped first, Mapped second)
 bool Mapped::area_contains(unsigned long addr) const
 {
         int ret = (addr < mapped_begin + mapped_length)
-		&& addr >= mapped_begin;
-	if (0) // TODO : REMOVE
-		printf("%s%12lx - %12lx - %12lx%s\n",
-		       ret ? GREEN : RED, mapped_begin, addr,
-		       mapped_begin + mapped_length, NONE);
-
+                && addr >= mapped_begin;
+        if (0) // TODO : REMOVE
+                printf("%s%12lx - %12lx - %12lx%s\n",
+                       ret ? GREEN : RED, mapped_begin, addr,
+                       mapped_begin + mapped_length, NONE);
         return ret;
 }
 
@@ -50,7 +49,7 @@ int Tracker::handle_mprotect(Breaker& b, void* bp, bool print)
 #if LEVEL == 4
         auto retval = b.handle_bp(bp, false, *this);
 #else
-	auto retval = b.handle_bp(bp, false);
+        auto retval = b.handle_bp(bp, false);
 #endif
 
 
@@ -61,8 +60,9 @@ int Tracker::handle_mprotect(Breaker& b, void* bp, bool print)
         if (it == mapped_areas.end())
                 return NOT_FOUND;
 
-	if (print)
-		lvl3_print_mprotect(0, regs.rdi, regs.rsi, it->mapped_protections);
+        if (print)
+                lvl3_print_mprotect(0, regs.rdi,
+				    regs.rsi, it->mapped_protections);
 
         long tmp = reinterpret_cast<long>(bp) - it->mapped_begin;
         regs.rsi -= tmp;
@@ -77,8 +77,9 @@ int Tracker::handle_mprotect(Breaker& b, void* bp, bool print)
                 it->mapped_protections = regs.rdx;
         }
 
-	if (print)
-		lvl3_print_mprotect(1, regs.rdi, regs.rsi, it->mapped_protections);
+        if (print)
+                lvl3_print_mprotect(1, regs.rdi,
+				    regs.rsi, it->mapped_protections);
 
         return retval;
 }
@@ -102,7 +103,7 @@ int Tracker::handle_mremap(Breaker& b, void* bp, bool print)
 #if LEVEL == 4
         auto retval = b.handle_bp(bp, false, *this);
 #else
-	auto retval = b.handle_bp(bp, false);
+        auto retval = b.handle_bp(bp, false);
 #endif
 
         if ((void*) retval == MAP_FAILED)
@@ -112,8 +113,9 @@ int Tracker::handle_mremap(Breaker& b, void* bp, bool print)
         if (it == mapped_areas.end())
                 return NOT_FOUND;
 
-	if (print)
-		lvl3_print_mremap(0, regs.rdi, regs.rsi, it->mapped_protections);
+        if (print)
+                lvl3_print_mremap(0, regs.rdi,
+				  regs.rsi, it->mapped_protections);
 
         if ((unsigned long)retval != it->mapped_begin)
         {
@@ -142,7 +144,7 @@ int Tracker::handle_mremap(Breaker& b, void* bp, bool print)
                         long addr = retval + i * PAGE_SIZE;
                         mapped_areas.push_back(Mapped(addr, PAGE_SIZE,
                                                       it->mapped_protections,
-						      id_inc++));
+                                                      id_inc++));
                 }
 
                 if (regs.rdx % PAGE_SIZE)
@@ -151,13 +153,14 @@ int Tracker::handle_mremap(Breaker& b, void* bp, bool print)
                         long len = regs.rdx % PAGE_SIZE;
                         mapped_areas.push_back(Mapped(addr, len,
                                                       it->mapped_protections,
-						      id_inc++));
+                                                      id_inc++));
                 }
                 mapped_areas.erase(it);
 
         }
-	if (print)
-		lvl3_print_mremap(1, retval, regs.rdx, it->mapped_protections);
+        if (print)
+                lvl3_print_mremap(1, retval,
+				  regs.rdx, it->mapped_protections);
         mapped_areas.sort(compare_address);
         return retval;
 }
@@ -170,7 +173,7 @@ int Tracker::handle_mmap(Breaker& b, void* bp, bool print)
 #if LEVEL == 4
         auto retval = b.handle_bp(bp, false, *this);
 #else
-	auto retval = b.handle_bp(bp, false);
+        auto retval = b.handle_bp(bp, false);
 #endif
         if ((void*) retval == MAP_FAILED)
                 return retval;
@@ -183,7 +186,7 @@ int Tracker::handle_mmap(Breaker& b, void* bp, bool print)
         {
                 long addr = retval + i * PAGE_SIZE;
                 mapped_areas.push_back(Mapped(addr, PAGE_SIZE,
-					      regs.rdx, id_inc++));
+                                              regs.rdx, id_inc++));
         }
 
         if (regs.rsi % PAGE_SIZE)
@@ -191,17 +194,17 @@ int Tracker::handle_mmap(Breaker& b, void* bp, bool print)
                 long addr = retval + i * PAGE_SIZE;
                 long len = regs.rsi % PAGE_SIZE;
                 mapped_areas.push_back(Mapped(addr, len,
-					      regs.rdx, id_inc++));
+                                              regs.rdx, id_inc++));
         }
-	if (print)
-		fprintf(OUT,
-			"mmap     { addr = 0x%lx, len = 0x%llx, prot = %lld } \n",
-			retval, regs.rsi, regs.rdx);
+        if (print)
+                fprintf(OUT,
+                        "mmap     { addr = 0x%lx, len = 0x%llx, prot = %lld } \n",
+                        retval, regs.rsi, regs.rdx);
 
         mapped_areas.sort(compare_address);
 
 #if LEVEL == 4
-	set_page_protection(retval, regs.rsi, PROT_EXEC & regs.rdx, pid);
+        set_page_protection(retval, regs.rsi, PROT_EXEC & regs.rdx, pid);
 #endif
         return retval;
 }
@@ -212,15 +215,15 @@ int Tracker::handle_brk(Breaker& b, void* bp, bool print)
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
 
-	if (print)
-		lvl3_print_brk(0, origin_program_break, actual_program_break);
+        if (print)
+                lvl3_print_brk(0, origin_program_break, actual_program_break);
 
 
 
 #if LEVEL == 4
         long retval = b.handle_bp(bp, false, *this);
 #else
-	long retval = b.handle_bp(bp, false);
+        long retval = b.handle_bp(bp, false);
 #endif
 
         if (retval < 0)
@@ -235,8 +238,8 @@ int Tracker::handle_brk(Breaker& b, void* bp, bool print)
         else
                 actual_program_break = (void*)retval;
 
-	if (print)
-		lvl3_print_brk(1, origin_program_break, actual_program_break);
+        if (print)
+                lvl3_print_brk(1, origin_program_break, actual_program_break);
 
         return 0;
 
@@ -250,7 +253,7 @@ int Tracker::handle_munmap(Breaker& b, void* bp, bool print)
 #if LEVEL == 4
         long retval = b.handle_bp(bp, false, *this);
 #else
-	long retval = b.handle_bp(bp, false);
+        long retval = b.handle_bp(bp, false);
 #endif
 
         if (retval < 0)
@@ -263,16 +266,16 @@ int Tracker::handle_munmap(Breaker& b, void* bp, bool print)
         unsigned long long addr = regs.rdi;
         unsigned long long len = regs.rsi;
 
-	if (len < it->mapped_length)
-	{
-		mapped_areas.push_back(Mapped(addr + len,
-					      it->mapped_length - len,
-					      it->mapped_protections, id_inc++));
-	}
+        if (len < it->mapped_length)
+        {
+                mapped_areas.push_back(Mapped(addr + len,
+                                              it->mapped_length - len,
+                                              it->mapped_protections, id_inc++));
+        }
 
-	tail_remove(it, len / PAGE_SIZE);
-	if (print)
-		fprintf(OUT, "munmap   { addr = 0x%llx, len = 0x%llx } \n",
+        tail_remove(it, len / PAGE_SIZE);
+        if (print)
+                fprintf(OUT, "munmap   { addr = 0x%llx, len = 0x%llx } \n",
                 addr, len);
         mapped_areas.sort(compare_address);
         return retval;
@@ -286,7 +289,7 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
 #if LEVEL == 4
         auto retval = b.handle_bp(bp, false, *this);
 #else
-	auto retval = b.handle_bp(bp, false);
+        auto retval = b.handle_bp(bp, false);
 #endif
 
         auto rbx = regs.rbx;
@@ -297,22 +300,22 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
 
         mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
 
-	if (print)
-	{
-		if (!prefix)
-			fprintf(OUT, "malloc   { addr = 0x%llx, len = 0x%llx } \n",
-				rbx, rcx);
-		else
-			fprintf(OUT, "calloc   { addr = 0x%llx, len = 0x%llx } \n",
-				rbx, rcx);
-	}
+        if (print)
+        {
+                if (!prefix)
+                        fprintf(OUT, "malloc   { addr = 0x%llx, len = 0x%llx } \n",
+                                rbx, rcx);
+                else
+                        fprintf(OUT, "calloc   { addr = 0x%llx, len = 0x%llx } \n",
+                                rbx, rcx);
+        }
 
 #if LEVEL == 4
-	set_page_protection(retval, regs.rsi, PROT_EXEC & regs.rdx, pid);
+        set_page_protection(retval, regs.rsi, PROT_EXEC & regs.rdx, pid);
 #endif
 
 
-	mapped_areas.sort(compare_address);
+        mapped_areas.sort(compare_address);
         return retval;
 }
 
@@ -324,14 +327,14 @@ int Tracker::custom_free(Breaker& b, void* bp, bool print)
 #if LEVEL == 4
         b.handle_bp(bp, false, *this);
 #else
-	b.handle_bp(bp, false);
+        b.handle_bp(bp, false);
 #endif
 
         auto rbx = regs.rbx;
         auto it = get_mapped(rbx);
 
-	if (it == mapped_areas.end())
-		return -1;
+        if (it == mapped_areas.end())
+                return -1;
 
         if (it == mapped_areas.end() || it->mapped_protections != MALLOC_CHILD)
         {
@@ -339,9 +342,9 @@ int Tracker::custom_free(Breaker& b, void* bp, bool print)
                 return -1;
         }
 
-	if (print)
-		fprintf(OUT, "free     { addr = 0x%llx, len = 0x%lx } \n",
-			rbx, it->mapped_length);
+        if (print)
+                fprintf(OUT, "free     { addr = 0x%llx, len = 0x%lx } \n",
+                        rbx, it->mapped_length);
 
         mapped_areas.erase(it);
 
@@ -358,23 +361,23 @@ int Tracker::custom_realloc(Breaker& b, void* bp, bool print)
 #if LEVEL == 4
         b.handle_bp(bp, false, *this);
 #else
-	b.handle_bp(bp, false);
+        b.handle_bp(bp, false);
 #endif
 
-	auto rbx = regs.rbx;
+        auto rbx = regs.rbx;
         auto rcx = regs.rcx;
         auto rdx = regs.rdx;
 
         auto it = get_mapped(rdx);
 
-	if (it == mapped_areas.end())
-		return -1;
+        if (it == mapped_areas.end())
+                return -1;
 
-	if (print)
-	{
-		lvl3_print_realloc(0, rdx, rbx, it->mapped_length);
-		lvl3_print_realloc(1, rdx, rbx, rcx);
-	}
+        if (print)
+        {
+                lvl3_print_realloc(0, rdx, rbx, it->mapped_length);
+                lvl3_print_realloc(1, rdx, rbx, rcx);
+        }
         if (rbx != rcx)
         {
                 mapped_areas.erase(it);

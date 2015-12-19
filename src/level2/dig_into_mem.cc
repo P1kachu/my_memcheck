@@ -4,6 +4,8 @@
 ** Very large chunk of functions used to
 ** dig into (mostly the child's) memory and
 ** access interesting stuff
+**
+** Needs some serious optimisations and refactoring
 */
 
 void* get_r_brk(void* rr_debug, pid_t pid_child)
@@ -193,7 +195,7 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
         lseek(fd, elf_header.e_shoff, SEEK_CUR);
         int string_table_offset =  elf_header.e_shstrndx;
         lseek(fd, elf_header.e_shentsize
-	      * (string_table_offset - 1), SEEK_CUR);
+              * (string_table_offset - 1), SEEK_CUR);
 
         // String table
         nread = read(fd, &string_header, sizeof (ElfW(Shdr)));
@@ -201,7 +203,7 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
         lseek(fd, strtab, SEEK_SET);
         char* table = new char[MAX_STRING_SIZE * elf_header.e_shnum];
         nread = read(fd, table, sizeof (char)
-		     * MAX_STRING_SIZE * elf_header.e_shnum);
+                     * MAX_STRING_SIZE * elf_header.e_shnum);
 
         // Section headers
         int i;
@@ -209,13 +211,13 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
         {
                 char buff[255] = { 0 };
                 lseek(fd,
-		      elf_header.e_shoff
-		      + elf_header.e_shentsize * i, SEEK_SET);
+                      elf_header.e_shoff
+                      + elf_header.e_shentsize * i, SEEK_SET);
 
                 nread = read(fd, &section_header, sizeof (ElfW(Shdr)));
 
                 if (in_executable
-		    && !(section_header.sh_flags & SHF_EXECINSTR))
+                    && !(section_header.sh_flags & SHF_EXECINSTR))
                         break;
 
                 if (!in_executable && section_header.sh_flags & SHF_EXECINSTR)
@@ -228,7 +230,7 @@ std::pair<off_t, long>get_sections(const char* lib_name, Breaker& b)
                 {
                         len += section_header.sh_size;
                         for (int j = section_header.sh_name;
-			     table[j] != '\0'; ++j)
+                             table[j] != '\0'; ++j)
                                 buff[j - section_header.sh_name] = table[j];
                         UNUSED(buff[0]);
                 }
@@ -270,9 +272,9 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
 
                 cs_option(handle, CS_OPT_SKIPDATA, CS_OPT_ON);
                 count = cs_disasm(handle, buffer, nread,
-				  (uintptr_t)offset +
-				  PAGE_SIZE *
-				  i, 0, &insn);
+                                  (uintptr_t)offset +
+                                  PAGE_SIZE*
+                                  i, 0, &insn);
 
                 if (count > 0)
                 {
@@ -297,17 +299,16 @@ int disass(const char* name, void* offset, long len, Breaker& b, pid_t pid)
                                         printf("\t\t%s\t%s\n", insn[j].mnemonic, insn[j].op_str);
                                 }
 #endif
-
                                 // If syscall, add breakpoint
                                 if (id == X86_INS_SYSENTER
-				    || id == X86_INS_SYSCALL
+                                    || id == X86_INS_SYSCALL
                                     || (id == X86_INS_INT
-					&& insn[j].bytes[1] == 0x80)
-				    || id == X86_INS_INT3)
+                                        && insn[j].bytes[1] == 0x80)
+                                    || id == X86_INS_INT3)
                                 {
                                         syscall_counter++;
                                         b.add_breakpoint(std::string(name),
-							 (void*)insn[j].address);
+                                                         (void*)insn[j].address);
                                 }
                                 counter += insn[j].size;
 
@@ -352,13 +353,13 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                         // l_addr is not a difference but the base address
                         // the shared object is loaded at.
                         char* dupp = (char*)print_string_from_mem(map.l_name,
-								  pid);
+                                                                  pid);
 
-                        std::pair<off_t, long> sections = get_sections(dupp, * b);
+                        std::pair<off_t, long>sections = get_sections(dupp, *b);
                         if (sections.second)
                                 disass(dupp,
-				       (char*)map.l_addr + sections.first,
-				       sections.second, * b, pid);
+                                       (char*)map.l_addr + sections.first,
+                                       sections.second, * b, pid);
 
                         free(dupp);
 //                        fprintf(OUT, "\n");
@@ -370,7 +371,7 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
         std::pair<off_t, long> sections = get_sections(b->name.c_str(), * b);
         if (sections.second)
                 disass(MAIN_CHILD,
-		       (char*)b->program_entry_point + sections.first,
-		       sections.second, * b, pid);
+                       (char*)b->program_entry_point + sections.first,
+                       sections.second, * b, pid);
 //        fprintf(OUT, "\n");
 }

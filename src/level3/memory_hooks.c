@@ -19,6 +19,7 @@ void* malloc(size_t size)
 		      : "a" (CUSTOM_SYSCALL_MALLOC),
 			"b" (p),
 			"c" (size));
+
         return p;
 }
 

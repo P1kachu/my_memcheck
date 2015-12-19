@@ -19,8 +19,8 @@ static int mem_tracker(std::string name, pid_t pid)
 
                 waitpid(pid, &status, 0);
 
-		struct user_regs_struct regs;
-		ptrace(PTRACE_GETREGS, pid, 0, &regs);
+                struct user_regs_struct regs;
+                ptrace(PTRACE_GETREGS, pid, 0, &regs);
                 long long addr = regs.XIP;
 
                 auto bp = (void*)(addr - 1);
@@ -33,10 +33,10 @@ static int mem_tracker(std::string name, pid_t pid)
 
                 // Segfault
                 if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
-		{
-			fprintf(OUT, "[%d] Signal 11 caught (SIGSEGV)\n", pid);
-			break;
-		}
+                {
+                        fprintf(OUT, "[%d] Signal 11 caught (SIGSEGV)\n", pid);
+                        break;
+                }
                 try
                 {
                         if (!addr)
@@ -68,8 +68,8 @@ int main(int argc, char** argv)
         if (argc < 2)
         {
                 fprintf(OUT,
-			"Usage: %s[--preload lib] binary_to_trace[ARGS]\n",
-			argv[0]);
+                        "Usage: %s[--preload lib] binary_to_trace[ARGS]\n",
+                        argv[0]);
                 return 0;
         }
 
@@ -81,10 +81,10 @@ int main(int argc, char** argv)
         else
         {
                 if (!binary_exists(name)
-		    && name.find("--") != std::string::npos)
+                    && name.find("--") != std::string::npos)
                 {
                         fprintf(OUT,
-				"%sERROR:%s Invalid command option (%s)\n",
+                                "%sERROR:%s Invalid command option (%s)\n",
                                 RED, NONE, name.c_str());
                         exit(-1);
                 }
