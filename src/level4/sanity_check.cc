@@ -80,7 +80,7 @@ static int get_instruction(pid_t pid,
         if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
                 return -(printf("CS_OPEN BUG\n"));
 
-//	cs_option(handle, CS_OPT_SYNTAX, CS_OPT_SYNTAX_ATT);
+	// Intel syntax because it's easier
 	cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
 	count = cs_disasm(handle, buffer, 16, xip, 0, &insn);
@@ -202,7 +202,7 @@ int display_memory_leaks(Tracker& t)
 		leak_sum += it->mapped_length;
 
         }
-
+	PID(t.pid);
 	fprintf(OUT, "[%d] HEAP LEAKS\n", t.pid);
 	fprintf(OUT,"[%d]         Used at exit: %lld byte(s) in %d block(s)\n",
 		t.pid, heap_sum, heap);
