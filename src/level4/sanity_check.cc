@@ -7,6 +7,20 @@ static inline void invalid_memory_access(void* fault, pid_t pid)
 		pid, PRED, NONE, fault);
 }
 
+static inline void invalid_memory_write(void* fault, pid_t pid)
+{
+        fprintf(OUT,
+		"[%d] %sInvalid memory write%s of size X at address: %p\n",
+		pid, PRED, NONE, fault);
+}
+
+static inline void invalid_memory_read(void* fault, pid_t pid)
+{
+        fprintf(OUT,
+		"[%d] %sInvalid memory read%s of size X at address: %p\n",
+		pid, PRED, NONE, fault);
+}
+
 static inline void invalid_free_aux(void* fault, pid_t pid, void* pointer)
 {
         fprintf(OUT,
@@ -31,7 +45,12 @@ static bool is_valid(void* fault, Tracker& t, int si_code)
         return true;
 }
 
-static int get_instruction(pid_t pid, unsigned long xip, unsigned long long  opcodes, bool print)
+static int get_instruction(pid_t pid,
+			   unsigned long xip,
+			   unsigned long long  opcodes,
+			   bool print,
+			   bool segfault,
+			   void* fault)
 {
         csh handle;
         cs_insn* insn = NULL;
@@ -53,13 +72,24 @@ static int get_instruction(pid_t pid, unsigned long xip, unsigned long long  opc
         {
                 if (print)
 		{
-                        printf("[%d] 0x%lx: ", pid, xip);
+
+			if (!segfault)
+			{
+				std::string tmp(insn[0].mnemonic);
+				if(tmp.find("movzx") != std::string::npos)
+					invalid_memory_read(fault, pid);
+				else if (tmp.find("mov") != std::string::npos)
+					invalid_memory_write(fault, pid);
+				else
+					invalid_memory_access(fault, pid);
+			}
+			else
+				invalid_memory_access(fault, pid);
+
+			printf("[%d] 0x%lx: ", pid, xip);
 
 			for (int i = 0; i < insn[0].size; ++i)
-			{
-				buffer[i] = (opcodes >> (8 * i)) & 0xFF;
 				printf("%02x ", buffer[i]);
-			}
 
 			printf("\t%s %s\033[0m\n",
 			       insn[0].mnemonic, insn[0].op_str);
@@ -85,7 +115,7 @@ int invalid_free(pid_t pid, void* pointer, Tracker& t)
 
         void* fault = infos.si_addr;
 	invalid_free_aux(fault, pid, pointer);
-	get_instruction(pid, regs.XIP, instruction_p, true);
+	get_instruction(pid, regs.XIP, instruction_p, true, false, fault);
 	display_memory_leaks(t);
 	exit(-1);
 
@@ -107,8 +137,7 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 
         if (handler == SEGFAULT)
         {
-                invalid_memory_access(fault, pid);
-                int size = get_instruction(pid, regs.XIP, instruction_p, true);
+                int size = get_instruction(pid, regs.XIP, instruction_p, true, true, fault);
                 fprintf(OUT, "[%d] Signal 11 caught (SIGSEGV)", pid);
                 regs.XIP += size + 1;
                 ptrace(PTRACE_SETREGS, pid, 0, &regs);
@@ -120,10 +149,7 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 
 
         if (!status)
-        {
-                invalid_memory_access(fault, pid);
-                get_instruction(pid, regs.XIP, instruction_p, true);
-        }
+                get_instruction(pid, regs.XIP, instruction_p, true, false, fault);
 
 //	printf("Status : %d\n\tXIP  : %p\n\tFAULT: %p\n", status, (void*)regs.XIP, fault);
 
