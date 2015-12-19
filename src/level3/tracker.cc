@@ -62,7 +62,7 @@ int Tracker::handle_mprotect(Breaker& b, void* bp, bool print)
 
         if (print)
                 lvl3_print_mprotect(0, regs.rdi,
-				    regs.rsi, it->mapped_protections);
+                                    regs.rsi, it->mapped_protections);
 
         long tmp = reinterpret_cast<long>(bp) - it->mapped_begin;
         regs.rsi -= tmp;
@@ -79,7 +79,7 @@ int Tracker::handle_mprotect(Breaker& b, void* bp, bool print)
 
         if (print)
                 lvl3_print_mprotect(1, regs.rdi,
-				    regs.rsi, it->mapped_protections);
+                                    regs.rsi, it->mapped_protections);
 
         return retval;
 }
@@ -115,7 +115,7 @@ int Tracker::handle_mremap(Breaker& b, void* bp, bool print)
 
         if (print)
                 lvl3_print_mremap(0, regs.rdi,
-				  regs.rsi, it->mapped_protections);
+                                  regs.rsi, it->mapped_protections);
 
         if ((unsigned long)retval != it->mapped_begin)
         {
@@ -160,7 +160,7 @@ int Tracker::handle_mremap(Breaker& b, void* bp, bool print)
         }
         if (print)
                 lvl3_print_mremap(1, retval,
-				  regs.rdx, it->mapped_protections);
+                                  regs.rdx, it->mapped_protections);
         mapped_areas.sort(compare_address);
         return retval;
 }
@@ -316,9 +316,9 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
 
 
         mapped_areas.sort(compare_address);
-	nb_of_allocs++;
+        nb_of_allocs++;
 
-	return retval;
+        return retval;
 
 }
 
@@ -350,7 +350,7 @@ int Tracker::custom_free(Breaker& b, void* bp, bool print)
 
         mapped_areas.erase(it);
 
-	nb_of_frees++;
+        nb_of_frees++;
         return 0;
 }
 
@@ -389,7 +389,7 @@ int Tracker::custom_realloc(Breaker& b, void* bp, bool print)
         else
                 it->mapped_length = rcx;
 
-	nb_of_allocs++;
+        nb_of_allocs++;
 
         mapped_areas.sort(compare_address);
         return 0;

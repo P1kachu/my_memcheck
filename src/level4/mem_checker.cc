@@ -14,11 +14,11 @@ static int mem_checker(std::string name, pid_t pid)
         b.add_breakpoint(MAIN_CHILD, b.rr_brk);
 
 
-	fprintf(OUT, "[%d] LSE RECRUITMENT 2016 - EPITA\n", pid);
-	fprintf(OUT, "[%d] P1kachu 2015 - my_memcheck %s\n", pid, VERSION);
-	fprintf(OUT, "[%d] Command: %s\n", pid, name.c_str());
-	PID(pid);
-	PID(pid);
+        fprintf(OUT, "[%d] LSE RECRUITMENT 2016 - EPITA\n", pid);
+        fprintf(OUT, "[%d] P1kachu 2015 - my_memcheck %s\n", pid, VERSION);
+        fprintf(OUT, "[%d] Command: %s\n", pid, name.c_str());
+        PID(pid);
+        PID(pid);
 
         while (1)
         {
@@ -43,13 +43,13 @@ static int mem_checker(std::string name, pid_t pid)
                                 + GREEN, pid, NONE, status, (void*)bp, RED,
                                 strsignal(WSTOPSIG(status)), NONE);
 
-		if (status == 1151)
-		{
-			fprintf(OUT,
-				"[%d] %sIllegal instruction%s - killing child.\n",
-			        pid, PRED, NONE);
-			break;
-		}
+                if (status == 1151)
+                {
+                        fprintf(OUT,
+                                "[%d] %sIllegal instruction%s - killing child.\n",
+                                pid, PRED, NONE);
+                        break;
+                }
 
                 // Segfault
                 if (WIFSTOPPED(status) && WSTOPSIG(status) == SIGSEGV)
@@ -59,16 +59,16 @@ static int mem_checker(std::string name, pid_t pid)
                 }
                 try
                 {
-			if (!addr)
+                        if (!addr)
                                 break;
 
                         if (!b.is_from_us(bp))
-			{
-				ptrace(PTRACE_GETREGS, pid, &regs, &regs);
-				regs.XIP++;
-				ptrace(PTRACE_SETREGS, pid, &regs, &regs);
+                        {
+                                ptrace(PTRACE_GETREGS, pid, &regs, &regs);
+                                regs.XIP++;
+                                ptrace(PTRACE_SETREGS, pid, &regs, &regs);
                                 continue;
-			}
+                        }
                         long syscall = NO_SYSCALL;
 
                         if (bp != b.rr_brk)
