@@ -30,14 +30,25 @@ Level4 - Memory checker:
        #include Level{1...3}
        Remove memory access
        Handle segfaults from that
-       display memory leaks and invalid accesses
+       display memory leaks and invalid accesses from mmap
+       display memory leaks from malloc
 
 
-I may retry this project when I have time so that I can do it proprely,
-with good functions factorisations, cleaner code, and more special
-cases handling.
-Also, I don't like having some code that I don't totally handle myself
-and that is not maintainable.
+
+What works:
+     Catch, print, and run child's syscall
+     Maintain a map of every allocated memory from the child,
+     from mmap and malloc
+     Syscalls from loaded libraries too
+     Display memory leaks from mmap and malloc (tells if on the heap or not)
+     Display invalid accesses from mmap (RW) only
+     Handles segfaults too, skip them and continue
+
+What doesn't:
+     Catch access to memory allocated on heap. Addresses are completely
+     different from the ones expected. So they are all marked as invalid
+     when accessed
+
 
 Details:
 XIP, XAX, and other variables like this were an attempt at preparing for a

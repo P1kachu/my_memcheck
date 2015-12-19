@@ -47,21 +47,14 @@ int main()
 
 	mapped = mapped;
 
-	mapped[1] = 5;
-	mapped[0x9f] = 5;
-	printf("Hello %p\n", (void*)mapped);
-	mapped[0x100] = 5;
-	mapped[0x101] = 5;
-	mapped[0x102] = 5;
-
-	mapped[0x80] = 5;
+	mapped[0x80] = mapped[0x100];
+	mapped[0x100] = mapped[0x80];
 
 
-	int i = mapped[0];
-        i = mapped[80];
-        i = mapped[100];
-	i = i;
-	munmap(mapped, 0x80);
+	munmap(mapped, 0x100);
+
+//	free(t);
+
 //*/
 /*
 	char *t = (char*)calloc(1, 0x1000);
