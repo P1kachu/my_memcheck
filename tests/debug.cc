@@ -50,10 +50,20 @@ int main()
 	mapped[0x80] = mapped[0x100];
 	mapped[0x100] = mapped[0x80];
 
+	void* t = malloc(90);
 
-	munmap(mapped, 0x20);
 
-//	free(t);
+	free(t);
+
+	t = malloc(1);
+
+	t = realloc(t, 0x180);
+
+	t = calloc(1, 0x100);
+
+	munmap(mapped, 0x100);
+
+	free(t);
 
 //*/
 /*

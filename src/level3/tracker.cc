@@ -316,7 +316,10 @@ int Tracker::custom_alloc(int prefix, Breaker& b, void* bp, bool print)
 
 
         mapped_areas.sort(compare_address);
-        return retval;
+	nb_of_allocs++;
+
+	return retval;
+
 }
 
 int Tracker::custom_free(Breaker& b, void* bp, bool print)
@@ -347,6 +350,7 @@ int Tracker::custom_free(Breaker& b, void* bp, bool print)
 
         mapped_areas.erase(it);
 
+	nb_of_frees++;
         return 0;
 }
 
@@ -384,6 +388,8 @@ int Tracker::custom_realloc(Breaker& b, void* bp, bool print)
         }
         else
                 it->mapped_length = rcx;
+
+	nb_of_allocs++;
 
         mapped_areas.sort(compare_address);
         return 0;
