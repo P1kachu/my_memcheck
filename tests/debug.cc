@@ -40,7 +40,9 @@ int main()
 
 	int fd = open("WHATEVER", O_RDWR|O_CREAT, 0666);
 
-	char *mapped = (char*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
+	char *mapped = (char*)mmap(NULL,0x100,PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
+	short *mapped2 = (short*)mmap(NULL,0x100,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
+	int *mapped3 = (int*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);	long *mapped4 = (long*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
 
 
 	print_errno(stdout);
@@ -49,9 +51,14 @@ int main()
 
 	mapped[0x80] = mapped[0x100];
 	mapped[0x100] = mapped[0x80];
+	mapped2[0x80] = mapped2[0x100];
+	mapped2[0x100] = mapped2[0x80];
+	mapped3[0x80] = mapped3[0x100];
+	mapped3[0x100] = mapped3[0x80];
+	mapped4[0x80] = mapped4[0x100];
+	mapped4[0x100] = mapped4[0x80];
 
 	void* t = malloc(90);
-
 
 	free(t);
 
@@ -62,8 +69,10 @@ int main()
 	t = calloc(1, 0x100);
 
 	munmap(mapped, 0x100);
+	munmap(mapped2, 0x80);
 
 	free(t);
+
 
 //*/
 /*

@@ -1,24 +1,24 @@
 #include "level4.hh"
 
-static inline void invalid_memory_access(void* fault, pid_t pid)
+static inline void invalid_memory_access(void* fault, pid_t pid, int size)
 {
         fprintf(OUT,
-		"[%d] %sInvalid memory access%s of size X at address: %p\n",
-		pid, PRED, NONE, fault);
+		"[%d] %sInvalid memory access%s of size %d at address: %p\n",
+		pid, PRED, NONE, size, fault);
 }
 
-static inline void invalid_memory_write(void* fault, pid_t pid)
+static inline void invalid_memory_write(void* fault, pid_t pid, int size)
 {
         fprintf(OUT,
-		"[%d] %sInvalid memory write%s of size X at address: %p\n",
-		pid, PRED, NONE, fault);
+		"[%d] %sInvalid memory write%s of size %d at address: %p\n",
+		pid, PRED, NONE, size, fault);
 }
 
-static inline void invalid_memory_read(void* fault, pid_t pid)
+static inline void invalid_memory_read(void* fault, pid_t pid, int size)
 {
         fprintf(OUT,
-		"[%d] %sInvalid memory read%s of size X at address: %p\n",
-		pid, PRED, NONE, fault);
+		"[%d] %sInvalid memory read%s of size %d at address: %p\n",
+		pid, PRED, NONE, size, fault);
 }
 
 static inline void invalid_free_aux(void* fault, pid_t pid, void* pointer)
@@ -45,6 +45,21 @@ static bool is_valid(void* fault, Tracker& t, int si_code)
         return true;
 }
 
+static int get_size(char* instru)
+{
+	std::string s(instru);
+	if (s.find("qword") != std::string::npos)
+		return sizeof(long);
+	else if(s.find("dword") != std::string::npos)
+		return sizeof(int);
+	else if(s.find("word") != std::string::npos)
+		return sizeof(short);
+	else if (s.find("byte") != std::string::npos)
+		return sizeof(char);
+
+	return 0;
+}
+
 static int get_instruction(pid_t pid,
 			   unsigned long xip,
 			   unsigned long long  opcodes,
@@ -65,7 +80,7 @@ static int get_instruction(pid_t pid,
         if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK)
                 return -(printf("CS_OPEN BUG\n"));
 
-	cs_option(handle, CS_OPT_SYNTAX, CS_OPT_SYNTAX_ATT);
+//	cs_option(handle, CS_OPT_SYNTAX, CS_OPT_SYNTAX_ATT);
 	cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
 	count = cs_disasm(handle, buffer, 16, xip, 0, &insn);
@@ -75,29 +90,29 @@ static int get_instruction(pid_t pid,
                 if (print)
 		{
 
+			int size = get_size(insn[0].op_str);
 			if (!segfault)
 			{
 				int write = insn[0].detail->regs_write_count;
 				int read = insn[0].detail->regs_read_count;
-
 				// Read and write
-				if ((write && read) || !(write || read))
-					invalid_memory_access(fault, pid);
+				if ((write && read) || (!write && !read))
+					invalid_memory_access(fault, pid, size);
 
 				// Invalid read
 				else if (read)
-					invalid_memory_read(fault, pid);
+					invalid_memory_read(fault, pid, size);
 
 				// Invalid write
 				else
-					invalid_memory_write(fault, pid);
+					invalid_memory_write(fault, pid, size);
 			}
 			else
-				invalid_memory_access(fault, pid);
+				invalid_memory_access(fault, pid, size);
 
-			printf("[%d] 0x%lx: ", pid, xip);
+			printf("[%d] 0x%lx:\t", pid, xip);
 
-			for (int i = 0; i < insn[0].size; ++i)
+			for (int i = 0; i < 8; ++i)
 				printf("%02x ", buffer[i]);
 
 			printf("\t%s %s\033[0m\n",
