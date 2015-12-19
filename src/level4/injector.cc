@@ -6,6 +6,11 @@ int remove_page_protection(pid_t pid, Tracker& t)
                 set_page_protection(it->mapped_begin, it->mapped_length,
                                     PROT_EXEC * it->executable_bit, pid);
 
+	unsigned long begin_brk = reinterpret_cast<unsigned long>(t.origin_program_break);
+	unsigned long end_brk = reinterpret_cast<unsigned long>(t.actual_program_break);
+
+	set_page_protection(begin_brk, end_brk - begin_brk, PROT_NONE, pid);
+
         return 0;
 }
 
@@ -14,6 +19,12 @@ int reset_page_protection(pid_t pid, Tracker& t)
         for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
                 set_page_protection(it->mapped_begin, it->mapped_length,
                                     it->mapped_protections, pid);
+
+	unsigned long begin_brk = reinterpret_cast<unsigned long>(t.origin_program_break);
+	unsigned long end_brk = reinterpret_cast<unsigned long>(t.actual_program_break);
+
+
+	set_page_protection(begin_brk, end_brk - begin_brk, PROT_READ | PROT_WRITE, pid);
         return 0;
 }
 
