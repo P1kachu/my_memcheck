@@ -1,6 +1,11 @@
 =================================================================================
                    LSE RECRUITEMENT 2016 - MY MEMCHECK
 =================================================================================
+
+Goal: Reimplement a memory checker, A.K.A look for invalid (out of bounds) memory
+      accesses, and memory leaks
+
+
 Level1 - Strace:
        src/level1
        Use of ptrace to track system calls from a traced program
@@ -38,25 +43,27 @@ Level4 - Memory checker:
 
 
 What works:
-     Catch, print, and run child's syscall
-     Maintain a map of every allocated memory from the child,
-     from mmap and malloc
-     Syscalls from loaded libraries too
-     Display memory leaks from mmap and malloc (tells if on the heap or not)
-     Display invalid accesses from mmap (RW) only
-     Handles segfaults too, skip them and continue
-     Get instructions sizes (access)
+     * Catch, print, and run child's syscall
+     * Maintain a map of every allocated memory from the child,
+       from mmap and malloc
+     * Syscalls from loaded libraries too
+     * Display memory leaks from mmap and malloc (tells if on the heap or not)
+     * Display invalid accesses from mmap (RW) only
+     * Handles segfaults too, skip them and continue
+     * Get instructions sizes (access)
 
 
 What doesn't:
-     Catch access to memory allocated on heap. Addresses are completely
-     different from the ones expected. So they are all marked as invalid
-     when accessed
-     Differentiates reads from writes 100% of the time
-     Handle invalid free
+     * Catch access to memory allocated on heap. Addresses are completely
+       different from the ones expected. So they are all marked as invalid
+       when accessed. However, tracking leaks from the heap works fine
+     * Differentiates reads from writes 100% of the time
+     * Handle invalid free
 
 
-Details:
+
+NOTES:
+
 XIP, XAX, and other variables like this were an attempt at preparing for a
 *possible* multi-arch compliant program. They translate to rip or eip (in the
 case of XIP for example) regarding the machine.
