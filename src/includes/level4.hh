@@ -12,4 +12,5 @@ int handle_injected_syscall(int syscall, Breaker& b, void* bp, Tracker& t);
 
 int sanity_customs(pid_t pid, Tracker& t, int handler);
 int display_memory_leaks(Tracker& t);
+int invalid_free(pid_t pid, void* pointer, Tracker& t);
 #endif /* LEVEL4_HH */

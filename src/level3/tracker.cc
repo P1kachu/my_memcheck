@@ -323,7 +323,6 @@ int Tracker::custom_free(Breaker& b, void* bp, bool print)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-
 #if LEVEL == 4
         b.handle_bp(bp, false, *this);
 #else
@@ -338,8 +337,8 @@ int Tracker::custom_free(Breaker& b, void* bp, bool print)
 
         if (it == mapped_areas.end() || it->mapped_protections != MALLOC_CHILD)
         {
-                // TODO : Invalid free
-                return -1;
+                invalid_free(pid, (void*)rbx, *this);
+                return 0;
         }
 
         if (print)

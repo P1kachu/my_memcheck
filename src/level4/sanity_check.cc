@@ -2,7 +2,16 @@
 
 static inline void invalid_memory_access(void* fault, pid_t pid)
 {
-        fprintf(OUT, "[%d] %sInvalid memory access%s of size X at address: %p\n", pid, PRED, NONE, fault);
+        fprintf(OUT,
+		"[%d] %sInvalid memory access%s of size X at address: %p\n",
+		pid, PRED, NONE, fault);
+}
+
+static inline void invalid_free_aux(void* fault, pid_t pid, void* pointer)
+{
+        fprintf(OUT,
+		"[%d] %sInvalid free%s of pointer %p at address: %p\n",
+		pid, PRED, NONE, pointer, fault);
 }
 
 static bool is_valid(void* fault, Tracker& t, int si_code)
@@ -64,11 +73,31 @@ static int get_instruction(pid_t pid, unsigned long xip, unsigned long long  opc
 
 }
 
+int invalid_free(pid_t pid, void* pointer, Tracker& t)
+{
+        struct user_regs_struct regs;
+        ptrace(PTRACE_GETREGS, pid, &regs, &regs);
+        unsigned long long instruction_p = ptrace(PTRACE_PEEKDATA,
+						  pid, regs.XIP,
+						  sizeof (unsigned long long));
+        siginfo_t infos;
+        ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
+
+        void* fault = infos.si_addr;
+	invalid_free_aux(fault, pid, pointer);
+	get_instruction(pid, regs.XIP, instruction_p, true);
+	display_memory_leaks(t);
+	exit(-1);
+
+}
+
 int sanity_customs(pid_t pid, Tracker& t, int handler)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, &regs, &regs);
-        unsigned long long instruction_p = ptrace(PTRACE_PEEKDATA, pid, regs.XIP, sizeof (unsigned long long));
+        unsigned long long instruction_p = ptrace(PTRACE_PEEKDATA,
+						  pid, regs.XIP,
+						  sizeof (unsigned long long));
         siginfo_t infos;
         ptrace(PTRACE_GETSIGINFO, pid, 0, &infos);
 
