@@ -52,6 +52,7 @@
 # define SYSCALL_ERROR             -2
 # define NO_SYSCALL                -1
 # define BONUS                     1
+# define VERSION                   "v1.0"
 # define MMAP_SYSCALL              9
 # define MPROTECT_SYSCALL          10
 # define MUNMAP_SYSCALL            11

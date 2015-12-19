@@ -40,9 +40,13 @@ int main()
 
 	int fd = open("WHATEVER", O_RDWR|O_CREAT, 0666);
 
-	char *mapped = (char*)mmap(NULL,0x100,PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
-	short *mapped2 = (short*)mmap(NULL,0x100,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
-	int *mapped3 = (int*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);	long *mapped4 = (long*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
+	char *mapped =
+		(char*)mmap(NULL,0x100,PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
+	short *mapped2 =
+		(short*)mmap(NULL,0x100,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
+	int *mapped3 =
+		(int*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
+	long *mapped4 =													(long*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
 
 
 	print_errno(stdout);

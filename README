@@ -43,6 +43,8 @@ What works:
      Display memory leaks from mmap and malloc (tells if on the heap or not)
      Display invalid accesses from mmap (RW) only
      Handles segfaults too, skip them and continue
+     Get instructions sizes (access)
+
 
 What doesn't:
      Catch access to memory allocated on heap. Addresses are completely
