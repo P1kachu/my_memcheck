@@ -1,13 +1,5 @@
 #include "level1.hh"
 
-// FIXME: Bonus maybe ?
-typedef struct threading
-{
-        int argc;
-        char **argv;
-        pid_t pid;
-} s_threading;
-
 int main(int argc, char** argv)
 {
         if (argc < 2)

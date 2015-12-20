@@ -226,8 +226,8 @@ public:
         std::list<Mapped> mapped_areas;
         std::string       name;
         pid_t             pid;
-        void*            actual_program_break;
-        void*            origin_program_break;
+        void*           actual_program_break;
+        void*           origin_program_break;
         int               id_inc; // For debugging purposes
         int               nb_of_frees;
         int               nb_of_allocs;
