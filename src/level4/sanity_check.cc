@@ -203,9 +203,12 @@ int display_memory_leaks(Tracker& t)
         unsigned long long leak_sum = 0;
         int heap = 0;
         int blocks = 0;
+	int length = 0;
 
         for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
         {
+		int n = snprintf(nullptr, 0, "%ld", it->mapped_length);
+		length = n > length ? n : length;
                 blocks++;
                 if (it->mapped_protections == MALLOC_CHILD)
                 {
@@ -215,6 +218,7 @@ int display_memory_leaks(Tracker& t)
                 leak_sum += it->mapped_length;
 
         }
+
         PID(t.pid);
         fprintf(OUT, "[%d] Heap leaks: %lld byte(s) in %d block(s)\n",
                 t.pid, heap_sum, heap);
@@ -239,8 +243,10 @@ int display_memory_leaks(Tracker& t)
                 fprintf(OUT, "[%d] \tEach allocated byte was freed, memory clean\n", t.pid);
                 return 0;
         }
+
         for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
-                        fprintf(OUT, "[%d] \t* 0x%lx\t bytes at 0x%lx\n",
-                                t.pid, it->mapped_length, it->mapped_begin);
+		fprintf(OUT, "[%d] \t* %*.ld bytes -  0x%lx\n",
+			t.pid, length, it->mapped_length, it->mapped_begin);
+
         return leak_sum;
 }
