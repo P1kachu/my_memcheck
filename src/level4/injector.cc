@@ -37,8 +37,8 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 
         ptrace(PTRACE_GETREGS, pid, &regs, &regs);
         bckp = regs;
-        regs.rdi = addr;
-        regs.rsi = len;
+        regs.rdi = addr - addr % PAGE_SIZE;
+        regs.rsi = len + len % PAGE_SIZE;
         regs.rdx = prot;
         regs.rax = MPROTECT_SYSCALL;
         overriden = ptrace(PTRACE_PEEKDATA, pid, regs.rip, sizeof (unsigned long));
