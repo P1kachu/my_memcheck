@@ -54,13 +54,7 @@ static bool is_valid(void* fault, Tracker& t, int si_code)
 
         auto it = t.get_mapped(reinterpret_cast<unsigned long> (fault));
         if (it == t.mapped_areas.end())
-        {
-//                int ret = fault < t.actual_program_break && fault >= t.origin_program_break;
-//		printf("\n");
-//                if (!ret)
 			return false;
-        }
-//	printf("\n");
         return true;
 }
 
