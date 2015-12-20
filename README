@@ -38,7 +38,7 @@ Level4 - Memory checker:
        Remove memory access
        Handle segfaults from that
        display memory leaks and invalid accesses from mmap
-       display memory leaks from malloc
+       display memory leaks and invalid accesses now from malloc
 
 
 
@@ -48,17 +48,14 @@ What works:
        from mmap and malloc
      * Syscalls from loaded libraries too
      * Display memory leaks from mmap and malloc (tells if on the heap or not)
-     * Display invalid accesses from mmap (RW) only
+     * Display invalid accesses from mmap and now malloc (RW)
      * Handles segfaults too, skip them and continue
      * Get instructions sizes (access)
 
 
 What doesn't:
-     * Catch access to memory allocated on heap. Addresses are completely
-       different from the ones expected. So they are all marked as invalid
-       when accessed. However, tracking leaks from the heap works fine
      * Differentiates reads from writes 100% of the time
-     * Handle invalid free
+     * Handle invalid frees
 
 
 
