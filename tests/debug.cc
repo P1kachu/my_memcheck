@@ -46,7 +46,8 @@ int main()
 		(short*)mmap(NULL,0x100,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
 	int *mapped3 =
 		(int*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
-	long *mapped4 =													(long*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
+	long *mapped4 =
+		(long*)mmap(NULL, 0x100, PROT_READ | PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, fd, 0);
 
 
 	print_errno(stdout);
