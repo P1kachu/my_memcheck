@@ -161,7 +161,7 @@ long Breaker::exec_breakpoint(std::string r, void* addr, bool p, Tracker& t)
         regs.XIP -= 1;
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
-        p ? print_retval(pid, regs.XAX) : p = p;
+        p ? print_syscall(pid, regs.XAX) : p = p;
 
         // Run instruction
         remove_breakpoint(r, addr);
@@ -193,7 +193,7 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 
         struct user_regs_struct regs;
 
-        if ((it->second.find(addr)->second & 0xFF) == TRAP_INST)
+        if (0 && (it->second.find(addr)->second & 0xFF) == TRAP_INST)
         {
                 ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
                 waitpid(pid, 0, 0);
@@ -205,7 +205,7 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
         regs.XIP -= 1;
         ptrace(PTRACE_SETREGS, pid, 0, &regs);
 
-        print ? print_retval(pid, regs.XAX) : print = print;
+        print ? print_syscall(pid, regs.XAX) : print = print;
 
         // Run instruction
         remove_breakpoint(region, addr);

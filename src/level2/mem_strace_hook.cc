@@ -33,12 +33,6 @@ static int mem_hook(std::string name, pid_t pid)
 
                 try
                 {
-			errno = 0;
-			long syscall = get_orig_xax(pid);
-			print_errno();
-
-			print_syscall(pid, syscall);
-
                         if (b.is_from_us(bp))
                                 b.handle_bp(bp, true);
 

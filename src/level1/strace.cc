@@ -86,7 +86,6 @@ int trace_child(pid_t child)
                 if (wait_for_syscall(child))
                         break;
 
-
                 // Retrieve data from $rax
                 long syscall = get_orig_xax(child);
 		if (syscall < 0)
