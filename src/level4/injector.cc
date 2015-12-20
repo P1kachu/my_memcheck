@@ -6,10 +6,10 @@ int remove_page_protection(pid_t pid, Tracker& t)
                 set_page_protection(it->mapped_begin, it->mapped_length,
                                     PROT_EXEC * it->executable_bit, pid);
 
-        unsigned long begin_brk = reinterpret_cast<unsigned long>(t.origin_program_break);
-        unsigned long end_brk = reinterpret_cast<unsigned long>(t.actual_program_break);
+	unsigned long begin_brk = reinterpret_cast<unsigned long>(t.origin_program_break);
+	unsigned long end_brk = reinterpret_cast<unsigned long>(t.actual_program_break);
 
-        set_page_protection(begin_brk, end_brk - begin_brk, PROT_NONE, pid);
+	set_page_protection(begin_brk, end_brk - begin_brk, PROT_NONE, pid);
 
         return 0;
 }
@@ -34,7 +34,6 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
         struct user_regs_struct bckp;
         int status = 0;
         unsigned long overriden = 0;
-
 	// Backup
         ptrace(PTRACE_GETREGS, pid, &regs, &regs);
         bckp = regs;
@@ -52,7 +51,6 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
         waitpid(pid, &status, 0);
 
-	// Reset registers
         ptrace(PTRACE_SETREGS, pid, &bckp, &bckp);
         ptrace(PTRACE_POKEDATA, pid, bckp.rip, overriden);
         return 0;

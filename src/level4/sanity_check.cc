@@ -16,15 +16,14 @@ static inline void invalid_memory_access(void* fault, pid_t pid, int size)
 
 static inline void invalid_memory_write(void* fault, pid_t pid, int size)
 {
-        if (size)
-                fprintf(OUT,
-                        "[%d] %sInvalid memory write%s of size %d at address %p\n",
-                        pid, PRED, NONE, size, fault);
-        else
-                fprintf(OUT,
-                        "[%d] %sInvalid memory write%s of unkown size at address %p\n",
-                        pid, PRED, NONE, fault);
-
+	if (size)
+		fprintf(OUT,
+			"[%d] %sInvalid memory write%s of size %d at address %p\n",
+			pid, PRED, NONE, size, fault);
+	else
+		fprintf(OUT,
+			"[%d] %sInvalid memory write%s of unkown size at address %p\n",
+			pid, PRED, NONE, fault);
 }
 
 static inline void invalid_memory_read(void* fault, pid_t pid, int size)
@@ -109,20 +108,20 @@ static int get_instruction(pid_t pid,
 			** to catch access sizes
 			**/
 
-                        int write = insn[0].detail->regs_write_count;
-                        int read = insn[0].detail->regs_read_count;
+			int write = insn[0].detail->regs_write_count;
+			int read = insn[0].detail->regs_read_count;
 
 			// Read and write, or none (stewpid)
-                        if (/* (write && read) || */ (!write && !read))
-                                invalid_memory_access(fault, pid, size);
+			if (/*(write && read) ||*/ (!write && !read))
+				invalid_memory_access(fault, pid, size);
 
 			// Invalid read
-                        else if (read)
-                                invalid_memory_read(fault, pid, size);
+			else if (read)
+				invalid_memory_read(fault, pid, size);
 
 			// Invalid write
-                        else
-                                invalid_memory_write(fault, pid, size);
+			else
+				invalid_memory_write(fault, pid, size);
 
                         printf("[%d] \t0x%012lx:  ", pid, xip);
 
@@ -200,53 +199,53 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 int display_memory_leaks(Tracker& t)
 {
         unsigned long long heap_sum = 0;
-        unsigned long long leak_sum = 0;
-        int heap = 0;
-        int blocks = 0;
-        int length = 0;
+	unsigned long long leak_sum = 0;
+	int heap = 0;
+	int blocks = 0;
+	int length = 0;
 
-        for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
-        {
-                int n = snprintf(nullptr, 0, "%ld", it->mapped_length);
-                length = n > length ? n : length;
-                blocks++;
-                if (it->mapped_protections == MALLOC_CHILD)
-                {
-                        heap_sum += it->mapped_length;
+	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
+	{
+		int n = snprintf(nullptr, 0, "%ld", it->mapped_length);
+		length = n > length ? n : length;
+		blocks++;
+		if (it->mapped_protections == MALLOC_CHILD)
+		{
+			heap_sum += it->mapped_length;
 			++heap;
-                }
-                leak_sum += it->mapped_length;
+		}
+		leak_sum += it->mapped_length;
 
-        }
+	}
 
-        PID(t.pid);
-        fprintf(OUT, "[%d] Heap leaks: %lld byte(s) in %d block(s)\n",
-                t.pid, heap_sum, heap);
+	PID(t.pid);
+	fprintf(OUT, "[%d] Heap leaks: %lld byte(s) in %d block(s)\n",
+		t.pid, heap_sum, heap);
 
-        if (heap_sum)
-        {
-                fprintf(OUT, "[%d] \tTotal heap usage: %d alloc(s), %d free(s).\n",
-                        t.pid, t.nb_of_allocs, t.nb_of_frees);
+	if (heap_sum)
+	{
+		fprintf(OUT, "[%d] \tTotal heap usage: %d alloc(s), %d free(s).\n",
+			t.pid, t.nb_of_allocs, t.nb_of_frees);
 
-                PID(t.pid);
+		PID(t.pid);
 
-                fprintf(OUT,
-                        "[%d] Memory leaks: %s0x%llx%s (%lld) byte(s) not freed at exit (%d block(s))\n",
-                        t.pid, leak_sum ? RED : GREEN, leak_sum, NONE, leak_sum, blocks);
-        }
-        else
-                fprintf(OUT, "[%d] \tEach allocated byte on heap was freed, memory clean\n",
-                        t.pid);
+		fprintf(OUT,
+			"[%d] Memory leaks: %s0x%llx%s (%lld) byte(s) not freed at exit (%d block(s))\n",
+			t.pid, leak_sum ? RED : GREEN, leak_sum, NONE, leak_sum, blocks);
+	}
+	else
+		fprintf(OUT, "[%d] \tEach allocated byte on heap was freed, memory clean\n",
+			t.pid);
 
-        if (!leak_sum)
-        {
-                fprintf(OUT, "[%d] \tEach allocated byte was freed, memory clean\n", t.pid);
-                return 0;
-        }
+	if (!leak_sum)
+	{
+		fprintf(OUT, "[%d] \tEach allocated byte was freed, memory clean\n", t.pid);
+		return 0;
+	}
 
-        for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
-                fprintf(OUT, "[%d] \t* %*.ld bytes at 0x%lx\n", // NOMO (moulinette flag)
-                        t.pid, length, it->mapped_length, it->mapped_begin);
+	for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
+		fprintf(OUT, "[%d] \t* %*.ld bytes at 0x%lx\n", // NOMO
+			t.pid, length, it->mapped_length, it->mapped_begin);
 
-        return leak_sum;
+	return leak_sum;
 }

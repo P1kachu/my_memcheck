@@ -324,7 +324,6 @@ int Tracker::custom_free(Breaker& b, void* bp, bool print)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-
 #if LEVEL == 4
         b.handle_bp(bp, false, *this);
 #else
@@ -383,7 +382,7 @@ int Tracker::custom_realloc(Breaker& b, void* bp, bool print)
         if (rbx != rcx)
         {
                 mapped_areas.erase(it);
-                mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
+		mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
         }
         else
                 it->mapped_length = rcx;

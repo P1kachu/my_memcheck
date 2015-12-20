@@ -7,7 +7,7 @@
 // Play with pages PROT_* flags, to break everything \o/
 int remove_page_protection(pid_t pid, Tracker& t);
 int set_page_protection(unsigned long addr, size_t len,
-                        unsigned long prot, pid_t pid);
+			unsigned long prot, pid_t pid);
 int reset_page_protection(pid_t pid, Tracker& t);
 
 // Catch segfaults and breakpoints, then call previous levels

@@ -149,8 +149,7 @@ long Breaker::exec_breakpoint(std::string r, void* addr, bool p, Tracker& t)
         struct user_regs_struct regs;
         if ((it->second.find(addr)->second & 0xFF) == TRAP_INST)
         {
-                sanity_customs(pid, t, 0);
-
+		sanity_customs(pid, t, 0);
                 ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
                 waitpid(pid, 0, 0);
 

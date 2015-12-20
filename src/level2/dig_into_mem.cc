@@ -105,7 +105,7 @@ void* get_phdr(unsigned long& phent, unsigned long& phnum, pid_t pid_child)
         auto file = ss.str();
         int fd = open(file.c_str(), std::ios::binary);
 
-        ElfW(auxv_t) auxv_;
+	ElfW(auxv_t) auxv_;
 
         void* at_phdr = NULL;
 
@@ -146,7 +146,7 @@ void* get_link_map(void* rr_debug, pid_t pid, int* status)
         struct link_map* link_map = tmp->r_map;
 
         tmp = (struct r_debug*)buffer;
-       * status = tmp->r_state;
+        *status = tmp->r_state;
         return link_map;
 }
 
