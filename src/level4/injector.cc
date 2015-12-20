@@ -35,8 +35,11 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
         int status = 0;
         unsigned long overriden = 0;
 
+	// Backup
         ptrace(PTRACE_GETREGS, pid, &regs, &regs);
         bckp = regs;
+
+	// Set new registers for mprotect
         regs.rdi = addr - addr % PAGE_SIZE;
         regs.rsi = len + len % PAGE_SIZE;
         regs.rdx = prot;
@@ -45,11 +48,11 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
         ptrace(PTRACE_POKEDATA, pid, regs.rip, SYSCALL);
         ptrace(PTRACE_SETREGS, pid, &regs, &regs);
 
-
+	// Launch syscall
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
         waitpid(pid, &status, 0);
 
-
+	// Reset registers
         ptrace(PTRACE_SETREGS, pid, &bckp, &bckp);
         ptrace(PTRACE_POKEDATA, pid, bckp.rip, overriden);
         return 0;
@@ -57,6 +60,7 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 
 int handle_injected_sigsegv(pid_t pid, Tracker& t)
 {
+	// Malloc fix
         long tmp = get_xip(pid);
         if (MALLOC_STUFF_ADDRESS > tmp)
                 sanity_customs(pid, t, 0);

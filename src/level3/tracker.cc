@@ -324,6 +324,7 @@ int Tracker::custom_free(Breaker& b, void* bp, bool print)
 {
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+
 #if LEVEL == 4
         b.handle_bp(bp, false, *this);
 #else
@@ -428,6 +429,8 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp, bool print)
 
 void Tracker::print_mapped_areas() const
 {
+	// Debug purposes
+
         printf("Origin process break %p\n", origin_program_break);
         printf("Actual process break %p\n", actual_program_break);
         for (auto it = mapped_areas.begin(); it != mapped_areas.end(); it++)

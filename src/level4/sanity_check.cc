@@ -11,7 +11,7 @@ static inline void invalid_memory_access(void* fault, pid_t pid, int size)
         else
                 fprintf(OUT,
                         "[%d] %sInvalid memory access%s of unknown size at address %p\n",
-                pid, PRED, NONE, fault);
+			pid, PRED, NONE, fault);
 }
 
 static inline void invalid_memory_write(void* fault, pid_t pid, int size)
@@ -54,7 +54,7 @@ static bool is_valid(void* fault, Tracker& t, int si_code)
 
         auto it = t.get_mapped(reinterpret_cast<unsigned long> (fault));
         if (it == t.mapped_areas.end())
-                        return false;
+		return false;
         return true;
 }
 
@@ -213,7 +213,7 @@ int display_memory_leaks(Tracker& t)
                 if (it->mapped_protections == MALLOC_CHILD)
                 {
                         heap_sum += it->mapped_length;
-                      ++heap;
+			++heap;
                 }
                 leak_sum += it->mapped_length;
 
