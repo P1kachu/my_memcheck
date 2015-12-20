@@ -193,7 +193,7 @@ long Breaker::exec_breakpoint(std::string region, void* addr, bool print)
 
         struct user_regs_struct regs;
 
-        if (0 && (it->second.find(addr)->second & 0xFF) == TRAP_INST)
+        if ((it->second.find(addr)->second & 0xFF) == TRAP_INST)
         {
                 ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
                 waitpid(pid, 0, 0);
