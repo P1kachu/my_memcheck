@@ -245,7 +245,7 @@ int display_memory_leaks(Tracker& t)
         }
 
         for (auto it = t.mapped_areas.begin(); it != t.mapped_areas.end(); it++)
-                fprintf(OUT, "[%d] \t* %* .ld bytes at 0x%lx\n",
+                fprintf(OUT, "[%d] \t* %*.ld bytes at 0x%lx\n", // NOMO (moulinette flag)
                         t.pid, length, it->mapped_length, it->mapped_begin);
 
         return leak_sum;

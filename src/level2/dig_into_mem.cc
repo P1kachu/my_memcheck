@@ -346,7 +346,7 @@ void browse_link_map(void* link_m, pid_t pid, Breaker* b)
                 remote.iov_base = map.l_next;
         } while (map.l_next);
 
-        // Add binary own syscalls
+        // Add binary's own syscalls
         std::pair<off_t, long> sections = get_sections(b->name.c_str(), * b);
         if (sections.second)
                 disass(MAIN_CHILD,
