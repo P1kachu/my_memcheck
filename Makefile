@@ -117,17 +117,14 @@ check:  distclean libhooks debug multi
 
 clean:
 	./utils/repo_cleaner.sh
-	$(RM) $(OBJS_1)
-	$(RM) $(OBJS_2)
-	$(RM) $(OBJS_3)
-	$(RM) $(OBJS_4)
 
 distclean: clean
 	$(RM) debug
 	$(RM) $(EXEC_1)
 	$(RM) $(EXEC_2)
 	$(RM) $(EXEC_3)
-	$(RM) $(libhooks)
 	$(RM) $(EXEC_4)
+	$(RM) libhooks
+	$(RM) WHATEVER
 
 .PHONY: multi all clean bonus libhook debug distclean
