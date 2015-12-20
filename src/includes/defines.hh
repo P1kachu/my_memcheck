@@ -71,7 +71,7 @@
 # define SYSCALL                   0x050f
 # define SEGFAULT                  0xc0ca
 # define MALLOC_CHILD              0xdeadbeef
-
+# define MALLOC_STUFF_ADDRESS      0x700000000000
 # if defined(__i386)
 
 #  define INSTR_REG   EIP
@@ -107,8 +107,9 @@
 
 # define get_orig_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * O_XAX) }
 # define get_xax(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * P_XAX) }
+# define get_xip(pid) { ptrace(PTRACE_PEEKUSER, pid, sizeof (long) * INSTR_REG) }
 # define void_of(number) { reinterpret_cast<void*>(number) }
-# define ANCHOR(x) fprintf(OUT, "\033[3%d;1mANCHOR #%d\033[0m\n", x % 7, x)
+# define ANCHOR(x) fprintf(OUT, "\033[3%d;1mANCHOR #%lx\033[0m\n", x % 7, (unsigned long)x)
 # define PID(pid) fprintf(OUT, "[%d]\n", pid)
 
 /* Thank you circular dependencies... */

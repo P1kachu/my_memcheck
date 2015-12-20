@@ -57,8 +57,11 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 
 int handle_injected_sigsegv(pid_t pid, Tracker& t)
 {
-        sanity_customs(pid, t, 0);
-        reset_page_protection(pid, t);
+	long tmp = get_xip(pid);
+	if (MALLOC_STUFF_ADDRESS > tmp)
+		sanity_customs(pid, t, 0);
+
+	reset_page_protection(pid, t);
 
         int status = 0;
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);
@@ -73,7 +76,8 @@ int handle_injected_sigsegv(pid_t pid, Tracker& t)
 
 int handle_injected_syscall(int syscall, Breaker& b, void* bp, Tracker& t)
 {
-        bool print = true;
+	ANCHOR(syscall);
+        bool print = false;
         reset_page_protection(b.pid, t);
         t.handle_syscall(syscall, b, bp, print);
         remove_page_protection(b.pid, t);

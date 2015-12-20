@@ -55,11 +55,12 @@ static bool is_valid(void* fault, Tracker& t, int si_code)
         auto it = t.get_mapped(reinterpret_cast<unsigned long> (fault));
         if (it == t.mapped_areas.end())
         {
-                int ret = fault < t.actual_program_break && fault >= t.origin_program_break;
-                if (!ret)
-                        return false;
+//                int ret = fault < t.actual_program_break && fault >= t.origin_program_break;
+//		printf("\n");
+//                if (!ret)
+			return false;
         }
-//	printf("\033[32;1mOK\033[0m ");
+//	printf("\n");
         return true;
 }
 
@@ -106,32 +107,28 @@ static int get_instruction(pid_t pid,
         {
                 if (print)
                 {
-
+			UNUSED(segfault);
                         int size = get_size(insn[0].op_str);
-                        if (!segfault)
-                        {
-				 /*
-				 ** Will be Intel syntax because it's easier
-				 ** to catch access sizes
-				 **/
 
-                                int write = insn[0].detail->regs_write_count;
-                                int read = insn[0].detail->regs_read_count;
+			/*
+			** Will be Intel syntax because it's easier
+			** to catch access sizes
+			**/
 
-                                // Read and write, or none (stewpid)
-                                if ((write && read) || (!write && !read))
-                                        invalid_memory_access(fault, pid, size);
+			int write = insn[0].detail->regs_write_count;
+			int read = insn[0].detail->regs_read_count;
 
-				// Invalid read
-                                else if (read)
-                                        invalid_memory_read(fault, pid, size);
+			// Read and write, or none (stewpid)
+			if (/*(write && read) ||*/ (!write && !read))
+				invalid_memory_access(fault, pid, size);
 
-				// Invalid write
-                                else
-                                        invalid_memory_write(fault, pid, size);
-                        }
-                        else
-                                invalid_memory_access(fault, pid, size);
+			// Invalid read
+			else if (read)
+				invalid_memory_read(fault, pid, size);
+
+			// Invalid write
+			else
+				invalid_memory_write(fault, pid, size);
 
                         printf("[%d] \t0x%012lx:  ", pid, xip);
 
@@ -181,8 +178,8 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
 
         void* fault = infos.si_addr;
 
-        int status = 0;
 
+        int status = 0;
         if (handler == SEGFAULT)
         {
                 int size = get_instruction(pid, regs.XIP, instruction_p, true, true, fault);
@@ -191,7 +188,6 @@ int sanity_customs(pid_t pid, Tracker& t, int handler)
                 ptrace(PTRACE_SETREGS, pid, 0, &regs);
                 return 0;
         }
-
         if (is_valid(fault, t, infos.si_code))
                 status =  1;
 

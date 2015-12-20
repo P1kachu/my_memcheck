@@ -424,7 +424,13 @@ int Tracker::handle_syscall(int syscall, Breaker& b, void* bp, bool print)
                 case CUSTOM_SYSCALL_FREE:
                         return custom_free(b, bp, print);
         }
+
+#if LEVEL == 4
+        return b.handle_bp(bp, false, *this);
+#else
         return b.handle_bp(bp, false);
+#endif
+
 }
 
 void Tracker::print_mapped_areas() const
