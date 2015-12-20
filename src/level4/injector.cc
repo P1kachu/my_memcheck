@@ -6,10 +6,10 @@ int remove_page_protection(pid_t pid, Tracker& t)
                 set_page_protection(it->mapped_begin, it->mapped_length,
                                     PROT_EXEC * it->executable_bit, pid);
 
-	unsigned long begin_brk = reinterpret_cast<unsigned long>(t.origin_program_break);
-	unsigned long end_brk = reinterpret_cast<unsigned long>(t.actual_program_break);
+        unsigned long begin_brk = reinterpret_cast<unsigned long>(t.origin_program_break);
+        unsigned long end_brk = reinterpret_cast<unsigned long>(t.actual_program_break);
 
-	set_page_protection(begin_brk, end_brk - begin_brk, PROT_NONE, pid);
+        set_page_protection(begin_brk, end_brk - begin_brk, PROT_NONE, pid);
 
         return 0;
 }
@@ -20,11 +20,11 @@ int reset_page_protection(pid_t pid, Tracker& t)
                 set_page_protection(it->mapped_begin, it->mapped_length,
                                     it->mapped_protections, pid);
 
-	unsigned long begin_brk = reinterpret_cast<unsigned long>(t.origin_program_break);
-	unsigned long end_brk = reinterpret_cast<unsigned long>(t.actual_program_break);
+        unsigned long begin_brk = reinterpret_cast<unsigned long>(t.origin_program_break);
+        unsigned long end_brk = reinterpret_cast<unsigned long>(t.actual_program_break);
 
 
-	set_page_protection(begin_brk, end_brk - begin_brk, PROT_READ | PROT_WRITE, pid);
+        set_page_protection(begin_brk, end_brk - begin_brk, PROT_READ | PROT_WRITE, pid);
         return 0;
 }
 
@@ -57,11 +57,11 @@ int set_page_protection(unsigned long addr, size_t len, unsigned long prot, pid_
 
 int handle_injected_sigsegv(pid_t pid, Tracker& t)
 {
-	long tmp = get_xip(pid);
-	if (MALLOC_STUFF_ADDRESS > tmp)
-		sanity_customs(pid, t, 0);
+        long tmp = get_xip(pid);
+        if (MALLOC_STUFF_ADDRESS > tmp)
+                sanity_customs(pid, t, 0);
 
-	reset_page_protection(pid, t);
+        reset_page_protection(pid, t);
 
         int status = 0;
         ptrace(PTRACE_SINGLESTEP, pid, 0, 0);

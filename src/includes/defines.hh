@@ -127,7 +127,7 @@ public:
         void            remove_breakpoint(std::string r, void* addr);
 
 	// Add a breakpoint at addr in the r region
-	void            add_breakpoint(std::string r, void* addr);
+        void            add_breakpoint(std::string r, void* addr);
 
 	// Find and patch every syscall from the child
         ssize_t         find_syscalls(void* addr);
@@ -226,8 +226,8 @@ public:
         std::list<Mapped> mapped_areas;
         std::string       name;
         pid_t             pid;
-        void*             actual_program_break;
-        void*             origin_program_break;
+        void*            actual_program_break;
+        void*            origin_program_break;
         int               id_inc; // For debugging purposes
         int               nb_of_frees;
         int               nb_of_allocs;

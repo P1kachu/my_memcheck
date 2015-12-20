@@ -385,7 +385,7 @@ int Tracker::custom_realloc(Breaker& b, void* bp, bool print)
         if (rbx != rcx)
         {
                 mapped_areas.erase(it);
-		mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
+                mapped_areas.push_back(Mapped(rbx, rcx, MALLOC_CHILD, id_inc++));
         }
         else
                 it->mapped_length = rcx;
