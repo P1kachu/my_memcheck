@@ -54,7 +54,7 @@ int run_child(int argc, char** argv, char* ld_preload)
                 char* tmp = strdup(s.c_str());
                 char* const envs[] = { tmp, NULL };
                 ret = execve(args[2], args + 2, envs);
-
+		print_errno();
                 free(tmp);
                 delete[] args;
         }
@@ -89,6 +89,8 @@ int trace_child(pid_t child)
 
                 // Retrieve data from $rax
                 long syscall = get_orig_xax(child);
+		if (syscall < 0)
+			continue;
 
                 int rdi = print_syscall(child, syscall);
 

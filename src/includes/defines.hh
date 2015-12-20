@@ -73,6 +73,7 @@
 # define MALLOC_CHILD              0xdeadbeef
 # define MALLOC_STUFF_ADDRESS      0x700000000000
 # define BONUS                     1
+
 # if defined(__i386)
 
 #  define INSTR_REG   EIP

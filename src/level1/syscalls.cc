@@ -2,6 +2,8 @@
 
 static void print_syscall_name(int id)
 {
+	if(id < 0)
+		return;
         std::ifstream in("/usr/include/asm/unistd_64.h");
         std::string s;
         id+=3;
@@ -231,6 +233,8 @@ int print_syscall(pid_t child, int orig)
 
         switch (orig)
         {
+		case   -1:
+			return 0;
                 case   MMAP_SYSCALL: // mmap
                         print_mmap(child, regs);
                         break;
