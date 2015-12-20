@@ -63,20 +63,32 @@ int main()
 	mapped4[0x80] = mapped4[0x100];
 	mapped4[0x100] = mapped4[0x80];
 
-	void* t = malloc(90);
+
+	int l = 0;
+
+	char* t = (char*)malloc(90);
 
 	free(t);
 
-	t = malloc(1);
+	t = (char*)malloc(1);
 
-	t = realloc(t, 0x180);
+//	printf("TEST\n");
 
-	t = calloc(1, 0x100);
+	*(t + 2) = l;
 
-	munmap(mapped, 0x100);
-	munmap(mapped2, 0x80);
+//	printf("/TEST\n");
+//	*(t + 7) = 5;
+//	mapped[2] = *t;
+//	mapped[45] = *(t + 7);
 
-	free(t);
+//	t = (char*)realloc(t, 0x180);
+
+//	t = (char*)calloc(1, 0x100);
+
+//	munmap(mapped, 0x100);
+//	munmap(mapped2, 0x80);
+
+//	free(t);
 
 
 //*/
