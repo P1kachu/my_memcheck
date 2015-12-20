@@ -2,6 +2,7 @@
 
 static bool compare_address(Mapped first, Mapped second)
 {
+	// Prettier than a direct return, sorry
         char* first_addr = (char*)first.mapped_begin;
         char* second_addr = (char*)second.mapped_begin;
         return first_addr < second_addr;
@@ -11,10 +12,6 @@ bool Mapped::area_contains(unsigned long addr) const
 {
         int ret = (addr < mapped_begin + mapped_length)
                 && addr >= mapped_begin;
-        if (0) // TODO : REMOVE
-                printf("%s%12lx - %12lx - %12lx%s\n",
-                       ret ? GREEN : RED, mapped_begin, addr,
-                       mapped_begin + mapped_length, NONE);
         return ret;
 }
 
