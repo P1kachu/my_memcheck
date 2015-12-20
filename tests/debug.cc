@@ -52,8 +52,7 @@ int main()
 
 	print_errno(stdout);
 
-	mapped = mapped;
-
+	printf("TEST\n");
 	mapped[0x80] = mapped[0x100];
 	mapped[0x100] = mapped[0x80];
 	mapped2[0x80] = mapped2[0x100];
@@ -63,7 +62,7 @@ int main()
 	mapped4[0x80] = mapped4[0x100];
 	mapped4[0x100] = mapped4[0x80];
 
-
+	printf("/TEST\n");
 	int l = 0;
 
 	char* t = (char*)malloc(90);
@@ -72,23 +71,21 @@ int main()
 
 	t = (char*)malloc(1);
 
-//	printf("TEST\n");
+	printf("TEST\n");
 
 	*(t + 2) = l;
+	*(t + 7) = 5;
+	mapped[2] = *t;
+	mapped[45] = *(t + 7);
+	printf("/TEST\n");
+	t = (char*)realloc(t, 0x180);
 
-//	printf("/TEST\n");
-//	*(t + 7) = 5;
-//	mapped[2] = *t;
-//	mapped[45] = *(t + 7);
+	t = (char*)calloc(1, 0x100);
 
-//	t = (char*)realloc(t, 0x180);
+	munmap(mapped, 0x100);
+	munmap(mapped2, 0x80);
 
-//	t = (char*)calloc(1, 0x100);
-
-//	munmap(mapped, 0x100);
-//	munmap(mapped2, 0x80);
-
-//	free(t);
+	free(t);
 
 
 //*/
