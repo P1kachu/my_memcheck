@@ -1,5 +1,14 @@
 QUIET=#-s
 ## COMPILER ##
+
+# Project was supposed to be done in C++
+# But I found some of it to be easier to do
+# in C. Like 90% of it. So lets say it was done
+# in C+ only.
+#
+# With love,
+# P1kachu.
+
 CXX       = g++
 
 ## FLAGS ##
