@@ -4,6 +4,7 @@
 
 Goal: Reimplement a memory checker, A.K.A look for invalid (out of bounds) memory
       accesses, and memory leaks
+      https://lse.epita.fr/data/sujets/sujet-my_mmck.pdf
 
 
 Level1 - Strace:
