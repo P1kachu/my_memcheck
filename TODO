@@ -26,7 +26,4 @@ Handle when a null pointer is given to realloc [ ]
 Handle access sizes                            [X]
 Error handling                                 [/]
 Remove debug printing                          [ ]
-<<<<<<< HEAD
-repair level2                                  [ ]
-=======
->>>>>>> 70c5600ebbe7981bf5af5f2b3d47a6f2d98c74c3
+repair level2                                  [X]
