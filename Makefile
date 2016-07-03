@@ -1,6 +1,5 @@
-QUIET=#-s
-## COMPILER ##
-
+# LSE RECRUITEMENT 2016 - my_memcheck
+#
 # Project was supposed to be done in C++
 # But I found some of it to be easier to do
 # in C. Like 90% of it. So lets say it was done
@@ -9,6 +8,8 @@ QUIET=#-s
 # With love,
 # P1kachu.
 
+QUIET=#-s
+## COMPILER ##
 CXX       = g++
 
 ## FLAGS ##
